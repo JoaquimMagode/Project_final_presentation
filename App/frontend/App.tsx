@@ -50,7 +50,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between shadow-sm">
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group">
           <div className="bg-emerald-600 p-1.5 rounded-lg text-white group-hover:scale-105 transition-transform">
             {APP_ICONS.Health}
@@ -101,6 +102,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
+        </div>
         </div>
       </header>
 
@@ -182,7 +184,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/hospitals" element={<Hospitals />} />
-              <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
+              <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
               <Route path="/visa" element={<VisaGuidance />} />
