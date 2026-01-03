@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Header } from './components/Header';
-import { HomePage } from './components/HomePage';
+import { HomePage } from './components/HomePageNew';
 import { LoginPage } from './components/LoginPage';
 import { RegisterPage } from './components/RegisterPage';
 import { PatientDashboard } from './components/PatientDashboard';
