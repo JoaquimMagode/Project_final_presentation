@@ -1,0 +1,7 @@
+{
+  "name": "AfriHealth Connect",
+  "description": "A mobile-first medical tourism platform connecting African patients directly with verified Indian hospitals, eliminating intermediaries.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
