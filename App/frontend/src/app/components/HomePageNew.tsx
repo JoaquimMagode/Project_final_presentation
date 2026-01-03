@@ -1,64 +1,14 @@
-import { ArrowRight, Upload, Search, Calendar, Plane, Shield, CheckCircle, Users, Clock, Lock, Phone, Star, Play, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Upload, Search, Calendar, Plane, Shield, CheckCircle, Users, Clock, Lock, Phone, Star, Play, ChevronDown } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import TestimonialV2 from './ui/testimonial-v2';
-import { useState, useEffect } from 'react';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
 }
 
 export function HomePage({ onNavigate }: HomePageProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  const carouselImages = [
-    {
-      src: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=600&h=700&fit=crop',
-      alt: 'Indian Cardiologist',
-      caption: 'Dr. Rajesh Sharma - Leading Cardiologist',
-      subtitle: 'Apollo Hospital, New Delhi'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&h=700&fit=crop',
-      alt: 'Modern Indian Hospital',
-      caption: 'World-Class Medical Facilities',
-      subtitle: 'NABH & JCI Accredited Hospitals'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=600&h=700&fit=crop',
-      alt: 'Advanced Medical Equipment',
-      caption: 'State-of-the-Art Technology',
-      subtitle: 'Latest Surgical Equipment & MRI'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1594824475317-d3c0b0e8b5e0?w=600&h=700&fit=crop',
-      alt: 'Indian Female Doctor',
-      caption: 'Dr. Priya Patel - Oncology Specialist',
-      subtitle: 'Fortis Hospital, Mumbai'
-    },
-    {
-      src: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=600&h=700&fit=crop',
-      alt: 'Hospital Operating Room',
-      caption: 'Advanced Surgical Suites',
-      subtitle: 'Robotic Surgery & Minimally Invasive Procedures'
-    }
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [carouselImages.length]);
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
-  };
 
   const features = [
     {
@@ -163,9 +113,9 @@ export function HomePage({ onNavigate }: HomePageProps) {
             <div className="space-y-8">
               <div className="space-y-6">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                  African Medical Tourism —<br />
+             
                   <span className="text-teal-600">Find Indian Hospitals</span><br />
-                  Direct Connection Platform
+                  Direct Connection
                 </h1>
                 <p className="text-lg text-gray-600 max-w-lg">
                   Empowering African patients with direct access to verified Indian hospitals. 
@@ -179,7 +129,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   onClick={() => onNavigate('dashboard')}
                   className="bg-teal-600 hover:bg-teal-700 text-white px-8 py-4 text-lg"
                 >
-                  Get Started
+                  Find Hospital
                 </Button>
                 <Button
                   size="lg"
@@ -187,7 +137,7 @@ export function HomePage({ onNavigate }: HomePageProps) {
                   className="border-teal-600 text-teal-600 hover:bg-teal-50 px-8 py-4 text-lg flex items-center gap-2"
                 >
                   <Play className="w-5 h-5" />
-                  Watch Demo
+                  Assistence Support
                 </Button>
               </div>
 
@@ -207,55 +157,14 @@ export function HomePage({ onNavigate }: HomePageProps) {
               </div>
             </div>
 
-            {/* Professional Medical Carousel */}
+            {/* Professional Nurse Image */}
             <div className="relative">
-              <div className="relative overflow-hidden rounded-2xl shadow-2xl">
-                <div 
-                  className="flex transition-transform duration-500 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                >
-                  {carouselImages.map((image, index) => (
-                    <div key={index} className="w-full flex-shrink-0 relative">
-                      <ImageWithFallback
-                        src={image.src}
-                        alt={image.alt}
-                        className="w-full h-[500px] object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
-                      <div className="absolute bottom-6 left-6 text-white">
-                        <h3 className="text-xl font-bold mb-1">{image.caption}</h3>
-                        <p className="text-sm opacity-90">{image.subtitle}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Navigation Arrows */}
-                <button
-                  onClick={prevSlide}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full transition-all shadow-lg"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-                <button
-                  onClick={nextSlide}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white p-3 rounded-full transition-all shadow-lg"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-                
-                {/* Dots Indicator */}
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                  {carouselImages.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setCurrentSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-all ${
-                        index === currentSlide ? 'bg-white scale-110' : 'bg-white/50'
-                      }`}
-                    />
-                  ))}
-                </div>
+              <div className="relative z-10">
+                <img
+                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
+                  alt="Professional Indian nurse"
+                  className="rounded-2xl shadow-2xl w-full h-[500px] object-cover"
+                />
               </div>
               
               {/* Floating Stats */}
