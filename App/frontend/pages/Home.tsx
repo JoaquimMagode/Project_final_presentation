@@ -12,33 +12,44 @@ const Home: React.FC = () => {
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       {/* Hero Section */}
-      <section className="text-center py-8 space-y-6">
-        <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full border border-emerald-100 text-sm font-semibold">
-          <Globe2 className="w-4 h-4" />
-          Direct Access to Indian Care
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-8">
+        <div className="space-y-6">
+          <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full border border-emerald-100 text-sm font-semibold">
+            <Globe2 className="w-4 h-4" />
+            Direct Access to Indian Care
+          </div>
+          
+          <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
+            {t.heroTitle}
+          </h1>
+          
+          <p className="text-slate-600 text-lg md:text-xl font-medium">
+            {t.heroSubtext}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <Link 
+              to="/register" 
+              className="px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2"
+            >
+              {t.ctaSubmit} <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link 
+              to="/hospitals" 
+              className="px-8 py-4 bg-white text-slate-900 font-bold rounded-2xl border border-slate-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-2"
+            >
+              {t.ctaFind}
+            </Link>
+          </div>
         </div>
         
-        <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
-          {t.heroTitle}
-        </h1>
-        
-        <p className="text-slate-600 text-lg md:text-xl max-w-2xl mx-auto font-medium">
-          {t.heroSubtext}
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-          <Link 
-            to="/register" 
-            className="px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2"
-          >
-            {t.ctaSubmit} <ArrowRight className="w-5 h-5" />
-          </Link>
-          <Link 
-            to="/hospitals" 
-            className="px-8 py-4 bg-white text-slate-900 font-bold rounded-2xl border border-slate-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-2"
-          >
-            {t.ctaFind}
-          </Link>
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-3xl transform rotate-3"></div>
+          <img 
+            src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+            alt="Professional Medical Team" 
+            className="relative w-full h-96 object-cover rounded-3xl shadow-2xl"
+          />
         </div>
       </section>
 

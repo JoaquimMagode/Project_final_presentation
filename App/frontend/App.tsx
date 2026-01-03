@@ -1,5 +1,5 @@
 
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import React, { useState, createContext, useContext, useEffect, useRef } from 'react';
 import { HashRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { Language, UserRole } from './types';
 import { LANGUAGES, APP_ICONS } from './constants';
@@ -12,7 +12,7 @@ import VisaGuidance from './pages/VisaGuidance';
 import DoctorProfile from './pages/DoctorProfile';
 import Services from './pages/Services';
 import Footer from './components/Footer';
-import { Menu, X, User as UserIcon, LogOut } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, Settings, AlertTriangle, ChevronDown } from 'lucide-react';
 
 // Auth & Language Context
 interface AuthContextType {
@@ -32,9 +32,21 @@ export const useLang = () => useContext(LangContext);
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { lang, setLang } = useLang();
   const { user, logout } = useAuth();
   const location = useLocation();
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const navItems = [
     { path: '/', label: 'Home', icon: APP_ICONS.Health },
@@ -81,11 +93,45 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </select>
           
           {user ? (
-            <div className="flex items-center gap-2">
-              <span className="hidden lg:block text-xs font-bold text-slate-500">{user.name}</span>
-              <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                <LogOut className="w-5 h-5" />
+            <div className="relative" ref={dropdownRef}>
+              <button 
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg transition-colors"
+              >
+                <span className="hidden lg:block text-xs font-bold text-slate-500">{user.name}</span>
+                <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  {user.name.charAt(0)}
+                </div>
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </button>
+              
+              {isDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+                  <Link 
+                    to="/dashboard" 
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                  >
+                    <Settings className="w-4 h-4" />
+                    Profile Settings
+                  </Link>
+                  <button 
+                    onClick={() => setIsDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 w-full text-left"
+                  >
+                    <AlertTriangle className="w-4 h-4" />
+                    Urgency Assistance
+                  </button>
+                  <hr className="my-2 border-slate-100" />
+                  <button 
+                    onClick={() => { logout(); setIsDropdownOpen(false); }}
+                    className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 w-full text-left"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Log Out
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <>
@@ -185,8 +231,8 @@ const App: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/hospitals" element={<Hospitals />} />
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" replace />} />
+              <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />
               <Route path="/doctors/:id" element={<DoctorProfile />} />
