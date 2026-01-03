@@ -2,20 +2,33 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
-import { Mail, Lock, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Mock credentials
+  const validCredentials = [
+    { email: 'patient@example.com', password: 'password', name: 'Samuel Mensah', role: 'PATIENT' },
+    { email: 'hospital@fortis.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' }
+  ];
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simple mock logic: if email contains 'hospital', log in as hospital
-    const role = email.includes('hospital') ? 'HOSPITAL' : 'PATIENT';
-    const name = role === 'HOSPITAL' ? 'Admin Hospital' : 'Samuel Mensah';
-    login(name, role);
-    navigate('/dashboard');
+    setError('');
+    
+    const user = validCredentials.find(u => u.email === email && u.password === password);
+    
+    if (user) {
+      login(user.name, user.role as 'PATIENT' | 'HOSPITAL');
+      navigate('/dashboard');
+    } else {
+      setError('Invalid email or password');
+    }
   };
 
   return (
@@ -48,11 +61,20 @@ const Login: React.FC = () => {
             <input 
               required 
               type="password" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
               placeholder="••••••••" 
             />
           </div>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+            <AlertCircle className="w-4 h-4" />
+            {error}
+          </div>
+        )}
 
         <button 
           type="submit" 
