@@ -2,6 +2,7 @@ import { ArrowRight, Upload, Search, Calendar, Plane, Shield, CheckCircle, Users
 import { Button } from './ui/button';
 import { Card } from './ui/card';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import TestimonialV2 from './ui/testimonial-v2';
 
 interface HomePageProps {
   onNavigate: (page: string) => void;
@@ -50,29 +51,6 @@ export function HomePage({ onNavigate }: HomePageProps) {
     { icon: CheckCircle, text: 'Transparent Pricing' }
   ];
 
-  const testimonials = [
-    {
-      name: 'Amara O.',
-      country: 'Nigeria',
-      flag: '🇳🇬',
-      text: 'I got direct contact with Apollo Hospital. The process was clear and no hidden charges. Best decision!',
-      treatment: 'Cardiac Surgery'
-    },
-    {
-      name: 'Kwame A.',
-      country: 'Ghana',
-      flag: '🇬🇭',
-      text: 'Within 48 hours, three hospitals reviewed my case. The visa guidance was very helpful.',
-      treatment: 'Orthopedic Treatment'
-    },
-    {
-      name: 'Fatima M.',
-      country: 'Kenya',
-      flag: '🇰🇪',
-      text: 'No agents, no extra fees. I spoke directly to the doctors. Saved money and got better care.',
-      treatment: 'Oncology Treatment'
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -253,40 +231,8 @@ export function HomePage({ onNavigate }: HomePageProps) {
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 md:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl mb-4 text-gray-900">
-              Real Stories from African Patients
-            </h2>
-            <p className="text-lg text-gray-600">
-              Join thousands who found quality healthcare in India
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center text-white text-lg">
-                    {testimonial.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span>{testimonial.name}</span>
-                      <span className="text-xl">{testimonial.flag}</span>
-                    </div>
-                    <p className="text-sm text-gray-500">{testimonial.country}</p>
-                  </div>
-                </div>
-                <p className="text-gray-700 mb-3 italic">"{testimonial.text}"</p>
-                <div className="inline-block px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs">
-                  {testimonial.treatment}
-                </div>
-              </Card>
-            ))}
-          </div>
-        </div>
+      <section className="bg-gray-50">
+        <TestimonialV2 />
       </section>
 
       {/* CTA Section */}

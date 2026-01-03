@@ -34,10 +34,10 @@ export function Header({ currentPage, onNavigate, language, onLanguageChange }: 
           {/* Logo */}
           <div className="flex items-center cursor-pointer" onClick={() => onNavigate('home')}>
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-teal-500 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-xl">M</span>
+              <span className="text-white font-bold text-xl">H</span>
             </div>
             <div className="ml-3 hidden sm:block">
-              <h1 className="font-bold text-gray-900">MediConnect Africa</h1>
+              <h1 className="font-bold text-gray-900">HealthGateway</h1>
               <p className="text-xs text-gray-500">India-Africa Healthcare Bridge</p>
             </div>
           </div>
