@@ -5,6 +5,7 @@ import { Language, UserRole } from './types';
 import { LANGUAGES, APP_ICONS } from './constants';
 import Home from './pages/Home';
 import Hospitals from './pages/Hospitals';
+import HospitalDetail from './pages/HospitalDetail';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -230,6 +231,7 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/hospitals" element={<Hospitals />} />
+              <Route path="/hospital/:id" element={<HospitalDetail />} />
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
               <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" replace />} />
               <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />

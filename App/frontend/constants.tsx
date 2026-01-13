@@ -111,7 +111,7 @@ export const TRANSLATIONS: Record<Language, any> = {
     ctaFind: 'Find Hospitals',
     steps: [
       { title: 'Upload Reports', desc: 'Securely share your medical history' },
-      { title: 'Get Opinions', desc: 'Direct responses from verified doctors' },
+      { title: 'Book Consultation', desc: 'Direct responses from verified doctors' },
       { title: 'Plan Trip', desc: 'Visa & travel assistance provided' },
       { title: 'Treatment', desc: 'Safe and guided medical journey' }
     ]
@@ -123,7 +123,7 @@ export const TRANSLATIONS: Record<Language, any> = {
     ctaFind: 'Encontrar Hospitais',
     steps: [
       { title: 'Upload Relatórios', desc: 'Compartilhe seu histórico médico com segurança' },
-      { title: 'Receber Opiniões', desc: 'Respostas diretas de médicos verificados' },
+      { title: 'Marcar Consulta', desc: 'Respostas diretas de médicos verificados' },
       { title: 'Planejar Viagem', desc: 'Assistência de visto e viagem fornecida' },
       { title: 'Tratamento', desc: 'Jornada médica segura e guiada' }
     ]
@@ -135,7 +135,7 @@ export const TRANSLATIONS: Record<Language, any> = {
     ctaFind: 'Trouver des Hôpitaux',
     steps: [
       { title: 'Rapports', desc: 'Partagez votre dossier en toute sécurité' },
-      { title: 'Avis Directs', desc: 'Réponses des médecins vérifiés' },
+      { title: 'Réserver Consultation', desc: 'Réponses des médecins vérifiés' },
       { title: 'Voyage', desc: 'Assistance visa et voyage incluse' },
       { title: 'Soin', desc: 'Un parcours médical sécurisé' }
     ]
@@ -147,7 +147,7 @@ export const TRANSLATIONS: Record<Language, any> = {
     ctaFind: 'Tafuta Hospitali',
     steps: [
       { title: 'Pakia Ripoti', desc: 'Shiriki historia yako kwa usalama' },
-      { title: 'Pata Maoni', desc: 'Majibu kutoka kwa madaktari walioidhinishwa' },
+      { title: 'Weka Mazungumzo', desc: 'Majibu kutoka kwa madaktari walioidhinishwa' },
       { title: 'Panga Safari', desc: 'Msaada wa visa na safari unapatikana' },
       { title: 'Matibabu', desc: 'Safari ya matibabu salama' }
     ]

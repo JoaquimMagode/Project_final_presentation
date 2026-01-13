@@ -45,7 +45,7 @@ const HospitalCard: React.FC<Props> = ({ hospital }) => {
             </div>
           </div>
           <Link 
-            to={`/register?hospitalId=${hospital.id}`}
+            to={`/hospital/${hospital.id}`}
             className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-colors"
           >
             Request Opinion
