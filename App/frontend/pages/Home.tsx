@@ -1,13 +1,30 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLang } from '../App';
 import { TRANSLATIONS, APP_ICONS } from '../constants';
-import { ArrowRight, CheckCircle2, Globe2 } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Globe2, Search, MapPin, Stethoscope } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { lang } = useLang();
   const t = TRANSLATIONS[lang];
+  const [destination, setDestination] = useState('');
+  const [procedure, setProcedure] = useState('');
+
+  const indianCities = [
+    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'
+  ];
+
+  const medicalProcedures = [
+    'Cardiac Surgery', 'Orthopedic Surgery', 'Cancer Treatment', 'Neurosurgery',
+    'Kidney Transplant', 'Liver Transplant', 'Eye Surgery', 'Cosmetic Surgery',
+    'Dental Treatment', 'IVF Treatment', 'Spine Surgery', 'Joint Replacement'
+  ];
+
+  const handleSearch = () => {
+    // Navigate to hospitals page with search parameters
+    console.log('Searching for:', { destination, procedure });
+  };
 
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
@@ -26,6 +43,66 @@ const Home: React.FC = () => {
           <p className="text-slate-600 text-lg md:text-xl font-medium">
             {t.heroSubtext}
           </p>
+
+          {/* Search Bar */}
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-4">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Find Your Medical Treatment in India</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Destination Dropdown */}
+              <div className="relative">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <MapPin className="w-4 h-4 inline mr-1" />
+                  Destination in India
+                </label>
+                <select 
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                >
+                  <option value="">Select a city</option>
+                  {indianCities.map(city => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Medical Procedure Dropdown */}
+              <div className="relative">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <Stethoscope className="w-4 h-4 inline mr-1" />
+                  Medical Procedure
+                </label>
+                <select 
+                  value={procedure}
+                  onChange={(e) => setProcedure(e.target.value)}
+                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                >
+                  <option value="">Select a procedure</option>
+                  {medicalProcedures.map(proc => (
+                    <option key={proc} value={proc}>{proc}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button 
+                onClick={handleSearch}
+                className="flex-1 bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Search className="w-5 h-5" />
+                Search Hospitals
+              </button>
+              
+              <button 
+                onClick={() => console.log('Get Quote:', { destination, procedure })}
+                className="flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                Get Quote
+              </button>
+            </div>
+          </div>
 
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <Link 
