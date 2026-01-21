@@ -207,18 +207,21 @@ const Dashboard: React.FC = () => {
                     
                     <div className="space-y-4">
                       {[
-                        { test: 'ECG Test', date: '20/04/24', time: '10:00 AM' },
-                        { test: 'Blood Test', date: '20/04/24', time: '11:30 AM' },
-                        { test: 'Diagnosis Test', date: '20/04/24', time: '2:00 PM' }
-                      ].map((test, i) => (
-                        <div key={i} className="group flex items-center justify-between p-3 hover:bg-slate-50 rounded-xl transition-all duration-300">
-                          <div>
-                            <p className="text-sm font-medium text-slate-900">{test.test}</p>
-                            <p className="text-xs text-slate-500">{test.time}</p>
+                        { test: 'ECG Test', doctor: 'Dr. Sandeep Vaishya', date: '20/04/24', time: '10:00 AM', location: 'Cardiology Wing' },
+                        { test: 'Blood Test', doctor: 'Dr. Priya Sharma', date: '20/04/24', time: '11:30 AM', location: 'Laboratory' },
+                        { test: 'MRI Scan', doctor: 'Dr. Robert Coelho', date: '22/04/24', time: '2:00 PM', location: 'Radiology Dept' },
+                        { test: 'Follow-up Consultation', doctor: 'Dr. Sandeep Vaishya', date: '25/04/24', time: '9:00 AM', location: 'OPD Room 3' }
+                      ].map((exam, i) => (
+                        <div key={i} className="group flex items-center justify-between p-4 hover:bg-slate-50 rounded-xl transition-all duration-300 border border-slate-100">
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-slate-900">{exam.test}</p>
+                            <p className="text-xs text-emerald-600 font-semibold">{exam.doctor}</p>
+                            <p className="text-xs text-slate-500">{exam.location}</p>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-semibold text-slate-900">{test.date}</p>
-                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                            <p className="text-sm font-bold text-slate-900">{exam.date}</p>
+                            <p className="text-xs text-blue-600 font-semibold">{exam.time}</p>
+                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium mt-1 inline-block">
                               Scheduled
                             </span>
                           </div>
@@ -270,6 +273,54 @@ const Dashboard: React.FC = () => {
                         }`}>
                           {app.status}
                         </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'UPCOMING_TEST' && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl">
+                    <Activity className="w-5 h-5 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900">Upcoming Tests & Examinations</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  {[
+                    { test: 'ECG Test', doctor: 'Dr. Sandeep Vaishya', date: '20/04/24', time: '10:00 AM', location: 'Cardiology Wing', status: 'Confirmed' },
+                    { test: 'Blood Test', doctor: 'Dr. Priya Sharma', date: '20/04/24', time: '11:30 AM', location: 'Laboratory', status: 'Confirmed' },
+                    { test: 'MRI Scan', doctor: 'Dr. Robert Coelho', date: '22/04/24', time: '2:00 PM', location: 'Radiology Dept', status: 'Scheduled' },
+                    { test: 'Follow-up Consultation', doctor: 'Dr. Sandeep Vaishya', date: '25/04/24', time: '9:00 AM', location: 'OPD Room 3', status: 'Scheduled' },
+                    { test: 'X-Ray Chest', doctor: 'Dr. Amit Kumar', date: '28/04/24', time: '3:30 PM', location: 'Radiology Dept', status: 'Pending' },
+                    { test: 'Cardiac Stress Test', doctor: 'Dr. Sandeep Vaishya', date: '30/04/24', time: '11:00 AM', location: 'Cardiology Wing', status: 'Scheduled' }
+                  ].map((exam, i) => (
+                    <div key={i} className="p-4 border border-slate-200 rounded-xl hover:shadow-md transition-all duration-300 bg-white">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-slate-900 text-base">{exam.test}</h4>
+                          <p className="text-sm text-emerald-600 font-semibold">{exam.doctor}</p>
+                          <p className="text-sm text-slate-500">{exam.location}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-slate-900">{exam.date}</p>
+                          <p className="text-sm text-blue-600 font-semibold">{exam.time}</p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                          exam.status === 'Confirmed' ? 'bg-green-100 text-green-700' :
+                          exam.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {exam.status}
+                        </span>
+                        <button className="text-xs text-slate-500 hover:text-slate-700 font-medium">
+                          View Details
+                        </button>
                       </div>
                     </div>
                   ))}

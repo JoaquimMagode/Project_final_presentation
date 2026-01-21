@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Star, MapPin, Clock, ShieldCheck, Phone, Mail, Users, Award, Camera, X, Calendar } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Star, MapPin, Clock, ShieldCheck, Phone, Mail, Users, Award, Camera, X, Calendar, DollarSign } from 'lucide-react';
 
 const HospitalDetail: React.FC = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -14,8 +15,7 @@ const HospitalDetail: React.FC = () => {
 
   const handleBookConsultation = () => {
     if (selectedDate && selectedTime) {
-      alert(`Consultation booked for ${selectedDate} at ${selectedTime}`);
-      setShowBookingModal(false);
+      navigate('/payment');
     }
   };
 
@@ -179,13 +179,23 @@ const HospitalDetail: React.FC = () => {
               </p>
             </div>
             
-            <button 
-              onClick={() => setShowBookingModal(true)}
-              className="mb-4 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Phone className="w-5 h-5" />
-              Book a Consultation
-            </button>
+            <div className="flex gap-3 mb-4">
+              <button 
+                onClick={() => setShowBookingModal(true)}
+                className="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <Phone className="w-5 h-5" />
+                Book Consultation
+              </button>
+              
+              <button 
+                onClick={() => alert('Quote request sent! We will contact you within 24 hours.')}
+                className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <DollarSign className="w-5 h-5" />
+                Get Quote
+              </button>
+            </div>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">

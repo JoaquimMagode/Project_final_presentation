@@ -25,8 +25,7 @@ const Login: React.FC = () => {
     
     if (user) {
       login(user.name, user.role as 'PATIENT' | 'HOSPITAL');
-      // Automatically redirect to dashboard after successful login
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     } else {
       setError('Invalid email or password');
     }

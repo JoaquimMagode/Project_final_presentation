@@ -24,3 +24,4 @@ This will run:
 ## Mock Login Credentials
 - **Patient**: `patient@example.com` / `password`
 - **Hospital**: `hospital@fortis.com` / `password`
+- **Admin**: `admin@afrihealth.com`/`password`
