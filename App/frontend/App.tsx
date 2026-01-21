@@ -8,6 +8,7 @@ import Hospitals from './pages/Hospitals';
 import HospitalDetail from './pages/HospitalDetail';
 import Payment from './pages/Payment';
 import Feedback from './pages/Feedback';
+
 import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
@@ -237,13 +238,11 @@ const App: React.FC = () => {
               <Route path="/hospital/:id" element={<HospitalDetail />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/feedback" element={<Feedback />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
-              <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" replace />} />
-              <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/login" element={<Login />} />
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/doctors/:id" element={<DoctorProfile />} />
+              <Route path="/admin" element={<AdminDashboard />} />
             </Routes>
           </Layout>
         </HashRouter>
