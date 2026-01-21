@@ -2,6 +2,8 @@
 
 ## Setup
 
+\
+'
 1. Install dependencies:
 ```bash
 npm install
@@ -19,8 +21,9 @@ npm run dev
 - `POST /api/auth/register` - User registration
 
 ### Mock Login Credentials
-- **Patient**: `patient@example.com` / `password`
+ .
+ - **Patient**: `patient@fortis.com` / `password`
 - **Hospital**: `hospital@fortis.com` / `password`
-
+-**Admin**: http://localhost:3000/#/admin
 ## Usage
 The backend runs on `http://localhost:5000` by default.

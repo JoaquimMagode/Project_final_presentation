@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plane, CheckCircle2, AlertTriangle, FileText, Download } from 'lucide-react';
+import { Plane, CheckCircle2, AlertTriangle, FileText, Download, ExternalLink } from 'lucide-react';
 
 const VisaGuidance: React.FC = () => {
   return (
@@ -90,6 +90,21 @@ const VisaGuidance: React.FC = () => {
             <span className="text-xs font-black text-slate-600">Referral Form Sample</span>
           </button>
         </div>
+      </div>
+
+      {/* Apply Button */}
+      <div className="text-center">
+        <a 
+          href="https://indianvisaonline.gov.in/evisa/tvoa.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:translate-y-[-2px] transition-all"
+        >
+          <Plane className="w-5 h-5" />
+          Apply Here - Official Indian Visa Portal
+          <ExternalLink className="w-5 h-5" />
+        </a>
+        <p className="text-sm text-slate-500 mt-3">Opens official Indian government visa website</p>
       </div>
     </div>
   );

@@ -6,6 +6,9 @@ import { LANGUAGES, APP_ICONS } from './constants';
 import Home from './pages/Home';
 import Hospitals from './pages/Hospitals';
 import HospitalDetail from './pages/HospitalDetail';
+import Payment from './pages/Payment';
+import Feedback from './pages/Feedback';
+import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
 import Login from './pages/Login';
@@ -232,6 +235,9 @@ const App: React.FC = () => {
               <Route path="/" element={<Home />} />
               <Route path="/hospitals" element={<Hospitals />} />
               <Route path="/hospital/:id" element={<HospitalDetail />} />
+              <Route path="/payment" element={<Payment />} />
+              <Route path="/feedback" element={<Feedback />} />
+              <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/dashboard" element={user ? <Dashboard /> : <Navigate to="/login" replace />} />
               <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" replace />} />
               <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" replace />} />

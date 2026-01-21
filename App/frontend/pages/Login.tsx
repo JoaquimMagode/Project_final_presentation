@@ -14,7 +14,8 @@ const Login: React.FC = () => {
   // Mock credentials
   const validCredentials = [
     { email: 'patient@example.com', password: 'password', name: 'Samuel Mensah', role: 'PATIENT' },
-    { email: 'hospital@fortis.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' }
+    { email: 'hospital@fortis.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' },
+    { email: 'admin@afrihealth.com', password: 'admin123', name: 'IMAP Admin', role: 'ADMIN' }
   ];
 
   const handleLogin = (e: React.FormEvent) => {
@@ -25,7 +26,6 @@ const Login: React.FC = () => {
     
     if (user) {
       login(user.name, user.role as 'PATIENT' | 'HOSPITAL');
-      // Automatically redirect to dashboard after successful login
       navigate('/dashboard', { replace: true });
     } else {
       setError('Invalid email or password');
