@@ -202,37 +202,116 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-slate-900 mb-8">Patient Stories</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white border border-slate-200 p-8">
-            <p className="text-slate-700 mb-6 leading-relaxed">
-              "AfriHealth connected me directly to Apollo Hospital. I got my visa and treatment without any stress."
-            </p>
-            <div className="flex items-center gap-3">
-              <img src="https://picsum.photos/seed/pat1/48/48" className="w-12 h-12 rounded-full" />
+      </div>
+
+      {/* Find the Care You're Looking For - Full Width */}
+      <section className="w-full bg-slate-800 py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <h2 className="text-4xl font-serif text-white text-center mb-2">Find the care you're looking for</h2>
+          <div className="w-24 h-1 bg-slate-600 mx-auto mb-12"></div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Virtual Care Card */}
+            <div className="bg-slate-700 p-8 rounded flex flex-col ">
               <div>
-                <div className="font-bold text-slate-900">Obinna K.</div>
-                <div className="text-sm text-slate-600">Lagos, Nigeria</div>
+                <p className="text-sm text-slate-300 mb-2">Got Care with Cedars-Sinai Connect</p>
+                <h3 className="text-3xl font-serif text-white mb-6">24/7 Virtual Care</h3>
+                <ul className="space-y-4">
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1">●</span>
+                    <span>Connect with providers for illnesses like flu, UTIs and rashes (ages 3+) or chronic conditions (ages 18+)</span>
+                  </li>
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1">●</span>
+                    <span>Get care in minutes or schedule an appointment on your schedule</span>
+                  </li>
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1">●</span>
+                    <span>Available 24/7, including weekends and holidays</span>
+                  </li>
+                </ul>
               </div>
+              <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors mt-auto">
+                <ArrowRight className="w-5 h-5 text-slate-800" />
+              </button>
             </div>
-          </div>
-          <div className="bg-white border border-slate-200 p-8">
-            <p className="text-slate-700 mb-6 leading-relaxed">
-              "The Portuguese support made everything clear. Direct communication with the doctor was a game changer."
-            </p>
-            <div className="flex items-center gap-3">
-              <img src="https://picsum.photos/seed/pat2/48/48" className="w-12 h-12 rounded-full" />
+
+            {/* Primary Care Card */}
+            <div className="bg-slate-700 p-8 rounded flex flex-col">
               <div>
-                <div className="font-bold text-slate-900">Maria S.</div>
-                <div className="text-sm text-slate-600">Maputo, Mozambique</div>
+                <p className="text-sm text-slate-300 mb-2">Find the right doctor for you</p>
+                <h3 className="text-3xl font-serif text-white mb-6">Primary Care</h3>
+                <ul className="space-y-4">
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1">●</span>
+                    <span>More than 30 convenient locations</span>
+                  </li>
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1">●</span>
+                    <span>Online scheduling available</span>
+                  </li>
+                </ul>
               </div>
+              <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors mt-auto">
+                <ArrowRight className="w-5 h-5 text-slate-800" />
+              </button>
+            </div>
+
+            {/* Urgent Care Card */}
+            <div className="bg-slate-700 p-8 rounded flex flex-col">
+              <div>
+                <p className="text-sm text-slate-300 mb-2">Got help now</p>
+                <h3 className="text-3xl font-serif text-white mb-6">Urgent Care</h3>
+                <ul className="space-y-4">
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1">●</span>
+                    <span>Open 7 days a week</span>
+                  </li>
+                  <li className="flex gap-3 text-slate-200 text-sm">
+                    <span className="text-red-500 mt-1\">●</span>
+                    <span>Accepts most insurance</span>
+                  </li>
+                </ul>
+              </div>
+              <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors mt-auto">
+                <ArrowRight className="w-5 h-5 text-slate-800" />
+              </button>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Testimonials */}
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-slate-900 mb-8">Patient Stories</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white border border-slate-200 p-8">
+              <p className="text-slate-700 mb-6 leading-relaxed">
+                "AfriHealth connected me directly to Apollo Hospital. I got my visa and treatment without any stress."
+              </p>
+              <div className="flex items-center gap-3">
+                <img src="https://picsum.photos/seed/pat1/48/48" className="w-12 h-12 rounded-full" />
+                <div>
+                  <div className="font-bold text-slate-900">Obinna K.</div>
+                  <div className="text-sm text-slate-600">Lagos, Nigeria</div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-white border border-slate-200 p-8">
+              <p className="text-slate-700 mb-6 leading-relaxed">
+                "The Portuguese support made everything clear. Direct communication with the doctor was a game changer."
+              </p>
+              <div className="flex items-center gap-3">
+                <img src="https://picsum.photos/seed/pat2/48/48" className="w-12 h-12 rounded-full" />
+                <div>
+                  <div className="font-bold text-slate-900">Maria S.</div>
+                  <div className="text-sm text-slate-600">Maputo, Mozambique</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   );
