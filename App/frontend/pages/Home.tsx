@@ -27,176 +27,178 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      {/* Hero Section */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center py-8">
-        <div className="space-y-6">
-          <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-1.5 rounded-full border border-emerald-100 text-sm font-semibold">
-            <Globe2 className="w-4 h-4" />
-            Direct Access to Indian Care
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 leading-[1.1] tracking-tight">
-            {t.heroTitle}
-          </h1>
-          
-          <p className="text-slate-600 text-lg md:text-xl font-medium">
-            {t.heroSubtext}
-          </p>
-
-          {/* Search Bar */}
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6 space-y-4">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Find Your Medical Treatment in India</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Destination Dropdown */}
-              <div className="relative">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  <MapPin className="w-4 h-4 inline mr-1" />
-                  Destination in India
-                </label>
-                <select 
-                  value={destination}
-                  onChange={(e) => setDestination(e.target.value)}
-                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                >
-                  <option value="">Select a city</option>
-                  {indianCities.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Medical Procedure Dropdown */}
-              <div className="relative">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">
-                  <Stethoscope className="w-4 h-4 inline mr-1" />
-                  Medical Procedure
-                </label>
-                <select 
-                  value={procedure}
-                  onChange={(e) => setProcedure(e.target.value)}
-                  className="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                >
-                  <option value="">Select a procedure</option>
-                  {medicalProcedures.map(proc => (
-                    <option key={proc} value={proc}>{proc}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button 
-                onClick={handleSearch}
-                className="flex-1 bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <Search className="w-5 h-5" />
-                Search Hospitals
-              </button>
+    <div className="space-y-0 animate-in fade-in duration-700">
+      {/* Hero Section - Cedars-Sinai Style */}
+      <section className="relative -mx-4 mb-16 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div className="space-y-8">
+              <h1 className="text-5xl md:text-6xl font-serif leading-tight text-slate-900">
+                Find Your Medical<br />Treatment in India
+              </h1>
               
-              <button 
-                onClick={() => console.log('Get Quote:', { destination, procedure })}
-                className="flex-1 bg-blue-600 text-white font-bold py-3 px-6 rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                Get Quote
-              </button>
+              {/* Search Filter */}
+              <div className="space-y-4">
+                <div className="flex gap-6 border-b border-slate-200">
+                  <button className="pb-2 border-b-2 border-slate-900 font-semibold text-slate-900">Destination</button>
+                  <button className="pb-2 text-slate-600 hover:text-slate-900">Procedure</button>
+                </div>
+                
+                {/* Dropdowns */}
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <MapPin className="w-4 h-4 inline mr-1" />
+                      Destination in India
+                    </label>
+                    <select 
+                      value={destination}
+                      onChange={(e) => setDestination(e.target.value)}
+                      className="w-full p-4 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                    >
+                      <option value="">Select a city</option>
+                      {indianCities.map(city => (
+                        <option key={city} value={city}>{city}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      <Stethoscope className="w-4 h-4 inline mr-1" />
+                      Medical Procedure
+                    </label>
+                    <select 
+                      value={procedure}
+                      onChange={(e) => setProcedure(e.target.value)}
+                      className="w-full p-4 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                    >
+                      <option value="">Select a procedure</option>
+                      {medicalProcedures.map(proc => (
+                        <option key={proc} value={proc}>{proc}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <button 
+                    onClick={handleSearch}
+                    className="w-full bg-slate-900 text-white font-semibold py-4 rounded hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    Search Hospitals
+                  </button>
+                </div>
+              </div>
+              
+              {/* Badge */}
+              <div className="flex items-center gap-3 pt-4">
+                <div className="flex gap-2">
+                  <div className="w-12 h-12 bg-slate-200 rounded flex items-center justify-center text-xs font-bold">🇮🇳</div>
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900">Verified Indian</div>
+                  <div className="text-slate-600">Healthcare Providers</div>
+                </div>
+              </div>
             </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 pt-4">
-            <Link 
-              to="/register" 
-              className="px-8 py-4 bg-emerald-600 text-white font-bold rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 hover:translate-y-[-2px] transition-all flex items-center justify-center gap-2"
-            >
-              {t.ctaSubmit} <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Link 
-              to="/hospitals" 
-              className="px-8 py-4 bg-white text-slate-900 font-bold rounded-2xl border border-slate-200 hover:border-emerald-300 transition-all flex items-center justify-center gap-2"
-            >
-              {t.ctaFind}
-            </Link>
+            
+            {/* Right Image */}
+            <div className="relative h-[600px] hidden lg:block">
+              <img 
+                src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                alt="Medical Professional" 
+                className="absolute right-0 bottom-0 h-full w-auto object-cover object-center"
+              />
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* India Medical Treatment Filter - Removed duplicate section */}
+
+      {/* Quick Links */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="bg-white border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+          <div className="text-slate-900 mb-3">{APP_ICONS.Hospital}</div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Find a Hospital</h3>
+          <p className="text-sm text-slate-600 mb-4">Access top-rated medical facilities</p>
+          <Link to="/hospitals" className="text-slate-900 font-semibold text-sm hover:underline">Learn More →</Link>
+        </div>
         
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-3xl transform rotate-3"></div>
-          <img 
-            src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-            alt="Professional Medical Team" 
-            className="relative w-full h-96 object-cover rounded-3xl shadow-2xl"
-          />
+        <div className="bg-white border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+          <div className="text-slate-900 mb-3">{APP_ICONS.Visa}</div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Visa Assistance</h3>
+          <p className="text-sm text-slate-600 mb-4">Medical visa application help</p>
+          <Link to="/visa" className="text-slate-900 font-semibold text-sm hover:underline">Learn More →</Link>
+        </div>
+        
+        <div className="bg-white border border-slate-200 p-6 hover:shadow-lg transition-shadow">
+          <div className="text-slate-900 mb-3">{APP_ICONS.Hotel}</div>
+          <h3 className="text-lg font-bold text-slate-900 mb-2">Travel Support</h3>
+          <p className="text-sm text-slate-600 mb-4">Accommodation and assistance</p>
+          <Link to="/services" className="text-slate-900 font-semibold text-sm hover:underline">Learn More →</Link>
         </div>
       </section>
 
       {/* Trust Badges */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-16">
         {[
           { label: 'Verified Hospitals', icon: APP_ICONS.Verified },
           { label: 'Secure Reports', icon: <CheckCircle2 className="w-5 h-5" /> },
           { label: 'Zero Commissions', icon: <CheckCircle2 className="w-5 h-5" /> },
           { label: 'Direct Payments', icon: <CheckCircle2 className="w-5 h-5" /> },
         ].map((badge, i) => (
-          <div key={i} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-            <div className="text-emerald-500">{badge.icon}</div>
+          <div key={i} className="flex items-center gap-2 bg-white p-3 border border-slate-200">
+            <div className="text-slate-900">{badge.icon}</div>
             <span className="text-xs font-bold text-slate-700">{badge.label}</span>
           </div>
         ))}
       </div>
 
       {/* How It Works */}
-      <section className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 space-y-8">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-black tracking-tight">How It Works</h2>
-          <p className="text-slate-400 font-medium">Simple 4-step process for your medical journey</p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {t.steps.map((step: any, i: number) => (
-            <div key={i} className="relative group">
-              <div className="mb-4 w-12 h-12 bg-emerald-600 text-white flex items-center justify-center rounded-xl font-black text-xl group-hover:scale-110 transition-transform">
-                {i + 1}
+      <section className="bg-slate-50 -mx-4 px-4 py-16 mb-16">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl font-bold text-slate-900 mb-8">How It Works</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {t.steps.map((step: any, i: number) => (
+              <div key={i} className="bg-white p-6 border-l-4 border-slate-900">
+                <div className="text-4xl font-bold text-slate-900 mb-3">{i + 1}</div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-sm text-slate-600">{step.desc}</p>
               </div>
-              <h3 className="text-lg font-bold mb-1">{step.title}</h3>
-              <p className="text-slate-400 text-sm leading-relaxed">{step.desc}</p>
-              {i < 3 && <div className="hidden md:block absolute top-6 left-16 right-0 h-[2px] bg-slate-800" />}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Flag Selector (African Focus) */}
-      <section className="space-y-6">
-        <h3 className="text-center font-bold text-slate-400 text-sm uppercase tracking-[0.2em]">Serving Patients From</h3>
-        <div className="flex flex-wrap justify-center gap-8 opacity-60 grayscale hover:grayscale-0 transition-all duration-700">
-          <span className="text-4xl" title="Nigeria">🇳🇬</span>
-          <span className="text-4xl" title="Mozambique">🇲🇿</span>
-          <span className="text-4xl" title="Kenya">🇰🇪</span>
-          <span className="text-4xl" title="Ghana">🇬🇭</span>
-          <span className="text-4xl" title="South Africa">🇿🇦</span>
-        </div>
-      </section>
-      
       {/* Testimonials */}
-      <section className="bg-white rounded-3xl border border-slate-100 p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-2xl font-black text-slate-900">Success Stories</h2>
-          <Link to="/register" className="text-emerald-600 font-bold text-sm">Join them today →</Link>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="p-6 bg-slate-50 rounded-2xl italic text-slate-600 text-sm relative">
-            "I was scared of agents taking my money. AfriHealth connected me directly to Apollo Hospital. I got my visa and treatment without any stress."
-            <div className="mt-4 not-italic font-bold text-slate-900 flex items-center gap-2">
-              <img src="https://picsum.photos/seed/pat1/40/40" className="w-8 h-8 rounded-full" />
-              Obinna K., Lagos
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-slate-900 mb-8">Patient Stories</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="bg-white border border-slate-200 p-8">
+            <p className="text-slate-700 mb-6 leading-relaxed">
+              "AfriHealth connected me directly to Apollo Hospital. I got my visa and treatment without any stress."
+            </p>
+            <div className="flex items-center gap-3">
+              <img src="https://picsum.photos/seed/pat1/48/48" className="w-12 h-12 rounded-full" />
+              <div>
+                <div className="font-bold text-slate-900">Obinna K.</div>
+                <div className="text-sm text-slate-600">Lagos, Nigeria</div>
+              </div>
             </div>
           </div>
-          <div className="p-6 bg-slate-50 rounded-2xl italic text-slate-600 text-sm relative">
-            "The Portuguese support made everything clear for me coming from Maputo. Direct communication with the doctor was a game changer."
-            <div className="mt-4 not-italic font-bold text-slate-900 flex items-center gap-2">
-              <img src="https://picsum.photos/seed/pat2/40/40" className="w-8 h-8 rounded-full" />
-              Maria S., Maputo
+          <div className="bg-white border border-slate-200 p-8">
+            <p className="text-slate-700 mb-6 leading-relaxed">
+              "The Portuguese support made everything clear. Direct communication with the doctor was a game changer."
+            </p>
+            <div className="flex items-center gap-3">
+              <img src="https://picsum.photos/seed/pat2/48/48" className="w-12 h-12 rounded-full" />
+              <div>
+                <div className="font-bold text-slate-900">Maria S.</div>
+                <div className="text-sm text-slate-600">Maputo, Mozambique</div>
+              </div>
             </div>
           </div>
         </div>
