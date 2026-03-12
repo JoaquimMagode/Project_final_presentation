@@ -180,7 +180,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       )}
 
       {/* Content Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6 mb-20 md:mb-0">
+      <main className="flex-1 w-full mb-20 md:mb-0">
         {children}
       </main>
 

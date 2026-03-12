@@ -27,9 +27,9 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="space-y-0 animate-in fade-in duration-700">
+    <div className="animate-in fade-in duration-700">
       {/* Hero Section - Cedars-Sinai Style */}
-      <section className="relative -mx-4 mb-16 bg-slate-50">
+      <section className="bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -104,9 +104,9 @@ const Home: React.FC = () => {
             </div>
             
             {/* Right Image */}
-            <div className="relative h-[600px] hidden lg:block">
+            <div className="relative h-[800px] hidden lg:block">
               <img 
-                src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                src="doctor.png" 
                 alt="Medical Professional" 
                 className="absolute right-0 bottom-0 h-full w-auto object-cover object-center"
               />
@@ -114,6 +114,35 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Testimonial Banner - Full Width */}
+      <section className="w-full bg-blue-100 py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+            {/* Quote */}
+            <div className="lg:col-span-2">
+              <blockquote className="text-xl md:text-2xl font-serif text-slate-900 leading-relaxed mb-4">
+                "My recovery was almost immediate. I had worried that the treatment wouldn't be a silver bullet, but it was. My goal was to get my life back, and in the hands of a skilled surgeon, I did."
+              </blockquote>
+              <p className="text-sm text-slate-700">Terry Carroll, Dr. Kim's patient</p>
+            </div>
+            
+            {/* Doctor Info */}
+            <div className="flex flex-col items-center lg:items-end gap-4">
+              <div className="text-center lg:text-right">
+                <div className="font-bold text-slate-900 text-lg">Dr. Sang Kim</div>
+                <div className="text-sm text-slate-600">Director, Orthopaedic Spine Trauma</div>
+              </div>
+              <button className="px-6 py-2 border-2 border-slate-900 text-slate-900 font-semibold rounded hover:bg-slate-900 hover:text-white transition-colors">
+                View Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Remaining Sections Container */}
+      <div className="max-w-7xl mx-auto px-4 py-6">
 
       {/* India Medical Treatment Filter - Removed duplicate section */}
 
@@ -203,6 +232,8 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      </div>
     </div>
   );
 };
