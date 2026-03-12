@@ -1,16 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { MOCK_HOSPITALS } from '../constants';
-import HospitalCard from '../components/HospitalCard';
-import { Search, SlidersHorizontal, MapPin, ArrowRight } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Clock, ShieldCheck } from 'lucide-react';
 
 const Hospitals: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+  const [searchParams] = useSearchParams();
   const [condition, setCondition] = useState('');
   const [location, setLocation] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredHospitals, setFilteredHospitals] = useState<typeof MOCK_HOSPITALS>([]);
+  const [hasSearched, setHasSearched] = useState(false);
 
-  const specialties = ['All', 'Oncology', 'Cardiology', 'Neurology', 'Orthopedics', 'Transplants', 'IVF'];
   const popularSearches = ['Primary Care Physician', 'Obstetrics & Gynecology', 'Neurology & Neurosurgery', 'Cardiology', 'Urology', 'Dermatology', 'Orthopaedics'];
   
   const moreSpecialties = [
@@ -20,15 +21,44 @@ const Hospitals: React.FC = () => {
     'Lung', 'Surgery', 'Transplant'
   ];
 
-  const filtered = MOCK_HOSPITALS.filter(h => {
-    const matchesSearch = h.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSpecialty = selectedSpecialty === 'All' || h.specializations.includes(selectedSpecialty);
-    return matchesSearch && matchesSpecialty;
-  });
+  // Load search parameters from URL on component mount
+  useEffect(() => {
+    const destination = searchParams.get('destination') || '';
+    const procedure = searchParams.get('procedure') || '';
+    
+    if (destination || procedure) {
+      setCondition(procedure || destination);
+      setLocation(destination);
+      setHasSearched(true);
+    }
+  }, [searchParams]);
+
+  // Filter hospitals whenever condition, location, or searchTerm changes
+  useEffect(() => {
+    if (hasSearched) {
+      const filtered = MOCK_HOSPITALS.filter(h => {
+        const matchesCondition = condition === '' || h.specializations.some(s => s.toLowerCase().includes(condition.toLowerCase()));
+        const matchesLocation = location === '' || h.location.toLowerCase().includes(location.toLowerCase());
+        const matchesSearch = searchTerm === '' || h.name.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesCondition && matchesLocation && matchesSearch;
+      });
+      setFilteredHospitals(filtered);
+    }
+  }, [condition, location, searchTerm, hasSearched]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Searching for:', { condition, location });
+    setHasSearched(true);
+  };
+
+  const handleSpecialtyClick = (specialty: string) => {
+    setCondition(specialty);
+    setHasSearched(true);
+  };
+
+  const handlePopularSearchClick = (search: string) => {
+    setCondition(search);
+    setHasSearched(true);
   };
 
   return (
@@ -73,7 +103,7 @@ const Hospitals: React.FC = () => {
               {popularSearches.map((search, i) => (
                 <button
                   key={i}
-                  onClick={() => setCondition(search)}
+                  onClick={() => handlePopularSearchClick(search)}
                   className="text-sm font-semibold text-slate-700 hover:text-slate-900 pb-1 border-b-2 border-transparent hover:border-slate-900 transition-colors"
                 >
                   {search}
@@ -141,7 +171,7 @@ const Hospitals: React.FC = () => {
             {moreSpecialties.map((specialty, i) => (
               <button
                 key={i}
-                onClick={() => setCondition(specialty)}
+                onClick={() => handleSpecialtyClick(specialty)}
                 className="bg-white p-6 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow flex items-center justify-between group"
               >
                 <span className="text-lg font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors">{specialty}</span>
@@ -152,69 +182,110 @@ const Hospitals: React.FC = () => {
         </div>
       </section>
 
-      {/* Hospitals Section */}
-      <section className="w-full bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 space-y-6">
-          <div className="flex flex-col gap-4">
-            <h2 className="text-3xl font-black text-slate-900">Verified Hospitals</h2>
-            
-            {/* Search Bar */}
-            <div className="relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
-              <input 
-                type="text" 
-                placeholder="Search by hospital name or specialty..."
-                className="w-full bg-white border border-slate-200 rounded-2xl py-4 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-900"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            {/* Filters Scrollable */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
-              <div className="p-2 bg-slate-100 rounded-xl text-slate-500 shrink-0">
-                <SlidersHorizontal className="w-4 h-4" />
+      {/* Hospitals Results Section */}
+      {hasSearched && (
+        <section className="w-full bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Hospitals</h2>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input 
+                  type="text" 
+                  placeholder="Search by hospital name..."
+                  className="w-full bg-white border border-slate-200 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-900"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
-              {specialties.map(spec => (
-                <button
-                  key={spec}
-                  onClick={() => setSelectedSpecialty(spec)}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                    selectedSpecialty === spec 
-                      ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-200' 
-                      : 'bg-white border border-slate-200 text-slate-600 hover:border-emerald-200'
-                  }`}
-                >
-                  {spec}
-                </button>
-              ))}
             </div>
-          </div>
 
-          {/* Results Count */}
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">
-            Found {filtered.length} Hospitals
-          </p>
+            {/* Results Count */}
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1 mb-8">
+              Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
+            </p>
 
-          {/* Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-20">
-            {filtered.map(h => (
-              <HospitalCard key={h.id} hospital={h} />
-            ))}
-            {filtered.length === 0 && (
-              <div className="col-span-full py-20 text-center space-y-4">
+            {/* Hospitals Grid or No Results Message */}
+            {filteredHospitals.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredHospitals.map(hospital => (
+                  <div key={hospital.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-4">
+                          <img 
+                            src={hospital.logo} 
+                            alt={hospital.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">{hospital.name}</h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                              <span className="text-sm font-semibold text-emerald-600">{hospital.accreditation}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-slate-900">{hospital.rating}</div>
+                          <div className="text-xs text-slate-500">Rating</div>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <div className="flex items-center gap-2 text-slate-600 mb-4">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{hospital.location}</span>
+                      </div>
+
+                      {/* Specializations */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {hospital.specializations.map((spec, i) => (
+                          <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full">
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Response Time */}
+                      <div className="flex items-center gap-2 text-slate-600 mb-6 pb-6 border-b border-slate-200">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm font-semibold">Response Time: {hospital.responseTime}</span>
+                      </div>
+
+                      {/* Action Button */}
+                      <button className="w-full px-4 py-2 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">
+                        Request Opinion
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-20 text-center space-y-4">
                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
                   <Search className="w-10 h-10 text-slate-300" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900">No hospitals found</h3>
-                  <p className="text-slate-500 text-sm">Try adjusting your search or filters.</p>
+                  <h3 className="font-bold text-slate-900 text-lg">No hospitals found</h3>
+                  <p className="text-slate-500 text-sm mt-2">
+                    {condition && location 
+                      ? `No hospitals found for "${condition}" in "${location}". Try adjusting your search criteria.`
+                      : condition
+                      ? `No hospitals found for "${condition}". Try adjusting your search criteria.`
+                      : location
+                      ? `No hospitals found in "${location}". Try adjusting your search criteria.`
+                      : 'Try adjusting your search criteria.'}
+                  </p>
                 </div>
               </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };

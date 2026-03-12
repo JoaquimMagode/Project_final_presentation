@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '../App';
 import { TRANSLATIONS, APP_ICONS } from '../constants';
 import { ArrowRight, CheckCircle2, Globe2, Search, MapPin, Stethoscope } from 'lucide-react';
@@ -8,6 +8,7 @@ import { ArrowRight, CheckCircle2, Globe2, Search, MapPin, Stethoscope } from 'l
 const Home: React.FC = () => {
   const { lang } = useLang();
   const t = TRANSLATIONS[lang];
+  const navigate = useNavigate();
   const [destination, setDestination] = useState('');
   const [procedure, setProcedure] = useState('');
 
@@ -21,9 +22,11 @@ const Home: React.FC = () => {
     'Dental Treatment', 'IVF Treatment', 'Spine Surgery', 'Joint Replacement'
   ];
 
-  const handleSearch = () => {
-    // Navigate to hospitals page with search parameters
-    console.log('Searching for:', { destination, procedure });
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (destination || procedure) {
+      navigate(`/hospitals?destination=${destination}&procedure=${procedure}`);
+    }
   };
 
   return (
@@ -39,10 +42,10 @@ const Home: React.FC = () => {
               </h1>
               
               {/* Search Filter */}
-              <div className="space-y-4">
+              <form onSubmit={handleSearch} className="space-y-4">
                 <div className="flex gap-6 border-b border-slate-200">
-                  <button className="pb-2 border-b-2 border-slate-900 font-semibold text-slate-900">Destination</button>
-                  <button className="pb-2 text-slate-600 hover:text-slate-900">Procedure</button>
+                  <button type="button" className="pb-2 border-b-2 border-slate-900 font-semibold text-slate-900">Destination</button>
+                  <button type="button" className="pb-2 text-slate-600 hover:text-slate-900">Procedure</button>
                 </div>
                 
                 {/* Dropdowns */}
@@ -82,14 +85,14 @@ const Home: React.FC = () => {
                   </div>
                   
                   <button 
-                    onClick={handleSearch}
+                    type="submit"
                     className="w-full bg-slate-900 text-white font-semibold py-4 rounded hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
                   >
                     <Search className="w-5 h-5" />
                     Search Hospitals
                   </button>
                 </div>
-              </div>
+              </form>
               
               {/* Badge */}
               <div className="flex items-center gap-3 pt-4">
@@ -164,7 +167,7 @@ const Home: React.FC = () => {
         
         <div className="bg-white border border-slate-200 p-6 hover:shadow-lg transition-shadow">
           <div className="text-slate-900 mb-3">{APP_ICONS.Hotel}</div>
-          <h3 className="text-lg font-bold text-slate-900 mb-2">Travel Support</h3>
+          <h3 className="text-lg font-bold text-slate-900 mb-2\">Travel Support</h3>
           <p className="text-sm text-slate-600 mb-4">Accommodation and assistance</p>
           <Link to="/services" className="text-slate-900 font-semibold text-sm hover:underline">Learn More →</Link>
         </div>
@@ -231,9 +234,11 @@ const Home: React.FC = () => {
                   </li>
                 </ul>
               </div>
-              <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors mt-auto">
-                <ArrowRight className="w-5 h-5 text-slate-800" />
-              </button>
+              <div className="flex justify-center mt-auto pt-8">
+                <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors">
+                  <ArrowRight className="w-5 h-5 text-slate-800" />
+                </button>
+              </div>
             </div>
 
             {/* Primary Care Card */}
@@ -252,9 +257,11 @@ const Home: React.FC = () => {
                   </li>
                 </ul>
               </div>
-              <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors mt-auto">
-                <ArrowRight className="w-5 h-5 text-slate-800" />
-              </button>
+              <div className="flex justify-center mt-auto pt-8">
+                <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors">
+                  <ArrowRight className="w-5 h-5 text-slate-800" />
+                </button>
+              </div>
             </div>
 
             {/* Urgent Care Card */}
@@ -268,14 +275,16 @@ const Home: React.FC = () => {
                     <span>Open 7 days a week</span>
                   </li>
                   <li className="flex gap-3 text-slate-200 text-sm">
-                    <span className="text-red-500 mt-1\">●</span>
+                    <span className="text-red-500 mt-1">●</span>
                     <span>Accepts most insurance</span>
                   </li>
                 </ul>
               </div>
-              <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors mt-auto">
-                <ArrowRight className="w-5 h-5 text-slate-800" />
-              </button>
+              <div className="flex justify-center mt-auto pt-8">
+                <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors">
+                  <ArrowRight className="w-5 h-5 text-slate-800" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
