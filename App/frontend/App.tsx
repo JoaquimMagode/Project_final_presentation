@@ -95,14 +95,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </Link>
               
               <div className="hidden lg:flex items-center gap-4">
-                <button className="text-black hover:text-slate-700 font-normal text-xs">For Patients</button>
-                <button className="text-black hover:text-slate-700 font-normal text-xs">For Providers</button>
-                <button className="text-black hover:text-slate-700 font-normal text-xs">Health Sciences University</button>
+                <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Patients</button>
+                <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Providers</button>
+                <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Health Sciences University</button>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <button className="text-black hover:text-slate-700 font-normal text-xs hidden md:block">Health Equity</button>
+              <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors hidden md:block">Health Equity</button>
               <div className="flex items-center gap-1 text-black text-xs">
                 <Phone className="w-3 h-3" />
                 <span className="font-normal">1-800-CEDARS-1</span>
@@ -122,12 +122,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="bg-white">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="hidden md:flex items-center gap-6">
-              <button className="text-black hover:text-slate-700 font-normal text-sm">Get Care</button>
-              <button className="text-black hover:text-slate-700 font-normal text-sm">Find a Doctor</button>
-              <button className="text-black hover:text-slate-700 font-normal text-sm">Locations</button>
-              <button className="text-black hover:text-slate-700 font-normal text-sm">Specialties</button>
-              <button className="text-black hover:text-slate-700 font-normal text-sm">Records & Billing</button>
-              <Link to="/login" className="text-black hover:text-slate-700 font-normal text-sm">Sign In</Link>
+              <button className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Get Care</button>
+              <button className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Find a Doctor</button>
+              <button className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</button>
+              <button className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</button>
+              <button className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Records & Billing</button>
+              <Link to="/login" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Sign In</Link>
             </div>
 
             <div className="flex items-center gap-4 ml-auto">
