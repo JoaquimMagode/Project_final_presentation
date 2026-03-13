@@ -79,91 +79,141 @@ const Hospitals: React.FC = () => {
   return (
     <div>
       {/* Find Hospitals Hero Section */}
-      <section className="w-full bg-gradient-to-br from-slate-900 to-slate-800 py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-serif text-white text-center mb-12">Find Hospitals</h1>
-          
-          {/* Search Form */}
-          <div className="bg-white rounded-lg p-8 mb-8">
-            <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4 mb-6">
-              <input
-                type="text"
-                placeholder="Condition, procedure, or name"
-                value={condition}
-                onChange={(e) => setCondition(e.target.value)}
-                className="flex-1 px-4 py-3 border border-slate-300 rounded outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-              />
-              <div className="relative flex-1">
-                <input
-                  type="text"
-                  placeholder="City or Zip Code"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                />
-                <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-red-500" />
-              </div>
-              <button
-                type="submit"
-                className="px-8 py-3 bg-black text-white rounded font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
-              >
-                <Search className="w-5 h-5" />
-                Search
-              </button>
-            </form>
+      <section className="bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 py-16">
+          <div className="space-y-8">
+            <div>
+              <h1 className="text-5xl md:text-6xl font-serif leading-tight text-slate-900 mb-4">
+                Find Top Hospitals
+              </h1>
+              <p className="text-lg text-slate-600 max-w-2xl">Search and connect with India's leading medical facilities</p>
+            </div>
+            
+            {/* Search Form */}
+            <div className="bg-white rounded-lg p-8 shadow-sm border border-slate-200">
+              <form onSubmit={handleSearch} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Condition, procedure, or name"
+                    value={condition}
+                    onChange={(e) => setCondition(e.target.value)}
+                    className="px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none"
+                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="City or Zip Code"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      className="w-full px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none"
+                    />
+                    <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-8 py-3 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Search className="w-5 h-5" />
+                    Search
+                  </button>
+                </div>
 
-            {/* Popular Searches */}
-            <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-sm font-bold text-slate-700">Popular Searches:</span>
-              {popularSearches.map((search, i) => (
-                <button
-                  key={i}
-                  onClick={() => handlePopularSearchClick(search)}
-                  className="text-sm font-semibold text-slate-700 hover:text-slate-900 pb-1 border-b-2 border-transparent hover:border-slate-900 transition-colors"
-                >
-                  {search}
-                </button>
-              ))}
+                {/* Popular Searches */}
+                <div className="flex flex-wrap gap-2 items-center pt-2">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Popular:</span>
+                  {popularSearches.slice(0, 5).map((search, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handlePopularSearchClick(search)}
+                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1 border border-slate-200 rounded-full hover:border-slate-900 transition-colors"
+                    >
+                      {search}
+                    </button>
+                  ))}
+                </div>
+              </form>
             </div>
           </div>
-
         </div>
       </section>
 
-
+      {/* How It Works Section */}
+      <section className="w-full bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-serif text-slate-900 mb-4">How It Works</h2>
+            <p className="text-lg text-slate-600 max-w-2xl">Simple steps to find and connect with the right hospital for your needs</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              {
+                step: 1,
+                title: 'Search & Filter',
+                desc: 'Enter your condition and location to find hospitals matching your needs'
+              },
+              {
+                step: 2,
+                title: 'Compare Options',
+                desc: 'Review ratings, specializations, and response times side by side'
+              },
+              {
+                step: 3,
+                title: 'Request Opinion',
+                desc: 'Connect directly with hospital specialists for medical consultation'
+              },
+              {
+                step: 4,
+                title: 'Get Support',
+                desc: 'Receive assistance with visa, travel, and accommodation arrangements'
+              }
+            ].map((item) => (
+              <div key={item.step} className="bg-white p-8 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-4xl font-bold text-slate-900">{item.step}</div>
+                  {item.step < 4 && <div className="hidden md:block text-2xl text-slate-300">→</div>}
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Hospitals Results Section */}
       {hasSearched && (
         <section className="w-full bg-white py-16">
           <div className="max-w-7xl mx-auto px-4">
             {/* Results Count */}
-            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1 mb-8">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
               Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
             </p>
 
             {/* Hospitals Grid */}
             {filteredHospitals.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {filteredHospitals.map(hospital => (
-                  <div key={hospital.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                  <div key={hospital.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-xl hover:border-slate-300 transition-all duration-300">
                     <div className="p-6">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start gap-4">
+                        <div className="flex items-start gap-4 flex-1">
                           <img 
                             src={hospital.logo} 
                             alt={hospital.name}
-                            className="w-16 h-16 rounded-lg object-cover"
+                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                           />
-                          <div>
-                            <h3 className="text-lg font-bold text-slate-900">{hospital.name}</h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                              <span className="text-sm font-semibold text-emerald-600">{hospital.accreditation}</span>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">{hospital.name}</h3>
+                            <div className="flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                              <span className="text-xs font-semibold text-emerald-600">{hospital.accreditation}</span>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <div className="text-2xl font-bold text-slate-900">{hospital.rating}</div>
                           <div className="text-xs text-slate-500">Rating</div>
                         </div>
@@ -171,27 +221,30 @@ const Hospitals: React.FC = () => {
 
                       {/* Location */}
                       <div className="flex items-center gap-2 text-slate-600 mb-4">
-                        <MapPin className="w-4 h-4" />
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span className="text-sm">{hospital.location}</span>
                       </div>
 
                       {/* Specializations */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {hospital.specializations.map((spec, i) => (
+                        {hospital.specializations.slice(0, 3).map((spec, i) => (
                           <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full">
                             {spec}
                           </span>
                         ))}
+                        {hospital.specializations.length > 3 && (
+                          <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">+{hospital.specializations.length - 3}</span>
+                        )}
                       </div>
 
                       {/* Response Time */}
                       <div className="flex items-center gap-2 text-slate-600 mb-6 pb-6 border-b border-slate-200">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm font-semibold">Response Time: {hospital.responseTime}</span>
+                        <Clock className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm font-semibold">Response: {hospital.responseTime}</span>
                       </div>
 
                       {/* Action Button */}
-                      <button className="w-full px-4 py-2 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">
+                      <button className="w-full px-4 py-3 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">
                         Request Opinion
                       </button>
                     </div>
