@@ -127,52 +127,6 @@ const Hospitals: React.FC = () => {
             </div>
           </div>
 
-          {/* Featured Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Primary Care Card */}
-            <div className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="grid grid-cols-2">
-                <div className="p-6 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-2xl font-serif text-slate-900 mb-3">Looking for a Primary Care doctor for yourself or a loved one?</h3>
-                    <p className="text-sm text-slate-600 mb-6">Explore doctor bios, ratings, experience and training backgrounds to find a perfect fit in your neighborhood</p>
-                  </div>
-                  <button className="flex items-center gap-2 text-slate-900 font-bold hover:text-emerald-600 transition-colors">
-                    Find a Primary Care Provider <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="bg-gray-200 h-64 md:h-auto">
-                  <img 
-                    src="https://picsum.photos/seed/doctor1/400/300" 
-                    alt="Doctor" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Pediatric Card */}
-            <div className="bg-blue-50 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-              <div className="p-6 flex flex-col justify-between h-full">
-                <div>
-                  <h3 className="text-2xl font-serif text-slate-900 mb-3">Guerin Children's Pediatric Primary Care</h3>
-                  <p className="text-sm text-slate-600 mb-6">Our pediatricians provide expert care to infants, kids and teens.</p>
-                </div>
-                <div className="flex items-end justify-between">
-                  <button className="flex items-center gap-2 text-slate-900 font-bold hover:text-emerald-600 transition-colors">
-                    Find a Pediatrician <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <div className="w-20 h-20">
-                    <img 
-                      src="https://picsum.photos/seed/pediatric/100/100" 
-                      alt="Pediatric" 
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -182,22 +136,6 @@ const Hospitals: React.FC = () => {
       {hasSearched && (
         <section className="w-full bg-white py-16">
           <div className="max-w-7xl mx-auto px-4">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">Found Hospitals</h2>
-              
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input 
-                  type="text" 
-                  placeholder="Search by hospital name..."
-                  className="w-full bg-white border border-slate-200 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-900"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            </div>
-
             {/* Results Count */}
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1 mb-8">
               Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
