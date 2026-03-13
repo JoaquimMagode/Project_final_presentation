@@ -252,7 +252,8 @@ const Home: React.FC = () => {
                     <span>More than 30 convenient locations</span>
                   </li>
                   <li className="flex gap-3 text-slate-200 text-sm">
-                    <span className="text-red-500 mt-1">●</span>
+                    <span className="text-red-500 mt-1">●</span>y
+                    
                     <span>Online scheduling available</span>
                   </li>
                 </ul>
