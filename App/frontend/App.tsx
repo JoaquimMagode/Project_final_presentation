@@ -4,6 +4,7 @@ import { Language, UserRole } from './types';
 import { LANGUAGES, APP_ICONS } from './constants';
 import Home from './pages/Home';
 import Hospitals from './pages/Hospitals';
+import HospitalsAdvanced from './pages/HospitalsAdvanced';
 import HospitalDetail from './pages/HospitalDetail';
 import Payment from './pages/Payment';
 import Feedback from './pages/Feedback';
@@ -11,6 +12,7 @@ import Feedback from './pages/Feedback';
 import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
 import Register from './pages/Register';
+import PatientRegistration from './pages/PatientRegistration';
 import Login from './pages/Login';
 import VisaGuidance from './pages/VisaGuidance';
 import DoctorProfile from './pages/DoctorProfile';
@@ -257,10 +259,12 @@ const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/hospitals" element={<Hospitals />} />
+              <Route path="/hospitals-search" element={<HospitalsAdvanced />} />
               <Route path="/hospital/:id" element={<HospitalDetail />} />
               <Route path="/payment" element={<Payment />} />
               <Route path="/feedback" element={<Feedback />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/patient-registration" element={<PatientRegistration />} />
               <Route path="/login" element={<Login />} />
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />

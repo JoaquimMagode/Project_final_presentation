@@ -38,16 +38,28 @@ const Hospitals: React.FC = () => {
 
   // Filter hospitals whenever condition, location, or searchTerm changes
   useEffect(() => {
-    if (hasSearched) {
-      const filtered = MOCK_HOSPITALS.filter(h => {
-        const matchesCondition = condition === '' || h.specializations.some(s => s.toLowerCase().includes(condition.toLowerCase()));
-        const matchesLocation = location === '' || h.location.toLowerCase().includes(location.toLowerCase());
-        const matchesSearch = searchTerm === '' || h.name.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesCondition && matchesLocation && matchesSearch;
-      });
-      setFilteredHospitals(filtered.length > 0 ? filtered : MOCK_HOSPITALS);
+    let filtered = MOCK_HOSPITALS;
+    
+    if (condition) {
+      filtered = filtered.filter(h => 
+        h.specializations.some(s => s.toLowerCase().includes(condition.toLowerCase()))
+      );
     }
-  }, [condition, location, searchTerm, hasSearched]);
+    
+    if (location) {
+      filtered = filtered.filter(h => 
+        h.location.toLowerCase().includes(location.toLowerCase())
+      );
+    }
+    
+    if (searchTerm) {
+      filtered = filtered.filter(h => 
+        h.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    setFilteredHospitals(filtered);
+  }, [condition, location, searchTerm]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -166,100 +178,110 @@ const Hospitals: React.FC = () => {
 
 
 
-      {/* Hospitals Results Section - Always Show */}
-      <section className="w-full bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Found Hospitals</h2>
-            
-            {/* Search Bar */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-              <input 
-                type="text" 
-                placeholder="Search by hospital name..."
-                className="w-full bg-white border border-slate-200 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-900"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+      {/* Hospitals Results Section */}
+      {hasSearched && (
+        <section className="w-full bg-white py-16">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 mb-4">Found Hospitals</h2>
+              
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <input 
+                  type="text" 
+                  placeholder="Search by hospital name..."
+                  className="w-full bg-white border border-slate-200 rounded-lg py-3 pl-12 pr-4 outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium text-slate-900"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Results Count */}
-          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1 mb-8">
-            Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
-          </p>
+            {/* Results Count */}
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1 mb-8">
+              Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
+            </p>
 
-          {/* Hospitals Grid */}
-          {filteredHospitals.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {filteredHospitals.map(hospital => (
-                <div key={hospital.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-4">
-                        <img 
-                          src={hospital.logo} 
-                          alt={hospital.name}
-                          className="w-16 h-16 rounded-lg object-cover"
-                        />
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-900">{hospital.name}</h3>
-                          <div className="flex items-center gap-2 mt-1">
-                            <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                            <span className="text-sm font-semibold text-emerald-600">{hospital.accreditation}</span>
+            {/* Hospitals Grid */}
+            {filteredHospitals.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {filteredHospitals.map(hospital => (
+                  <div key={hospital.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <div className="p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-4">
+                          <img 
+                            src={hospital.logo} 
+                            alt={hospital.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div>
+                            <h3 className="text-lg font-bold text-slate-900">{hospital.name}</h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                              <span className="text-sm font-semibold text-emerald-600">{hospital.accreditation}</span>
+                            </div>
                           </div>
                         </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-slate-900">{hospital.rating}</div>
+                          <div className="text-xs text-slate-500">Rating</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-slate-900">{hospital.rating}</div>
-                        <div className="text-xs text-slate-500">Rating</div>
+
+                      {/* Location */}
+                      <div className="flex items-center gap-2 text-slate-600 mb-4">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{hospital.location}</span>
                       </div>
-                    </div>
 
-                    {/* Location */}
-                    <div className="flex items-center gap-2 text-slate-600 mb-4">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{hospital.location}</span>
-                    </div>
+                      {/* Specializations */}
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {hospital.specializations.map((spec, i) => (
+                          <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full">
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
 
-                    {/* Specializations */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {hospital.specializations.map((spec, i) => (
-                        <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full">
-                          {spec}
-                        </span>
-                      ))}
-                    </div>
+                      {/* Response Time */}
+                      <div className="flex items-center gap-2 text-slate-600 mb-6 pb-6 border-b border-slate-200">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm font-semibold">Response Time: {hospital.responseTime}</span>
+                      </div>
 
-                    {/* Response Time */}
-                    <div className="flex items-center gap-2 text-slate-600 mb-6 pb-6 border-b border-slate-200">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm font-semibold">Response Time: {hospital.responseTime}</span>
+                      {/* Action Button */}
+                      <button className="w-full px-4 py-2 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">
+                        Request Opinion
+                      </button>
                     </div>
-
-                    {/* Action Button */}
-                    <button className="w-full px-4 py-2 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">
-                      Request Opinion
-                    </button>
                   </div>
+                ))}
+              </div>
+            ) : (
+              <div className="py-20 text-center space-y-4">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
+                  <Search className="w-10 h-10 text-slate-300" />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-20 text-center space-y-4">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">
-                <Search className="w-10 h-10 text-slate-300" />
+                <div>
+                  <h3 className="font-bold text-slate-900 text-lg">No hospitals found</h3>
+                  <p className="text-slate-500 text-sm mt-2">
+                    {condition && location 
+                      ? `No hospitals found for "${condition}" in "${location}". Try adjusting your search criteria.`
+                      : condition
+                      ? `No hospitals found for "${condition}". Try adjusting your search criteria.`
+                      : location
+                      ? `No hospitals found in "${location}". Try adjusting your search criteria.`
+                      : 'Try adjusting your search criteria.'}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-lg">No hospitals found</h3>
-                <p className="text-slate-500 text-sm mt-2">Try adjusting your search criteria.</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
+      )}
     </div>
   );
 };
