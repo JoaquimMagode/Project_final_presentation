@@ -201,8 +201,7 @@ const HospitalDashboard: React.FC = () => {
 
         {/* Other Menu */}
         {sidebarOpen && (
-          <div className="p-4 border-t border-teal-700">
-            <div className="text-teal-300 text-xs font-semibold mb-3 uppercase tracking-wider">Other Menu</div>
+          <div className="p-0 border-t border-teal-700">
           </div>
         )}
       </div>
