@@ -12,6 +12,7 @@ import Feedback from './pages/Feedback';
 import AdminDashboard from './pages/AdminDashboard';
 import Dashboard from './pages/Dashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
+import PatientDashboard from './pages/PatientDashboard';
 import Register from './pages/Register';
 import PatientRegistration from './pages/PatientRegistration';
 import Login from './pages/Login';
@@ -49,6 +50,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const searchRef = useRef<HTMLInputElement>(null);
   
   const isHospitalDashboard = location.pathname === '/hospital-dashboard';
+  const isPatientDashboard = location.pathname === '/patient-dashboard';
+  const isDashboardPage = isHospitalDashboard || isPatientDashboard;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -87,7 +90,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Header - Cedars-Sinai Style */}
-      {!isHospitalDashboard && (
+      {!isDashboardPage && (
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         {/* Top Navigation Bar */}
         <div className="bg-white border-b border-slate-100">
@@ -103,6 +106,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <div className="hidden lg:flex items-center gap-4">
                 <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Patients</button>
                 <Link to="/hospital-dashboard" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Hospitals</Link>
+                <Link to="/patient-dashboard" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Portal</Link>
                 <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Health Sciences University</button>
               </div>
             </div>
@@ -208,14 +212,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       )}
 
       {/* Content Area */}
-      <main className={`flex-1 w-full ${!isHospitalDashboard ? 'mb-20 md:mb-0' : ''}`}>
+      <main className={`flex-1 w-full ${!isDashboardPage ? 'mb-20 md:mb-0' : ''}`}>
         {children}
       </main>
 
-      {!isHospitalDashboard && <Footer />}
+      {!isDashboardPage && <Footer />}
 
       {/* Mobile Bottom Nav */}
-      {!isHospitalDashboard && (
+      {!isDashboardPage && (
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 flex justify-around items-center py-2 md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         {navItems.slice(0, 4).map(item => (
           <Link 
@@ -276,6 +280,7 @@ const App: React.FC = () => {
               <Route path="/services" element={<Services />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/hospital-dashboard" element={<HospitalDashboard />} />
+              <Route path="/patient-dashboard" element={<PatientDashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
             </Routes>
           </Layout>
