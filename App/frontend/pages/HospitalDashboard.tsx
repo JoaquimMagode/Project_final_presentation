@@ -1,26 +1,38 @@
 import React, { useState } from 'react';
 import { 
-  Menu, X, Search, Bell, User, Calendar, Phone, Users, Activity, 
+  Menu, X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
   TrendingUp, TrendingDown, MoreHorizontal, Plus, Settings, HelpCircle,
   BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
   Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown
 } from 'lucide-react';
 
+// Import hospital pages
+import Patients from './hospital/Patients';
+import Appointments from './hospital/Appointments';
+import Payments from './hospital/Payments';
+import Employee from './hospital/Employee';
+import ActivityPage from './hospital/Activity';
+import Statistic from './hospital/Statistic';
+import HelpCenter from './hospital/HelpCenter';
+import Setting from './hospital/Setting';
+import Report from './hospital/Report';
+
 const HospitalDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('Week');
+  const [activePage, setActivePage] = useState('dashboard');
   
   const sidebarItems = [
-    { icon: Home, label: 'Dashboard', active: true },
-    { icon: Users, label: 'Patients' },
-    { icon: Calendar, label: 'Appointment' },
-    { icon: CreditCard, label: 'Payments' },
-    { icon: UserCheck, label: 'Employee' },
-    { icon: Activity, label: 'Activity' },
-    { icon: BarChart3, label: 'Statistic' },
-    { icon: HelpCircle, label: 'Help & Center' },
-    { icon: Settings, label: 'Setting' },
-    { icon: FileText, label: 'Report' }
+    { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
+    { icon: Users, label: 'Patients', active: activePage === 'patients', page: 'patients' },
+    { icon: Calendar, label: 'Appointment', active: activePage === 'appointments', page: 'appointments' },
+    { icon: CreditCard, label: 'Payments', active: activePage === 'payments', page: 'payments' },
+    { icon: UserCheck, label: 'Employee', active: activePage === 'employee', page: 'employee' },
+    { icon: ActivityIcon, label: 'Activity', active: activePage === 'activity', page: 'activity' },
+    { icon: BarChart3, label: 'Statistic', active: activePage === 'statistic', page: 'statistic' },
+    { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
+    { icon: Settings, label: 'Setting', active: activePage === 'setting', page: 'setting' },
+    { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' }
   ];
 
   const appointments = [
@@ -173,6 +185,7 @@ const HospitalDashboard: React.FC = () => {
             {sidebarItems.map((item, index) => (
               <button
                 key={index}
+                onClick={() => setActivePage(item.page)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
                   item.active 
                     ? 'bg-teal-700 text-white' 
@@ -239,19 +252,22 @@ const HospitalDashboard: React.FC = () => {
 
         {/* Dashboard Content */}
         <main className="flex-1 overflow-auto p-6">
-          {/* Welcome Section */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">Hello, Sourav 👋</h1>
-                <p className="text-gray-600">These is the latest update for the last 7 days. check now</p>
+          {/* Render different pages based on activePage */}
+          {activePage === 'dashboard' && (
+            <>
+              {/* Welcome Section */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Hello, Sourav 👋</h1>
+                    <p className="text-gray-600">These is the latest update for the last 7 days. check now</p>
+                  </div>
+                  <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium">Monday, 4th September</span>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium">Monday, 4th September</span>
-              </div>
-            </div>
-          </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -474,6 +490,19 @@ const HospitalDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+            </>
+          )}
+          
+          {/* Other Pages */}
+          {activePage === 'patients' && <Patients />}
+          {activePage === 'appointments' && <Appointments />}
+          {activePage === 'payments' && <Payments />}
+          {activePage === 'employee' && <Employee />}
+          {activePage === 'activity' && <ActivityPage />}
+          {activePage === 'statistic' && <Statistic />}
+          {activePage === 'help' && <HelpCenter />}
+          {activePage === 'setting' && <Setting />}
+          {activePage === 'report' && <Report />}
         </main>
       </div>
     </div>
