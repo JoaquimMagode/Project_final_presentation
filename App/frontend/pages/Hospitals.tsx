@@ -138,50 +138,6 @@ const Hospitals: React.FC = () => {
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="w-full bg-slate-50 py-16">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-12">
-            <h2 className="text-4xl md:text-5xl font-serif text-slate-900 mb-4">How It Works</h2>
-            <p className="text-lg text-slate-600 max-w-2xl">Simple steps to find and connect with the right hospital for your needs</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              {
-                step: 1,
-                title: 'Search & Filter',
-                desc: 'Enter your condition and location to find hospitals matching your needs'
-              },
-              {
-                step: 2,
-                title: 'Compare Options',
-                desc: 'Review ratings, specializations, and response times side by side'
-              },
-              {
-                step: 3,
-                title: 'Request Opinion',
-                desc: 'Connect directly with hospital specialists for medical consultation'
-              },
-              {
-                step: 4,
-                title: 'Get Support',
-                desc: 'Receive assistance with visa, travel, and accommodation arrangements'
-              }
-            ].map((item) => (
-              <div key={item.step} className="bg-white p-8 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-4xl font-bold text-slate-900">{item.step}</div>
-                  {item.step < 4 && <div className="hidden md:block text-2xl text-slate-300">→</div>}
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Hospitals Results Section */}
       {hasSearched && (
         <section className="w-full bg-white py-16">
@@ -273,6 +229,50 @@ const Hospitals: React.FC = () => {
           </div>
         </section>
       )}
+
+      {/* How It Works Section */}
+      <section className="w-full bg-slate-50 py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-12">
+            <h2 className="text-4xl md:text-5xl font-serif text-slate-900 mb-4">How It Works</h2>
+            <p className="text-lg text-slate-600 max-w-2xl">Simple steps to find and connect with the right hospital for your needs</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {[
+              {
+                step: 1,
+                title: 'Search & Filter',
+                desc: 'Enter your condition and location to find hospitals matching your needs'
+              },
+              {
+                step: 2,
+                title: 'Compare Options',
+                desc: 'Review ratings, specializations, and response times side by side'
+              },
+              {
+                step: 3,
+                title: 'Request Opinion',
+                desc: 'Connect directly with hospital specialists for medical consultation'
+              },
+              {
+                step: 4,
+                title: 'Get Support',
+                desc: 'Receive assistance with visa, travel, and accommodation arrangements'
+              }
+            ].map((item) => (
+              <div key={item.step} className="bg-white p-8 rounded-lg border border-slate-200 hover:shadow-lg transition-shadow">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-4xl font-bold text-slate-900">{item.step}</div>
+                  {item.step < 4 && <div className="hidden md:block text-2xl text-slate-300">→</div>}
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 };
