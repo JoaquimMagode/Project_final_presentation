@@ -17,6 +17,12 @@ const Login: React.FC = () => {
     { email: 'hospitalname@hospital.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' }
   ];
 
+  const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError('');
+  };
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -102,8 +108,20 @@ const Login: React.FC = () => {
       
       <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-xs text-emerald-800 font-medium">
         <strong>Demo Credentials:</strong><br/>
-        Patient: username@patient.com / password<br/>
-        Hospital: hospitalname@hospital.com / password
+        <button 
+          type="button"
+          onClick={() => handleDemoLogin('username@patient.com', 'password')}
+          className="text-emerald-700 hover:text-emerald-900 underline hover:no-underline transition-colors mr-4"
+        >
+          Patient: username@patient.com
+        </button>
+        <button 
+          type="button"
+          onClick={() => handleDemoLogin('hospitalname@hospital.com', 'password')}
+          className="text-emerald-700 hover:text-emerald-900 underline hover:no-underline transition-colors"
+        >
+          Hospital: hospitalname@hospital.com
+        </button>
       </div>
     </div>
   );

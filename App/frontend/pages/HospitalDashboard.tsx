@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Menu, X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
   TrendingUp, TrendingDown, MoreHorizontal, Plus, Settings, HelpCircle,
   BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
-  Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown
+  Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut
 } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
@@ -25,6 +25,18 @@ const HospitalDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('Week');
   const [activePage, setActivePage] = useState('dashboard');
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   const sidebarItems = [
     { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
@@ -241,12 +253,9 @@ const HospitalDashboard: React.FC = () => {
                 <Bell className="w-5 h-5 text-gray-600" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </button>
-              <div className="relative">
+              <div className="relative" ref={dropdownRef}>
                 <button 
-                  onClick={() => {
-                    logout();
-                    navigate('/login');
-                  }}
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <img
@@ -257,6 +266,42 @@ const HospitalDashboard: React.FC = () => {
                   <span className="font-medium">{user?.name}</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
+                
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                    <button 
+                      onClick={() => {
+                        setActivePage('setting');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <User className="w-4 h-4" />
+                      Profile Settings
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setActivePage('help');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    >
+                      <HelpCircle className="w-4 h-4" />
+                      FAQ
+                    </button>
+                    <hr className="my-1" />
+                    <button 
+                      onClick={() => {
+                        logout();
+                        navigate('/login');
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
