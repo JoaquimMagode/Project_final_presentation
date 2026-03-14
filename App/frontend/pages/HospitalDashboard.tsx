@@ -5,6 +5,8 @@ import {
   BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
   Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown
 } from 'lucide-react';
+import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
 
 // Import hospital pages
 import Patients from './hospital/Patients';
@@ -18,6 +20,8 @@ import Setting from './hospital/Setting';
 import Report from './hospital/Report';
 
 const HospitalDashboard: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('Week');
   const [activePage, setActivePage] = useState('dashboard');
@@ -237,13 +241,22 @@ const HospitalDashboard: React.FC = () => {
                 <Bell className="w-5 h-5 text-gray-600" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </button>
-              <div className="flex items-center gap-2">
-                <img
-                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full"
-                />
-                <ChevronDown className="w-4 h-4 text-gray-600" />
+              <div className="relative">
+                <button 
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <img
+                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face"
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <span className="font-medium">{user?.name}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -258,7 +271,7 @@ const HospitalDashboard: React.FC = () => {
               <div className="mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Hello, Sourav 👋</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Hello, {user?.name} 👋</h1>
                     <p className="text-gray-600">These is the latest update for the last 7 days. check now</p>
                   </div>
                   <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">

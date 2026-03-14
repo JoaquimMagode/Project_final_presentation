@@ -20,6 +20,7 @@ import VisaGuidance from './pages/VisaGuidance';
 import DoctorProfile from './pages/DoctorProfile';
 import Services from './pages/Services';
 import Footer from './components/Footer';
+import ProtectedRoute from './components/ProtectedRoute';
 import { Menu, X, User as UserIcon, LogOut, Settings, AlertTriangle, ChevronDown, Phone, Search } from 'lucide-react';
 
 // Auth & Language Context
@@ -51,7 +52,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   const isHospitalDashboard = location.pathname === '/hospital-dashboard';
   const isPatientDashboard = location.pathname === '/patient-dashboard';
+  const isLoginPage = location.pathname === '/login';
   const isDashboardPage = isHospitalDashboard || isPatientDashboard;
+  const hideHeaderFooter = isDashboardPage || isLoginPage;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -90,7 +93,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Top Header - Cedars-Sinai Style */}
-      {!isDashboardPage && (
+      {!hideHeaderFooter && (
       <header className="sticky top-0 z-50 bg-white border-b border-slate-200">
         {/* Top Navigation Bar */}
         <div className="bg-white border-b border-slate-100">
@@ -212,14 +215,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       )}
 
       {/* Content Area */}
-      <main className={`flex-1 w-full ${!isDashboardPage ? 'mb-20 md:mb-0' : ''}`}>
+      <main className={`flex-1 w-full ${!hideHeaderFooter ? 'mb-20 md:mb-0' : ''}`}>
         {children}
       </main>
 
-      {!isDashboardPage && <Footer />}
+      {!hideHeaderFooter && <Footer />}
 
       {/* Mobile Bottom Nav */}
-      {!isDashboardPage && (
+      {!hideHeaderFooter && (
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 flex justify-around items-center py-2 md:hidden shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
         {navItems.slice(0, 4).map(item => (
           <Link 
@@ -279,9 +282,21 @@ const App: React.FC = () => {
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />
               <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/hospital-dashboard" element={<HospitalDashboard />} />
-              <Route path="/patient-dashboard" element={<PatientDashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/hospital-dashboard" element={
+                <ProtectedRoute requiredRole="HOSPITAL">
+                  <HospitalDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/patient-dashboard" element={
+                <ProtectedRoute requiredRole="PATIENT">
+                  <PatientDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
             </Routes>
           </Layout>
         </HashRouter>

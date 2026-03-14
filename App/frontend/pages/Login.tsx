@@ -13,8 +13,8 @@ const Login: React.FC = () => {
 
   // Mock credentials
   const validCredentials = [
-    { email: 'patient@example.com', password: 'password', name: 'Samuel Mensah', role: 'PATIENT' },
-    { email: 'hospital@fortis.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' }
+    { email: 'username@patient.com', password: 'password', name: 'Samuel Mensah', role: 'PATIENT' },
+    { email: 'hospitalname@hospital.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' }
   ];
 
   const handleLogin = (e: React.FormEvent) => {
@@ -25,7 +25,12 @@ const Login: React.FC = () => {
     
     if (user) {
       login(user.name, user.role as 'PATIENT' | 'HOSPITAL');
-      navigate('/', { replace: true });
+      // Navigate to appropriate dashboard based on role
+      if (user.role === 'PATIENT') {
+        navigate('/patient-dashboard', { replace: true });
+      } else if (user.role === 'HOSPITAL') {
+        navigate('/hospital-dashboard', { replace: true });
+      }
     } else {
       setError('Invalid email or password');
     }
@@ -96,7 +101,9 @@ const Login: React.FC = () => {
       </form>
       
       <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 text-xs text-emerald-800 font-medium">
-        <strong>Demo Note:</strong> Use an email containing 'hospital' to log in as a Hospital Admin.
+        <strong>Demo Credentials:</strong><br/>
+        Patient: username@patient.com / password<br/>
+        Hospital: hospitalname@hospital.com / password
       </div>
     </div>
   );
