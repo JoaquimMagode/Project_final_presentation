@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MOCK_HOSPITALS } from '../constants';
 import { Search, MapPin, ArrowRight, Clock, ShieldCheck } from 'lucide-react';
 
 const Hospitals: React.FC = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [condition, setCondition] = useState('');
   const [location, setLocation] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,6 +62,10 @@ const Hospitals: React.FC = () => {
     setFilteredHospitals(filtered);
   }, [condition, location, searchTerm]);
 
+  const handleHospitalClick = (hospitalId: string) => {
+    navigate(`/hospital/${hospitalId}`);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setHasSearched(true);
@@ -80,7 +85,7 @@ const Hospitals: React.FC = () => {
     <div>
       {/* Find Hospitals Hero Section */}
       <section className="bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="space-y-8">
             <div>
               <h1 className="text-5xl md:text-6xl font-serif leading-tight text-slate-900 mb-4">
@@ -88,7 +93,7 @@ const Hospitals: React.FC = () => {
               </h1>
               <p className="text-lg text-slate-600 max-w-2xl">Search and connect with India's leading medical facilities</p>
             </div>
-            
+          
             {/* Search Form */}
             <div className="bg-white rounded-lg p-8 shadow-sm border border-slate-200">
               <form onSubmit={handleSearch} className="space-y-4">
@@ -140,7 +145,7 @@ const Hospitals: React.FC = () => {
 
       {/* Hospitals Results Section */}
       {hasSearched && (
-        <section className="w-full bg-white py-16">
+        <section className="w-full bg-white py-4">
           <div className="max-w-7xl mx-auto px-4">
             {/* Results Count */}
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
@@ -151,7 +156,11 @@ const Hospitals: React.FC = () => {
             {filteredHospitals.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {filteredHospitals.map(hospital => (
-                  <div key={hospital.id} className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-xl hover:border-slate-300 transition-all duration-300">
+                  <div 
+                    key={hospital.id} 
+                    onClick={() => handleHospitalClick(hospital.id)}
+                    className="bg-white border border-slate-200 rounded-lg overflow-hidden hover:shadow-xl hover:border-slate-300 transition-all duration-300 cursor-pointer"
+                  >
                     <div className="p-6">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
@@ -200,8 +209,14 @@ const Hospitals: React.FC = () => {
                       </div>
 
                       {/* Action Button */}
-                      <button className="w-full px-4 py-3 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">
-                        Request Opinion
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleHospitalClick(hospital.id);
+                        }}
+                        className="w-full px-4 py-3 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors"
+                      >
+                        View Details
                       </button>
                     </div>
                   </div>

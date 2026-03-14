@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { MOCK_HOSPITALS } from '../constants';
 import { Star, MapPin, Clock, ShieldCheck, Phone, Mail, Users, Award, Camera, X, Calendar, DollarSign } from 'lucide-react';
 
 const HospitalDetail: React.FC = () => {
@@ -19,61 +20,27 @@ const HospitalDetail: React.FC = () => {
     }
   };
 
-  // Mock hospital data with detailed information
-  const hospitalData = {
-    'h1': {
-      id: 'h1',
-      name: 'Fortis Memorial Research Institute',
-      location: 'Gurgaon, India',
-      specializations: ['Oncology', 'Cardiology', 'Neurology', 'Orthopedics'],
-      rating: 4.8,
-      accreditation: 'JCI Accredited',
-      responseTime: '< 4 hours',
-      logo: 'https://picsum.photos/seed/fortis/100/100',
-      description: 'Leading multi-specialty hospital with state-of-the-art facilities and world-class medical care.',
-      established: '2001',
-      beds: '1000+',
-      doctors: '200+',
-      phone: '+91-124-496-2200',
-      email: 'info@fortishealthcare.com',
-      about: 'Fortis Memorial Research Institute is a premier healthcare destination offering world-class medical services with cutting-edge technology and internationally trained specialists. The hospital provides comprehensive treatment across multiple specialties with a focus on patient safety and comfort.',
-      services: [
-        'Emergency Care', 'ICU Services', 'Surgical Procedures', 'Diagnostic Imaging',
-        'Laboratory Services', 'Pharmacy', 'Blood Bank', 'Rehabilitation'
-      ],
-      facilities: [
-        'Modern Operation Theaters', 'Advanced ICU Units', 'Digital Radiology',
-        'Cardiac Catheterization Lab', 'Robotic Surgery', 'Transplant Center'
-      ]
-    },
-    'h2': {
-      id: 'h2',
-      name: 'Apollo Hospitals',
-      location: 'Chennai, India',
-      specializations: ['Transplants', 'Orthopedics', 'Gastroenterology', 'Cardiology'],
-      rating: 4.9,
-      accreditation: 'NABH Verified',
-      responseTime: '< 2 hours',
-      logo: 'https://picsum.photos/seed/apollo/100/100',
-      description: 'Asia\'s largest healthcare group with pioneering medical treatments and advanced technology.',
-      established: '1983',
-      beds: '1200+',
-      doctors: '300+',
-      phone: '+91-44-2829-3333',
-      email: 'info@apollohospitals.com',
-      about: 'Apollo Hospitals is Asia\'s foremost integrated healthcare provider with a legacy of clinical excellence and patient care. Known for pioneering organ transplants and advanced cardiac procedures, Apollo combines cutting-edge technology with compassionate care.',
-      services: [
-        '24/7 Emergency', 'Organ Transplants', 'Robotic Surgery', 'Nuclear Medicine',
-        'Preventive Health', 'International Patient Care', 'Telemedicine', 'Home Healthcare'
-      ],
-      facilities: [
-        'Transplant Centers', 'Robotic Surgery Suites', 'PET-CT Scanners',
-        'Cardiac Cath Labs', 'Proton Therapy Center', 'Stem Cell Research'
-      ]
-    }
+  // Find hospital from MOCK_HOSPITALS or use default
+  const hospital = MOCK_HOSPITALS.find(h => h.id === id) || MOCK_HOSPITALS[0];
+  
+  // Extended hospital data for detail view
+  const hospitalDetails = {
+    description: 'Leading multi-specialty hospital with state-of-the-art facilities and world-class medical care.',
+    established: '2001',
+    beds: '1000+',
+    doctors: '200+',
+    phone: '+91-124-496-2200',
+    email: 'info@hospital.com',
+    about: `${hospital.name} is a premier healthcare destination offering world-class medical services with cutting-edge technology and internationally trained specialists. The hospital provides comprehensive treatment across multiple specialties with a focus on patient safety and comfort.`,
+    services: [
+      'Emergency Care', 'ICU Services', 'Surgical Procedures', 'Diagnostic Imaging',
+      'Laboratory Services', 'Pharmacy', 'Blood Bank', 'Rehabilitation'
+    ],
+    facilities: [
+      'Modern Operation Theaters', 'Advanced ICU Units', 'Digital Radiology',
+      'Cardiac Catheterization Lab', 'Robotic Surgery', 'Transplant Center'
+    ]
   };
-
-  const hospital = hospitalData[id as keyof typeof hospitalData] || hospitalData['h1'];
 
   const patientReviews = id === 'h2' ? [
     {
@@ -169,13 +136,13 @@ const HospitalDetail: React.FC = () => {
             <p className="text-slate-600 flex items-center gap-2 mb-4">
               <MapPin className="w-4 h-4" /> {hospital.location}
             </p>
-            <p className="text-slate-600 mb-4">{hospital.description}</p>
+            <p className="text-slate-600 mb-4">{hospitalDetails.description}</p>
             
             {/* Brief Hospital Explanation */}
             <div className="bg-slate-50 rounded-xl p-4 mb-4">
               <h3 className="font-bold text-slate-900 mb-2">About This Hospital</h3>
               <p className="text-sm text-slate-600 leading-relaxed">
-                {hospital.about}
+                {hospitalDetails.about}
               </p>
             </div>
             
@@ -199,15 +166,15 @@ const HospitalDetail: React.FC = () => {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600">{hospital.beds}</div>
+                <div className="text-2xl font-bold text-emerald-600">{hospitalDetails.beds}</div>
                 <div className="text-xs text-slate-500">Beds</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600">{hospital.doctors}</div>
+                <div className="text-2xl font-bold text-emerald-600">{hospitalDetails.doctors}</div>
                 <div className="text-xs text-slate-500">Doctors</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-emerald-600">{hospital.established}</div>
+                <div className="text-2xl font-bold text-emerald-600">{hospitalDetails.established}</div>
                 <div className="text-xs text-slate-500">Established</div>
               </div>
               <div className="text-center">
@@ -238,7 +205,7 @@ const HospitalDetail: React.FC = () => {
         <div className="bg-white rounded-2xl border border-slate-200 p-6">
           <h2 className="text-xl font-bold text-slate-900 mb-4">Services</h2>
           <div className="grid grid-cols-2 gap-2">
-            {hospital.services.map(service => (
+            {hospitalDetails.services.map(service => (
               <div key={service} className="text-sm text-slate-600 flex items-center gap-2">
                 <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
                 {service}
@@ -312,11 +279,11 @@ const HospitalDetail: React.FC = () => {
             <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
               <span className="flex items-center gap-1">
                 <Phone className="w-4 h-4" />
-                {hospital.phone}
+                {hospitalDetails.phone}
               </span>
               <span className="flex items-center gap-1">
                 <Mail className="w-4 h-4" />
-                {hospital.email}
+                {hospitalDetails.email}
               </span>
             </div>
           </div>
