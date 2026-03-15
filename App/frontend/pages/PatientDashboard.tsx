@@ -16,6 +16,7 @@ import MedicalReports from './patient/MedicalReports';
 import AppointmentRequests from './patient/AppointmentRequests';
 import PatientSettings from './patient/PatientSettings';
 import PatientHelp from './patient/PatientHelp';
+import FindHospitals from './patient/FindHospitals';
 
 const PatientDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -38,6 +39,7 @@ const PatientDashboard: React.FC = () => {
   
   const sidebarItems = [
     { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
+    { icon: Building2, label: 'Find Hospitals', active: activePage === 'hospitals', page: 'hospitals' },
     { icon: UserCheck, label: 'Registration', active: activePage === 'registration', page: 'registration' },
     { icon: User, label: 'My Profile', active: activePage === 'profile', page: 'profile' },
     { icon: FileText, label: 'Medical Reports', active: activePage === 'reports', page: 'reports' },
@@ -371,7 +373,22 @@ const PatientDashboard: React.FC = () => {
               </div>
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
+                <div 
+                  onClick={() => setActivePage('hospitals')}
+                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-gray-900">Find Hospitals</h4>
+                      <p className="text-sm text-gray-600">Search by city and procedure</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -386,8 +403,8 @@ const PatientDashboard: React.FC = () => {
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Upload className="w-6 h-6 text-green-600" />
+                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-purple-600" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Upload Reports</h4>
@@ -398,8 +415,8 @@ const PatientDashboard: React.FC = () => {
 
                 <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-purple-600" />
+                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                      <Phone className="w-6 h-6 text-orange-600" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-gray-900">Telemedicine</h4>
@@ -412,6 +429,7 @@ const PatientDashboard: React.FC = () => {
           )}
           
           {/* Other Pages */}
+          {activePage === 'hospitals' && <FindHospitals />}
           {activePage === 'registration' && <PatientRegistration />}
           {activePage === 'profile' && <PatientProfile />}
           {activePage === 'reports' && <MedicalReports />}
