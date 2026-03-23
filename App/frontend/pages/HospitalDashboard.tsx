@@ -28,6 +28,14 @@ const HospitalDashboard: React.FC = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Mock hospital data - in real app, this would come from user context or API
+  const hospitalData = {
+    name: user?.name || 'Apollo Hospitals Mumbai',
+    logo: 'https://picsum.photos/seed/hospital1/100/100', // In real app, this would be the actual hospital logo
+    location: 'Mumbai, India',
+    type: 'Multi-Specialty Hospital'
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -188,10 +196,28 @@ const HospitalDashboard: React.FC = () => {
         {/* Logo */}
         <div className="p-6 border-b border-teal-700">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-teal-800" />
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden">
+              <img 
+                src={hospitalData.logo} 
+                alt={`${hospitalData.name} Logo`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback to stethoscope icon if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <Stethoscope className="w-5 h-5 text-teal-800 hidden" />
             </div>
-            {sidebarOpen && <span className="text-white font-bold text-lg">Medcare</span>}
+            {sidebarOpen && (
+              <div className="flex-1 min-w-0">
+                <div className="text-white font-bold text-lg truncate">{hospitalData.name}</div>
+                {hospitalData.location && (
+                  <div className="text-teal-200 text-xs truncate">{hospitalData.location}</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -316,7 +342,7 @@ const HospitalDashboard: React.FC = () => {
               <div className="mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Hello, {user?.name} 👋</h1>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome to {hospitalData.name} Dashboard 👋</h1>
                     <p className="text-gray-600">These is the latest update for the last 7 days. check now</p>
                   </div>
                   <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">

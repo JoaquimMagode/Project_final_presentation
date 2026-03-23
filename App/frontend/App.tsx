@@ -10,6 +10,7 @@ import Payment from './pages/Payment';
 import Feedback from './pages/Feedback';
 
 import AdminDashboard from './pages/AdminDashboard';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Dashboard from './pages/Dashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
 import PatientDashboard from './pages/PatientDashboard';
@@ -52,8 +53,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   const isHospitalDashboard = location.pathname === '/hospital-dashboard';
   const isPatientDashboard = location.pathname === '/patient-dashboard';
+  const isSuperAdminDashboard = location.pathname === '/superadmin';
   const isLoginPage = location.pathname === '/login';
-  const isDashboardPage = isHospitalDashboard || isPatientDashboard;
+  const isDashboardPage = isHospitalDashboard || isPatientDashboard || isSuperAdminDashboard;
   const hideHeaderFooter = isDashboardPage || isLoginPage;
 
   useEffect(() => {
@@ -110,6 +112,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Patients</button>
                 <Link to="/hospital-dashboard" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Hospitals</Link>
                 <Link to="/patient-dashboard" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Portal</Link>
+                <Link to="/superadmin" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Super Admin</Link>
                 <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Health Sciences University</button>
               </div>
             </div>
@@ -282,6 +285,7 @@ const App: React.FC = () => {
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/superadmin" element={<SuperAdminDashboard />} />
               <Route path="/hospital-dashboard" element={
                 <ProtectedRoute requiredRole="HOSPITAL">
                   <HospitalDashboard />
