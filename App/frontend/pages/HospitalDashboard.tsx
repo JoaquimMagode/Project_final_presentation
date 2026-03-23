@@ -33,7 +33,9 @@ const HospitalDashboard: React.FC = () => {
     name: user?.name || 'Apollo Hospitals Mumbai',
     logo: 'https://picsum.photos/seed/hospital1/100/100', // In real app, this would be the actual hospital logo
     location: 'Mumbai, India',
-    type: 'Multi-Specialty Hospital'
+    type: 'Multi-Specialty Hospital',
+    adminName: user?.name || 'Dr. Rajesh Kumar', // Hospital admin name
+    adminRole: 'Hospital Administrator'
   };
 
   useEffect(() => {
@@ -289,7 +291,7 @@ const HospitalDashboard: React.FC = () => {
                     alt="Profile"
                     className="w-8 h-8 rounded-full"
                   />
-                  <span className="font-medium">{user?.name}</span>
+                  <span className="font-medium">{hospitalData.adminName}</span>
                   <ChevronDown className="w-4 h-4" />
                 </button>
                 
@@ -342,8 +344,8 @@ const HospitalDashboard: React.FC = () => {
               <div className="mb-8">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome to {hospitalData.name} Dashboard 👋</h1>
-                    <p className="text-gray-600">These is the latest update for the last 7 days. check now</p>
+                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {hospitalData.adminName} 👋</h1>
+                    <p className="text-gray-600">Here's the latest update for {hospitalData.name} - last 7 days overview</p>
                   </div>
                   <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-gray-600" />
