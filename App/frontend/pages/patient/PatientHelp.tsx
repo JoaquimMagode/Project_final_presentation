@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   HelpCircle, Search, Book, MessageCircle, Phone, Mail, 
   FileText, Video, Users, ChevronRight, ExternalLink, 
-  Clock, CheckCircle, AlertCircle
+  Clock, CheckCircle, AlertCircle, Calendar, CreditCard
 } from 'lucide-react';
 
 const PatientHelp: React.FC = () => {

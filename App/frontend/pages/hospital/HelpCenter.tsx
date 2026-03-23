@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   HelpCircle, Search, Book, MessageCircle, Phone, Mail, 
-  FileText, Video, Users, ChevronRight, ExternalLink 
+  FileText, Video, Users, ChevronRight, ExternalLink, Activity 
 } from 'lucide-react';
 
 const HelpCenter: React.FC = () => {
