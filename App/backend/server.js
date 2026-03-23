@@ -1,32 +1,204 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const path = require('path');
+require('dotenv').config();
+
+// Import database configuration
+const { testConnection, initializeDatabase } = require('./config/database');
+
+// Import routes
 const authRoutes = require('./routes/auth');
+const hospitalRoutes = require('./routes/hospitals');
+const patientRoutes = require('./routes/patients');
+const appointmentRoutes = require('./routes/appointments');
 
+// Initialize Express app
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Trust proxy (for rate limiting behind reverse proxy)
+app.set('trust proxy', 1);
 
-// Routes
+// Security middleware
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// CORS configuration
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: (process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000, // 15 minutes default
+  max: process.env.RATE_LIMIT_MAX_REQUESTS || 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use('/api/', limiter);
+
+// Compression middleware
+app.use(compression());
+
+// Logging middleware
+if (process.env.NODE_ENV === 'development') {
+  app.use(morgan('dev'));
+} else {
+  app.use(morgan('combined'));
+}
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Static files middleware (for uploaded files)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'AfriHealth API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
+// API Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/hospitals', hospitalRoutes);
+app.use('/api/patients', patientRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'AfriHealth Backend API' });
+// Additional routes would be added here:
+// app.use('/api/appointments', appointmentRoutes);
+// app.use('/api/doctors', doctorRoutes);
+// app.use('/api/payments', paymentRoutes);
+// app.use('/api/reports', reportRoutes);
+// app.use('/api/employees', employeeRoutes);
+// app.use('/api/notifications', notificationRoutes);
+
+// 404 handler for API routes
+app.use('/api/*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found'
+  });
 });
 
-require("dotenv").config();
+// Global error handler
+app.use((error, req, res, next) => {
+  console.error('Global error handler:', error);
 
-require("./config/db");
+  // Mongoose validation error
+  if (error.name === 'ValidationError') {
+    const errors = Object.values(error.errors).map(err => err.message);
+    return res.status(400).json({
+      success: false,
+      message: 'Validation Error',
+      errors
+    });
+  }
 
-app.use(cors());
-app.use(express.json());
+  // JWT errors
+  if (error.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
 
-app.use("/auth", require("./routes/auth"));
-app.use("/hospitals", require("./routes/hospital"));
-app.use("/appointments", require("./routes/appointment"));
+  if (error.name === 'TokenExpiredError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Token expired'
+    });
+  }
 
-app.listen(process.env.PORT, () => {
-  console.log("Server running on port " + process.env.PORT);
+  // MySQL errors
+  if (error.code === 'ER_DUP_ENTRY') {
+    return res.status(400).json({
+      success: false,
+      message: 'Duplicate entry - record already exists'
+    });
+  }
+
+  if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+    return res.status(400).json({
+      success: false,
+      message: 'Referenced record does not exist'
+    });
+  }
+
+  // Default error response
+  res.status(error.status || 500).json({
+    success: false,
+    message: error.message || 'Internal server error',
+    ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
+  });
 });
+
+// Graceful shutdown handler
+const gracefulShutdown = (signal) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  server.close(() => {
+    console.log('HTTP server closed.');
+    process.exit(0);
+  });
+
+  // Force close after 10 seconds
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+// Initialize database and start server
+const startServer = async () => {
+  try {
+    // Test database connection
+    await testConnection();
+    
+    // Initialize database tables
+    await initializeDatabase();
+    
+    // Start server
+    const PORT = process.env.PORT || 5000;
+    const server = app.listen(PORT, () => {
+      console.log(`
+🚀 AfriHealth API Server is running!
+📍 Environment: ${process.env.NODE_ENV || 'development'}
+🌐 Server: http://localhost:${PORT}
+📊 Health Check: http://localhost:${PORT}/health
+📚 API Base URL: http://localhost:${PORT}/api
+      `);
+    });
+
+    // Handle graceful shutdown
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    return server;
+    
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
+
+// Start the server
+const server = startServer();
+
+module.exports = app;
