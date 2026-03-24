@@ -45,14 +45,13 @@ router.get('/search', validatePagination, async (req, res) => {
     query += whereClause;
     countQuery += whereClause;
 
-    query += ' ORDER BY h.name ASC LIMIT ? OFFSET ?';
-    queryParams.push(parseInt(limit), parseInt(offset));
+    query += ` ORDER BY h.name ASC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
 
     // Get hospitals
     const [hospitals] = await pool.execute(query, queryParams);
     
     // Get total count
-    const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
+    const [countResult] = await pool.execute(countQuery, queryParams);
     const total = countResult[0].total;
 
     // Parse JSON fields
@@ -101,7 +100,9 @@ router.get('/search', validatePagination, async (req, res) => {
 router.get('/', validatePagination, async (req, res) => {
   try {
     const { page = 1, limit = 10, city, state, country, specialty, status = 'active' } = req.query;
-    const offset = (page - 1) * limit;
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const offset = (pageNum - 1) * limitNum;
 
     let query = `
       SELECT h.*, u.name as admin_name, u.email as admin_email 
@@ -135,14 +136,13 @@ router.get('/', validatePagination, async (req, res) => {
     query += whereClause;
     countQuery += whereClause;
 
-    query += ' ORDER BY h.created_at DESC LIMIT ? OFFSET ?';
-    queryParams.push(parseInt(limit), parseInt(offset));
+    query += ` ORDER BY h.created_at DESC LIMIT ${limitNum} OFFSET ${offset}`;
 
     // Get hospitals
     const [hospitals] = await pool.execute(query, queryParams);
     
     // Get total count
-    const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
+    const [countResult] = await pool.execute(countQuery, queryParams);
     const total = countResult[0].total;
 
     // Parse JSON fields safely
@@ -173,10 +173,10 @@ router.get('/', validatePagination, async (req, res) => {
       data: {
         hospitals,
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: pageNum,
+          limit: limitNum,
           total,
-          pages: Math.ceil(total / limit)
+          pages: Math.ceil(total / limitNum)
         }
       }
     });

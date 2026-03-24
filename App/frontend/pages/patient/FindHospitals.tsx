@@ -271,7 +271,7 @@ const FindHospitals: React.FC = () => {
                   : 'Please select a city or procedure to search for hospitals.'}
               </p>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 
