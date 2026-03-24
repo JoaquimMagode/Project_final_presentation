@@ -26,6 +26,7 @@ const seedDatabase = async () => {
         specializations TEXT,
         contact_email VARCHAR(255),
         contact_phone VARCHAR(20),
+        password VARCHAR(255),
         admin_id INT,
         status ENUM('active', 'inactive') DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -48,7 +49,7 @@ const seedDatabase = async () => {
         notes TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
         FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
       )
     `);
@@ -136,8 +137,8 @@ const seedDatabase = async () => {
     console.log('🏥 Seeding hospitals...');
     for (const hospital of hospitals) {
       const [result] = await pool.execute(
-        'INSERT INTO hospitals (name, location, address, specializations, contact_email, contact_phone, admin_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [hospital.name, hospital.location, `${hospital.location}, India`, hospital.specializations, hospital.contact_email, hospital.contact_phone, hospital.admin_id, 'active']
+        'INSERT INTO hospitals (name, location, address, specializations, contact_email, contact_phone, password, admin_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [hospital.name, hospital.location, `${hospital.location}, India`, hospital.specializations, hospital.contact_email, hospital.contact_phone, hashedPassword, hospital.admin_id, 'active']
       );
       console.log(`✅ Created hospital: ${hospital.name} (ID: ${result.insertId})`);
     }
@@ -145,7 +146,7 @@ const seedDatabase = async () => {
     // Seed appointments
     const appointments = [
       {
-        patient_id: 1,
+        patient_id: 1, // This should be the patient.id, not user.id
         hospital_id: 1,
         doctor_name: 'Dr. Sandeep Vaishya',
         appointment_date: '2024-04-20',
@@ -185,7 +186,10 @@ const seedDatabase = async () => {
     console.log('🎉 Database seeding completed successfully!');
     console.log('\n📋 Demo Credentials:');
     console.log('Patient: patient@demo.com / password');
-    console.log('Hospital Admin: hospital@demo.com / password');
+    console.log('Hospital Admin (User): hospital@demo.com / password');
+    console.log('Hospital Login: info@apollomumbai.com / password');
+    console.log('Hospital Login: info@fortismemorial.com / password');
+    console.log('Hospital Login: info@maxhealthcare.com / password');
     console.log('Super Admin: admin@imapsolution.com / password');
 
   } catch (error) {
@@ -239,6 +243,7 @@ const createTables = async () => {
       specializations TEXT,
       contact_email VARCHAR(255),
       contact_phone VARCHAR(20),
+      password VARCHAR(255),
       admin_id INT,
       status ENUM('active', 'inactive') DEFAULT 'active',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -261,7 +266,7 @@ const createTables = async () => {
       notes TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-      FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE,
+      FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
       FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
     )
   `);

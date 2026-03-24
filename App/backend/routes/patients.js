@@ -56,23 +56,17 @@ router.put('/profile',
     try {
       const userId = req.user.id;
       const {
-        date_of_birth, gender, blood_group, address, city, state,
-        emergency_contact_name, emergency_contact_phone, medical_history,
-        allergies, insurance_provider, insurance_policy_number
+        date_of_birth, gender, address, emergency_contact_name, medical_history
       } = req.body;
 
       // Update patient profile
       await pool.execute(`
         UPDATE patients SET 
-        date_of_birth = ?, gender = ?, blood_group = ?, address = ?, city = ?, state = ?,
-        emergency_contact_name = ?, emergency_contact_phone = ?,
-        medical_history = ?, allergies = ?, insurance_provider = ?, insurance_policy_number = ?,
+        date_of_birth = ?, gender = ?, address = ?, emergency_contact = ?, medical_history = ?,
         updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ?
       `, [
-        date_of_birth, gender, blood_group, address, city, state,
-        emergency_contact_name, emergency_contact_phone, medical_history,
-        allergies, insurance_provider, insurance_policy_number, userId
+        date_of_birth, gender, address, emergency_contact_name, medical_history, userId
       ]);
 
       // Get updated patient data
@@ -262,20 +256,17 @@ router.put('/registration',
     try {
       const userId = req.user.id;
       const {
-        date_of_birth, gender, blood_group, medical_history,
-        allergies, current_medications, emergency_contact_name, emergency_contact_phone
+        date_of_birth, gender, medical_history, emergency_contact_name
       } = req.body;
 
       // Update patient registration
       await pool.execute(`
         UPDATE patients SET 
-        date_of_birth = ?, gender = ?, blood_group = ?, medical_history = ?,
-        allergies = ?, emergency_contact_name = ?, emergency_contact_phone = ?,
+        date_of_birth = ?, gender = ?, medical_history = ?, emergency_contact = ?,
         updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ?
       `, [
-        date_of_birth, gender, blood_group, medical_history,
-        allergies, emergency_contact_name, emergency_contact_phone, userId
+        date_of_birth, gender, medical_history, emergency_contact_name, userId
       ]);
 
       // Get updated registration data
@@ -314,8 +305,7 @@ router.post('/registration',
     try {
       const userId = req.user.id;
       const {
-        date_of_birth, gender, blood_group, medical_history,
-        allergies, emergency_contact_name, emergency_contact_phone
+        date_of_birth, gender, medical_history, emergency_contact_name
       } = req.body;
 
       // Check if patient already exists
@@ -333,12 +323,10 @@ router.post('/registration',
 
       // Create patient registration
       await pool.execute(`
-        INSERT INTO patients (user_id, date_of_birth, gender, blood_group, medical_history,
-        allergies, emergency_contact_name, emergency_contact_phone)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO patients (user_id, date_of_birth, gender, medical_history, emergency_contact)
+        VALUES (?, ?, ?, ?, ?)
       `, [
-        userId, date_of_birth, gender, blood_group, medical_history,
-        allergies, emergency_contact_name, emergency_contact_phone
+        userId, date_of_birth, gender, medical_history, emergency_contact_name
       ]);
 
       // Get created registration data
@@ -581,9 +569,7 @@ router.put('/:id',
     try {
       const patientId = req.params.id;
       const {
-        date_of_birth, gender, blood_group, address, city, state, country,
-        emergency_contact_name, emergency_contact_phone, medical_history,
-        allergies, current_medications, insurance_provider, insurance_policy_number
+        date_of_birth, gender, address, emergency_contact_name, medical_history
       } = req.body;
 
       // Get patient data for authorization check
@@ -615,16 +601,11 @@ router.put('/:id',
       // Update patient profile
       await pool.execute(`
         UPDATE patients SET 
-        date_of_birth = ?, gender = ?, blood_group = ?, address = ?, city = ?, 
-        state = ?, country = ?, emergency_contact_name = ?, emergency_contact_phone = ?,
-        medical_history = ?, allergies = ?, current_medications = ?, 
-        insurance_provider = ?, insurance_policy_number = ?, updated_at = CURRENT_TIMESTAMP
+        date_of_birth = ?, gender = ?, address = ?, emergency_contact = ?, medical_history = ?,
+        updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `, [
-        date_of_birth, gender, blood_group, address, city, state, country,
-        emergency_contact_name, emergency_contact_phone, medical_history,
-        allergies, current_medications, insurance_provider, insurance_policy_number,
-        patientId
+        date_of_birth, gender, address, emergency_contact_name, medical_history, patientId
       ]);
 
       // Get updated patient data

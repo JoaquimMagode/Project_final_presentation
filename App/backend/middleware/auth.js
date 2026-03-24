@@ -23,29 +23,64 @@ const authenticateToken = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Get user from database
-    const [users] = await pool.execute(
-      'SELECT id, email, name, role, status FROM users WHERE id = ?',
-      [decoded.userId]
-    );
+    // Check if this is a hospital token
+    if (decoded.isHospital) {
+      // Get hospital from database
+      const [hospitals] = await pool.execute(
+        'SELECT id, name, contact_email as email, status FROM hospitals WHERE id = ?',
+        [decoded.userId]
+      );
 
-    if (users.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token - user not found'
-      });
+      if (hospitals.length === 0) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token - hospital not found'
+        });
+      }
+
+      const hospital = hospitals[0];
+
+      if (hospital.status !== 'active') {
+        return res.status(401).json({
+          success: false,
+          message: 'Hospital account is inactive'
+        });
+      }
+
+      req.user = {
+        id: hospital.id,
+        email: hospital.email,
+        name: hospital.name,
+        role: 'hospital_admin',
+        status: hospital.status,
+        isHospital: true
+      };
+    } else {
+      // Get user from database
+      const [users] = await pool.execute(
+        'SELECT id, email, name, role, status FROM users WHERE id = ?',
+        [decoded.userId]
+      );
+
+      if (users.length === 0) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid token - user not found'
+        });
+      }
+
+      const user = users[0];
+
+      if (user.status !== 'active') {
+        return res.status(401).json({
+          success: false,
+          message: 'Account is inactive'
+        });
+      }
+
+      req.user = user;
     }
 
-    const user = users[0];
-
-    if (user.status !== 'active') {
-      return res.status(401).json({
-        success: false,
-        message: 'Account is inactive'
-      });
-    }
-
-    req.user = user;
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -107,17 +142,27 @@ const authorizeHospitalAdmin = async (req, res, next) => {
       });
     }
 
-    // Check if user is admin of this hospital
-    const [hospitals] = await pool.execute(
-      'SELECT id FROM hospitals WHERE id = ? AND admin_id = ?',
-      [hospitalId, req.user.id]
-    );
+    // If this is a hospital token, check if it matches the requested hospital
+    if (req.user.isHospital) {
+      if (req.user.id !== parseInt(hospitalId)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied - not authorized for this hospital'
+        });
+      }
+    } else {
+      // Check if user is admin of this hospital
+      const [hospitals] = await pool.execute(
+        'SELECT id FROM hospitals WHERE id = ? AND admin_id = ?',
+        [hospitalId, req.user.id]
+      );
 
-    if (hospitals.length === 0) {
-      return res.status(403).json({
-        success: false,
-        message: 'Access denied - not authorized for this hospital'
-      });
+      if (hospitals.length === 0) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied - not authorized for this hospital'
+        });
+      }
     }
 
     next();

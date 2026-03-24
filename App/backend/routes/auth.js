@@ -73,37 +73,101 @@ router.post('/register', validateUserRegistration, async (req, res) => {
 });
 
 // @route   POST /api/auth/login
-// @desc    Login user
+// @desc    Login user or hospital
 // @access  Public
 router.post('/login', validateUserLogin, async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Get user with password
+    // First try to find user in users table
     const [users] = await pool.execute(
       'SELECT id, email, password, name, phone, role, status FROM users WHERE email = ?',
       [email]
     );
 
-    if (users.length === 0) {
+    if (users.length > 0) {
+      const user = users[0];
+
+      // Check if account is active
+      if (user.status !== 'active') {
+        return res.status(401).json({
+          success: false,
+          message: 'Account is inactive. Please contact support.'
+        });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials'
+        });
+      }
+
+      // Generate token
+      const token = generateToken({ 
+        userId: user.id, 
+        email: user.email, 
+        role: user.role 
+      });
+
+      // Remove password from response
+      delete user.password;
+
+      // Get additional data based on role
+      let additionalData = {};
+      
+      if (user.role === 'patient') {
+        const [patients] = await pool.execute(
+          'SELECT * FROM patients WHERE user_id = ?',
+          [user.id]
+        );
+        additionalData.patient = patients[0] || null;
+      } else if (user.role === 'hospital_admin') {
+        const [hospitals] = await pool.execute(
+          'SELECT * FROM hospitals WHERE admin_id = ?',
+          [user.id]
+        );
+        additionalData.hospital = hospitals[0] || null;
+      }
+
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        data: {
+          user,
+          token,
+          ...additionalData
+        }
+      });
+    }
+
+    // If not found in users table, try hospitals table
+    const [hospitals] = await pool.execute(
+      'SELECT id, name, contact_email as email, password, contact_phone as phone, status FROM hospitals WHERE contact_email = ?',
+      [email]
+    );
+
+    if (hospitals.length === 0) {
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
 
-    const user = users[0];
+    const hospital = hospitals[0];
 
-    // Check if account is active
-    if (user.status !== 'active') {
+    // Check if hospital is active
+    if (hospital.status !== 'active') {
       return res.status(401).json({
         success: false,
-        message: 'Account is inactive. Please contact support.'
+        message: 'Hospital account is inactive. Please contact support.'
       });
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, hospital.password);
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
@@ -111,40 +175,31 @@ router.post('/login', validateUserLogin, async (req, res) => {
       });
     }
 
-    // Generate token
+    // Generate token for hospital
     const token = generateToken({ 
-      userId: user.id, 
-      email: user.email, 
-      role: user.role 
+      userId: hospital.id, 
+      email: hospital.email, 
+      role: 'hospital_admin',
+      isHospital: true
     });
 
     // Remove password from response
-    delete user.password;
-
-    // Get additional data based on role
-    let additionalData = {};
-    
-    if (user.role === 'patient') {
-      const [patients] = await pool.execute(
-        'SELECT * FROM patients WHERE user_id = ?',
-        [user.id]
-      );
-      additionalData.patient = patients[0] || null;
-    } else if (user.role === 'hospital_admin') {
-      const [hospitals] = await pool.execute(
-        'SELECT * FROM hospitals WHERE admin_id = ?',
-        [user.id]
-      );
-      additionalData.hospital = hospitals[0] || null;
-    }
+    delete hospital.password;
 
     res.json({
       success: true,
-      message: 'Login successful',
+      message: 'Hospital login successful',
       data: {
-        user,
-        token,
-        ...additionalData
+        user: {
+          id: hospital.id,
+          email: hospital.email,
+          name: hospital.name,
+          phone: hospital.phone,
+          role: 'hospital_admin',
+          status: hospital.status
+        },
+        hospital,
+        token
       }
     });
 
