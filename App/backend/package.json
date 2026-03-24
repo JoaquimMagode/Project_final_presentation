@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "create-db": "node create-db.js",
     "seed": "node seed.js",
+    "setup-db": "node setup-database.js",
     "test": "jest"
   },
   "dependencies": {

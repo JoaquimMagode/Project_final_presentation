@@ -150,6 +150,7 @@ const createTables = async () => {
         patient_id INT NOT NULL,
         hospital_id INT NOT NULL,
         doctor_id INT,
+        doctor_name VARCHAR(255),
         appointment_date DATE NOT NULL,
         appointment_time TIME NOT NULL,
         type ENUM('consultation', 'procedure', 'follow_up', 'telemedicine') NOT NULL,

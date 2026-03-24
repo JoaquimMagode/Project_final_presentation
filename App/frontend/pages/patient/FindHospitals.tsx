@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { MOCK_HOSPITALS } from '../../constants';
-import { Search, MapPin, Clock, ShieldCheck, Building2 } from 'lucide-react';
+import { Search, MapPin, Clock, ShieldCheck, Building2, AlertCircle } from 'lucide-react';
+import { hospitalsAPI } from '../../services/api';
 import HospitalDetailsModal from './HospitalDetailsModal';
 
 const FindHospitals: React.FC = () => {
   const [city, setCity] = useState('');
   const [procedure, setProcedure] = useState('');
-  const [filteredHospitals, setFilteredHospitals] = useState<typeof MOCK_HOSPITALS>([]);
+  const [hospitals, setHospitals] = useState<any[]>([]);
+  const [filteredHospitals, setFilteredHospitals] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [selectedHospitalId, setSelectedHospitalId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const indianCities = [
-    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'
+    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad',
+    'New Delhi', 'Mohali', 'Karnataka', 'Tamil Nadu', 'Punjab'
   ];
 
   const medicalProcedures = [

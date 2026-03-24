@@ -24,11 +24,14 @@ const PatientProfile: React.FC = () => {
     gender: '',
     bloodType: '',
     address: '',
+    city: '',
+    state: '',
     emergencyContact: '',
     emergencyPhone: '',
     allergies: '',
     medications: '',
     insuranceProvider: '',
+    policyNumber: '',
     memberSince: ''
   });
 
@@ -51,15 +54,18 @@ const PatientProfile: React.FC = () => {
           lastName: patient.name?.split(' ').slice(1).join(' ') || '',
           email: patient.email || '',
           phone: patient.phone || '',
-          dateOfBirth: patient.date_of_birth || '',
+          dateOfBirth: patient.date_of_birth ? patient.date_of_birth.split('T')[0] : '',
           gender: patient.gender || '',
           bloodType: patient.blood_group || '',
           address: patient.address || '',
+          city: patient.city || '',
+          state: patient.state || '',
           emergencyContact: patient.emergency_contact_name || '',
           emergencyPhone: patient.emergency_contact_phone || '',
           allergies: patient.allergies || '',
           medications: patient.medical_history || '',
           insuranceProvider: patient.insurance_provider || '',
+          policyNumber: patient.insurance_policy_number || '',
           memberSince: patient.created_at || ''
         });
       }
@@ -123,11 +129,14 @@ const PatientProfile: React.FC = () => {
         gender: profileData.gender,
         blood_group: profileData.bloodType,
         address: profileData.address,
+        city: profileData.city,
+        state: profileData.state,
         emergency_contact_name: profileData.emergencyContact,
         emergency_contact_phone: profileData.emergencyPhone,
         allergies: profileData.allergies,
         medical_history: profileData.medications,
-        insurance_provider: profileData.insuranceProvider
+        insurance_provider: profileData.insuranceProvider,
+        insurance_policy_number: profileData.policyNumber
       });
 
       setIsEditing(false);
@@ -367,7 +376,7 @@ const PatientProfile: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         ) : (
-                          <p className="text-gray-900">{profileData.city}</p>
+                          <p className="text-gray-900">{profileData.city || 'Not specified'}</p>
                         )}
                       </div>
                       <div>
@@ -380,7 +389,7 @@ const PatientProfile: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         ) : (
-                          <p className="text-gray-900">{profileData.state}</p>
+                          <p className="text-gray-900">{profileData.state || 'Not specified'}</p>
                         )}
                       </div>
                     </div>

@@ -92,8 +92,22 @@ export const appointmentsAPI = {
 
 // Hospitals API
 export const hospitalsAPI = {
-  getHospitals: async () => {
-    return apiRequest('/hospitals');
+  getHospitals: async (params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    city?: string;
+    state?: string;
+  }) => {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) queryParams.append(key, value.toString());
+      });
+    }
+    
+    const endpoint = queryParams.toString() ? `/hospitals?${queryParams.toString()}` : '/hospitals';
+    return apiRequest(endpoint);
   },
 
   getHospitalById: async (id: number) => {
@@ -124,11 +138,14 @@ export const patientsAPI = {
     date_of_birth?: string;
     gender?: string;
     address?: string;
+    city?: string;
+    state?: string;
     emergency_contact?: string;
     medical_history?: string;
     blood_group?: string;
     allergies?: string;
     insurance_provider?: string;
+    insurance_policy_number?: string;
     emergency_contact_name?: string;
     emergency_contact_phone?: string;
   }) => {

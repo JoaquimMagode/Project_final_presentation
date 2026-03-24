@@ -1,12 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, Mail, Phone, MapPin, Calendar, Shield, Upload, 
   CheckCircle, AlertCircle, Save, Eye, EyeOff 
 } from 'lucide-react';
+import { authAPI, patientsAPI } from '../../services/api';
+import { useAuth } from '../../App';
 
 const PatientRegistration: React.FC = () => {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [existingRegistration, setExistingRegistration] = useState<any>(null);
+  const [isUpdate, setIsUpdate] = useState(false);
   const [formData, setFormData] = useState({
     // Personal Information
     firstName: '',
@@ -57,16 +65,128 @@ const PatientRegistration: React.FC = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < 5) setCurrentStep(currentStep + 1);
+    if (currentStep < (isUpdate ? 4 : 5)) setCurrentStep(currentStep + 1);
   };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    console.log('Registration data:', formData);
-    // Handle registration submission
+  useEffect(() => {
+    if (user) {
+      checkExistingRegistration();
+    }
+  }, [user]);
+
+  const checkExistingRegistration = async () => {
+    try {
+      const response = await patientsAPI.getPatientRegistration();
+      if (response.success && response.data.registration) {
+        const reg = response.data.registration;
+        setExistingRegistration(reg);
+        setIsUpdate(true);
+        // Pre-fill form with existing data
+        setFormData({
+          firstName: reg.name?.split(' ')[0] || '',
+          lastName: reg.name?.split(' ').slice(1).join(' ') || '',
+          email: reg.email || '',
+          phone: reg.phone || '',
+          dateOfBirth: reg.date_of_birth ? reg.date_of_birth.split('T')[0] : '',
+          gender: reg.gender || '',
+          address: reg.address || '',
+          city: reg.city || '',
+          state: reg.state || '',
+          zipCode: reg.postal_code || '',
+          country: reg.country || '',
+          bloodType: reg.blood_group || '',
+          allergies: reg.allergies || '',
+          medications: reg.medical_history || '',
+          emergencyContact: reg.emergency_contact_name || '',
+          emergencyPhone: reg.emergency_contact_phone || '',
+          insuranceProvider: reg.insurance_provider || '',
+          policyNumber: reg.insurance_policy_number || '',
+          groupNumber: '',
+          password: '',
+          confirmPassword: '',
+          agreeToTerms: true
+        });
+      }
+    } catch (err: any) {
+      // No existing registration found, continue with new registration
+      console.log('No existing registration found');
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+
+      // Validate required fields
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      if (!isUpdate && (!formData.password || formData.password !== formData.confirmPassword)) {
+        setError('Passwords do not match');
+        return;
+      }
+
+      if (!formData.agreeToTerms) {
+        setError('Please agree to the terms and conditions');
+        return;
+      }
+
+      if (isUpdate) {
+        // Update existing registration
+        await authAPI.updateProfile({
+          name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone
+        });
+
+        await patientsAPI.updatePatientRegistration({
+          date_of_birth: formData.dateOfBirth,
+          gender: formData.gender,
+          blood_group: formData.bloodType,
+          medical_history: formData.medications,
+          allergies: formData.allergies,
+          emergency_contact_name: formData.emergencyContact,
+          emergency_contact_phone: formData.emergencyPhone
+        });
+
+        setSuccess('Registration updated successfully!');
+      } else {
+        // Create new user account
+        const registerResponse = await authAPI.register({
+          email: formData.email,
+          password: formData.password,
+          name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone,
+          role: 'patient'
+        });
+
+        if (registerResponse.success) {
+          // Create patient registration
+          await patientsAPI.createPatientRegistration({
+            date_of_birth: formData.dateOfBirth,
+            gender: formData.gender,
+            blood_group: formData.bloodType,
+            medical_history: formData.medications,
+            allergies: formData.allergies,
+            emergency_contact_name: formData.emergencyContact,
+            emergency_contact_phone: formData.emergencyPhone
+          });
+
+          setSuccess('Registration completed successfully! You can now log in.');
+        }
+      }
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

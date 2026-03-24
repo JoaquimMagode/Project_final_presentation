@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Clock, User, MapPin, Phone, Search, Filter, 
   Plus, CheckCircle, XCircle, AlertCircle, Eye, Edit2, 
   Trash2, Star, Video, MessageCircle
 } from 'lucide-react';
+import { patientsAPI, hospitalsAPI } from '../../services/api';
 
 interface Appointment {
   id: string;
@@ -35,96 +36,72 @@ const AppointmentRequests: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'appointments' | 'book'>('appointments');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [selectedHospital, setSelectedHospital] = useState<any>(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [hospitals, setHospitals] = useState<any[]>([]);
 
-  const [appointments] = useState<Appointment[]>([
-    {
-      id: '1',
-      doctorName: 'Dr. Sarah Wilson',
-      specialty: 'Cardiology',
-      hospital: 'Heart Care Clinic',
-      date: '2024-01-20',
-      time: '10:00 AM',
-      type: 'in-person',
-      status: 'scheduled',
-      reason: 'Follow-up consultation for hypertension',
-      notes: 'Bring recent blood pressure readings'
-    },
-    {
-      id: '2',
-      doctorName: 'Dr. Michael Brown',
-      specialty: 'General Medicine',
-      hospital: 'City Medical Center',
-      date: '2024-01-25',
-      time: '2:30 PM',
-      type: 'telemedicine',
-      status: 'scheduled',
-      reason: 'Annual physical examination'
-    },
-    {
-      id: '3',
-      doctorName: 'Dr. Emily Davis',
-      specialty: 'Dermatology',
-      hospital: 'Skin Care Institute',
-      date: '2024-01-15',
-      time: '11:00 AM',
-      type: 'in-person',
-      status: 'completed',
-      reason: 'Skin condition consultation',
-      rating: 5
-    },
-    {
-      id: '4',
-      doctorName: 'Dr. James Miller',
-      specialty: 'Neurology',
-      hospital: 'Neurological Institute',
-      date: '2024-01-18',
-      time: '3:00 PM',
-      type: 'in-person',
-      status: 'pending',
-      reason: 'Headache evaluation'
-    }
-  ]);
+  useEffect(() => {
+    fetchAppointments();
+    fetchHospitals();
+  }, []);
 
-  const [availableDoctors] = useState<Doctor[]>([
-    {
-      id: '1',
-      name: 'Dr. Sarah Wilson',
-      specialty: 'Cardiology',
-      hospital: 'Heart Care Clinic',
-      rating: 4.9,
-      experience: '15 years',
-      availableSlots: ['9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM'],
-      consultationFee: 200,
-      image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&h=100&fit=crop&crop=face'
-    },
-    {
-      id: '2',
-      name: 'Dr. Michael Brown',
-      specialty: 'General Medicine',
-      hospital: 'City Medical Center',
-      rating: 4.7,
-      experience: '12 years',
-      availableSlots: ['8:00 AM', '11:00 AM', '1:00 PM', '4:00 PM'],
-      consultationFee: 150,
-      image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=100&h=100&fit=crop&crop=face'
-    },
-    {
-      id: '3',
-      name: 'Dr. Emily Davis',
-      specialty: 'Dermatology',
-      hospital: 'Skin Care Institute',
-      rating: 4.8,
-      experience: '10 years',
-      availableSlots: ['9:30 AM', '11:30 AM', '2:30 PM', '4:30 PM'],
-      consultationFee: 180,
-      image: 'https://images.unsplash.com/photo-1594824388853-d0c2b8e8e8e8?w=100&h=100&fit=crop&crop=face'
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      const response = await patientsAPI.getPatientAppointments();
+      if (response.success) {
+        const formattedAppointments = response.data.appointments.map((apt: any) => ({
+          id: apt.id.toString(),
+          doctorName: apt.doctor_name || 'Doctor',
+          specialty: apt.reason || 'Consultation',
+          hospital: apt.hospital_name || 'Hospital',
+          date: apt.appointment_date,
+          time: apt.appointment_time,
+          type: 'in-person' as 'in-person' | 'telemedicine',
+          status: apt.status as 'scheduled' | 'pending' | 'completed' | 'cancelled',
+          reason: apt.reason || apt.notes || 'Consultation',
+          notes: apt.notes
+        }));
+        setAppointments(formattedAppointments);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load appointments');
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  const fetchHospitals = async () => {
+    try {
+      const response = await hospitalsAPI.getHospitals();
+      if (response.success) {
+        setHospitals(response.data.hospitals || []);
+      }
+    } catch (err: any) {
+      console.error('Failed to load hospitals:', err);
+    }
+  };
+
+  const searchHospitals = async (searchTerm: string) => {
+    try {
+      const response = await hospitalsAPI.searchHospitals({ name: searchTerm });
+      if (response.success) {
+        setHospitals(response.data.hospitals || []);
+      }
+    } catch (err: any) {
+      console.error('Failed to search hospitals:', err);
+    }
+  };
+
+  const [availableDoctors] = useState<Doctor[]>([]);
 
   const [bookingForm, setBookingForm] = useState({
-    doctorId: '',
+    hospitalId: '',
+    doctorName: '',
     date: '',
     time: '',
     type: 'in-person' as 'in-person' | 'telemedicine',
@@ -160,18 +137,44 @@ const AppointmentRequests: React.FC = () => {
     }
   };
 
-  const handleBookingSubmit = () => {
-    console.log('Booking appointment:', bookingForm);
-    // Handle booking logic here
-    setShowBookingModal(false);
-    setBookingForm({
-      doctorId: '',
-      date: '',
-      time: '',
-      type: 'in-person',
-      reason: '',
-      notes: ''
-    });
+  const handleBookingSubmit = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      setSuccess('');
+
+      if (!bookingForm.hospitalId || !bookingForm.date || !bookingForm.time || !bookingForm.reason) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      await patientsAPI.createAppointment({
+        hospital_id: parseInt(bookingForm.hospitalId),
+        doctor_name: bookingForm.doctorName || 'Doctor',
+        appointment_date: bookingForm.date,
+        appointment_time: bookingForm.time,
+        reason: bookingForm.reason
+      });
+
+      setSuccess('Appointment booked successfully!');
+      setShowBookingModal(false);
+      setBookingForm({
+        hospitalId: '',
+        doctorName: '',
+        date: '',
+        time: '',
+        type: 'in-person',
+        reason: '',
+        notes: ''
+      });
+      
+      // Refresh appointments
+      fetchAppointments();
+    } catch (err: any) {
+      setError(err.message || 'Failed to book appointment');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -199,6 +202,20 @@ const AppointmentRequests: React.FC = () => {
           Book Appointment
         </button>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center gap-2">
+          <CheckCircle className="w-4 h-4" />
+          {success}
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 mb-6">
@@ -445,39 +462,54 @@ const AppointmentRequests: React.FC = () => {
       </div>
 
       {/* Booking Modal */}
-      {showBookingModal && selectedDoctor && (
+      {showBookingModal && selectedHospital && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <h3 className="text-xl font-bold text-gray-900">
-                Book Appointment with {selectedDoctor.name}
+                Book Appointment at {selectedHospital.name}
               </h3>
             </div>
 
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Date</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Doctor Name (Optional)</label>
+                  <input
+                    type="text"
+                    value={bookingForm.doctorName}
+                    onChange={(e) => setBookingForm({ ...bookingForm, doctorName: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter doctor name if known"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Date *</label>
                   <input
                     type="date"
                     value={bookingForm.date}
                     onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
+                    min={new Date().toISOString().split('T')[0]}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Time</label>
-                  <select
-                    value={bookingForm.time}
-                    onChange={(e) => setBookingForm({ ...bookingForm, time: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select time</option>
-                    {selectedDoctor.availableSlots.map((slot) => (
-                      <option key={slot} value={slot}>{slot}</option>
-                    ))}
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Time *</label>
+                <select
+                  value={bookingForm.time}
+                  onChange={(e) => setBookingForm({ ...bookingForm, time: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select time</option>
+                  <option value="09:00">9:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="14:00">2:00 PM</option>
+                  <option value="15:00">3:00 PM</option>
+                  <option value="16:00">4:00 PM</option>
+                </select>
               </div>
 
               <div>
@@ -507,7 +539,7 @@ const AppointmentRequests: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Visit</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Reason for Visit *</label>
                 <textarea
                   value={bookingForm.reason}
                   onChange={(e) => setBookingForm({ ...bookingForm, reason: e.target.value })}
@@ -538,9 +570,10 @@ const AppointmentRequests: React.FC = () => {
               </button>
               <button
                 onClick={handleBookingSubmit}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Book Appointment
+                {loading ? 'Booking...' : 'Book Appointment'}
               </button>
             </div>
           </div>

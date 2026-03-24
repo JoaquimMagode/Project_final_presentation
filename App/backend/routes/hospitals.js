@@ -5,6 +5,96 @@ const { validateHospitalCreation, validateId, validatePagination } = require('..
 const { uploadSingle, getFileUrl, deleteFile } = require('../middleware/upload');
 const router = express.Router();
 
+// @route   GET /api/hospitals/search
+// @desc    Search hospitals
+// @access  Public
+router.get('/search', validatePagination, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, name, location, specialization, city, state } = req.query;
+    const offset = (page - 1) * limit;
+
+    let query = `
+      SELECT h.*, u.name as admin_name, u.email as admin_email 
+      FROM hospitals h 
+      LEFT JOIN users u ON h.admin_id = u.id
+    `;
+    let countQuery = 'SELECT COUNT(*) as total FROM hospitals h';
+    let queryParams = [];
+    let conditions = ['h.status = "active"'];
+
+    // Add search filters
+    if (name) {
+      conditions.push('h.name LIKE ?');
+      queryParams.push(`%${name}%`);
+    }
+    if (location || city) {
+      const searchLocation = location || city;
+      conditions.push('(h.city LIKE ? OR h.state LIKE ? OR h.address LIKE ?)');
+      queryParams.push(`%${searchLocation}%`, `%${searchLocation}%`, `%${searchLocation}%`);
+    }
+    if (state) {
+      conditions.push('h.state LIKE ?');
+      queryParams.push(`%${state}%`);
+    }
+    if (specialization) {
+      conditions.push('(JSON_CONTAINS(h.specialties, ?) OR h.description LIKE ?)');
+      queryParams.push(`"${specialization}"`, `%${specialization}%`);
+    }
+
+    const whereClause = ' WHERE ' + conditions.join(' AND ');
+    query += whereClause;
+    countQuery += whereClause;
+
+    query += ' ORDER BY h.name ASC LIMIT ? OFFSET ?';
+    queryParams.push(parseInt(limit), parseInt(offset));
+
+    // Get hospitals
+    const [hospitals] = await pool.execute(query, queryParams);
+    
+    // Get total count
+    const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
+    const total = countResult[0].total;
+
+    // Parse JSON fields
+    hospitals.forEach(hospital => {
+      if (hospital.specialties) {
+        try {
+          hospital.specialties = JSON.parse(hospital.specialties);
+        } catch (e) {
+          hospital.specialties = [];
+        }
+      }
+      if (hospital.accreditations) {
+        try {
+          hospital.accreditations = JSON.parse(hospital.accreditations);
+        } catch (e) {
+          hospital.accreditations = [];
+        }
+      }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        hospitals,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Search hospitals error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to search hospitals'
+    });
+  }
+});
+
 // @route   GET /api/hospitals
 // @desc    Get all hospitals
 // @access  Public
@@ -37,8 +127,8 @@ router.get('/', validatePagination, async (req, res) => {
       queryParams.push(country);
     }
     if (specialty) {
-      conditions.push('JSON_CONTAINS(h.specialties, ?)');
-      queryParams.push(`"${specialty}"`);
+      conditions.push('(JSON_CONTAINS(h.specialties, ?) OR h.description LIKE ?)');
+      queryParams.push(`"${specialty}"`, `%${specialty}%`);
     }
 
     const whereClause = ' WHERE ' + conditions.join(' AND ');
@@ -55,13 +145,26 @@ router.get('/', validatePagination, async (req, res) => {
     const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
     const total = countResult[0].total;
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     hospitals.forEach(hospital => {
       if (hospital.specialties) {
-        hospital.specialties = JSON.parse(hospital.specialties);
+        try {
+          hospital.specialties = JSON.parse(hospital.specialties);
+        } catch (e) {
+          hospital.specialties = [];
+        }
+      } else {
+        hospital.specialties = [];
       }
+      
       if (hospital.accreditations) {
-        hospital.accreditations = JSON.parse(hospital.accreditations);
+        try {
+          hospital.accreditations = JSON.parse(hospital.accreditations);
+        } catch (e) {
+          hospital.accreditations = [];
+        }
+      } else {
+        hospital.accreditations = [];
       }
     });
 
@@ -82,7 +185,8 @@ router.get('/', validatePagination, async (req, res) => {
     console.error('Get hospitals error:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to get hospitals'
+      message: 'Failed to get hospitals',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });
