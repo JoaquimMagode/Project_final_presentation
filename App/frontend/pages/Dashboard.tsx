@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../App';
-import { MOCK_APPOINTMENTS, MOCK_DOCTORS } from '../constants';
+import { appointmentsAPI, patientsAPI, hospitalsAPI } from '../services/api';
 import { FileText, MessageCircle, Clock, AlertCircle, User, Calendar, Plus, Settings, Upload, Heart, Activity, Droplets, Bell, Eye, TrendingUp, BarChart3, Building, Download } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -9,6 +9,47 @@ const Dashboard: React.FC = () => {
     user?.role === 'PATIENT' ? 'DASHBOARD' : 'DOCTORS'
   );
   const [notifications, setNotifications] = useState(3);
+  const [appointments, setAppointments] = useState<any[]>([]);
+  const [patientProfile, setPatientProfile] = useState<any>(null);
+  const [hospitals, setHospitals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        if (user?.role === 'PATIENT') {
+          // Fetch patient-specific data
+          const [appointmentsRes, profileRes] = await Promise.all([
+            appointmentsAPI.getAppointments().catch(() => ({ data: { appointments: [] } })),
+            patientsAPI.getPatientProfile().catch(() => ({ data: { patient: null } }))
+          ]);
+          
+          setAppointments(appointmentsRes.data?.appointments || []);
+          setPatientProfile(profileRes.data?.patient || null);
+        } else if (user?.role === 'HOSPITAL_ADMIN') {
+          // Fetch hospital-specific data
+          const [hospitalsRes, appointmentsRes] = await Promise.all([
+            hospitalsAPI.getHospitals().catch(() => ({ data: { hospitals: [] } })),
+            appointmentsAPI.getAppointments().catch(() => ({ data: { appointments: [] } }))
+          ]);
+          
+          setHospitals(hospitalsRes.data?.hospitals || []);
+          setAppointments(appointmentsRes.data?.appointments || []);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchData();
+    }
+  }, [user]);
 
   const PatientDashboard = () => (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -259,24 +300,40 @@ const Dashboard: React.FC = () => {
             {activeTab === 'APPOINTMENT' && (
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg">
                 <h3 className="text-lg font-bold text-orange-500 mb-4">Appointments</h3>
-                <div className="space-y-4">
-                  {MOCK_APPOINTMENTS.map(app => (
-                    <div key={app.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-slate-900">{app.doctorName}</h4>
-                          <p className="text-sm text-slate-600">{app.hospitalName}</p>
-                          <p className="text-sm text-slate-500">{app.date}</p>
+                {loading ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+                    <p className="text-slate-500 mt-2">Loading appointments...</p>
+                  </div>
+                ) : appointments.length > 0 ? (
+                  <div className="space-y-4">
+                    {appointments.map(app => (
+                      <div key={app.id} className="p-4 border border-slate-200 rounded-lg hover:shadow-md transition-shadow">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium text-slate-900">{app.doctor_name || 'Doctor Name'}</h4>
+                            <p className="text-sm text-slate-600">{app.hospital_name || 'Hospital Name'}</p>
+                            <p className="text-sm text-slate-500">{new Date(app.appointment_date).toLocaleDateString()} at {app.appointment_time}</p>
+                            {app.reason && <p className="text-sm text-slate-600 mt-1">Reason: {app.reason}</p>}
+                          </div>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            app.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
+                            app.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {app.status?.charAt(0).toUpperCase() + app.status?.slice(1) || 'Pending'}
+                          </span>
                         </div>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          app.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {app.status}
-                        </span>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-500">No appointments found</p>
+                    <p className="text-sm text-slate-400">Book your first appointment to get started</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -389,41 +446,64 @@ const Dashboard: React.FC = () => {
               <Plus className="w-4 h-4" /> Add Doctor
             </button>
           </div>
-          {MOCK_DOCTORS.map(doc => (
-            <div key={doc.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <img src={doc.photo} className="w-12 h-12 rounded-xl object-cover" />
-                <div>
-                  <h4 className="font-bold text-slate-900">{doc.name}</h4>
-                  <p className="text-xs font-medium text-slate-500 uppercase">{doc.specialization} • {doc.experience}</p>
-                </div>
-              </div>
-              <div className={`w-3 h-3 rounded-full ${doc.available ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+              <p className="text-slate-500 mt-2">Loading doctors...</p>
             </div>
-          ))}
+          ) : hospitals.length > 0 ? (
+            hospitals.map(hospital => (
+              <div key={hospital.id} className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                    <Building className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900">{hospital.name}</h4>
+                    <p className="text-xs font-medium text-slate-500 uppercase">{hospital.location} • {hospital.specializations}</p>
+                  </div>
+                </div>
+                <div className={`w-3 h-3 rounded-full ${hospital.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <Building className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500">No hospitals found</p>
+            </div>
+          )}
         </div>
       )}
 
       {activeTab === 'REQUESTS' && (
         <div className="space-y-4">
-          {[
-            { id: 'r1', patient: 'Samuel Mensah', country: 'Nigeria', case: 'Knee Surgery', date: '2 hours ago' },
-            { id: 'r2', patient: 'Lindiwe D.', country: 'S. Africa', case: 'Cardiac Consult', date: '5 hours ago' },
-          ].map(req => (
-            <div key={req.id} className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h4 className="font-bold text-slate-900">{req.patient}</h4>
-                  <p className="text-xs font-medium text-slate-500 uppercase">{req.country} • {req.case}</p>
-                </div>
-                <span className="text-xs text-slate-400 font-bold">{req.date}</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button className="py-2 bg-emerald-600 text-white text-xs font-black uppercase rounded-lg">Response</button>
-                <button className="py-2 bg-slate-100 text-slate-600 text-xs font-black uppercase rounded-lg">View Reports</button>
-              </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto"></div>
+              <p className="text-slate-500 mt-2">Loading requests...</p>
             </div>
-          ))}
+          ) : appointments.filter(app => app.status === 'pending').length > 0 ? (
+            appointments.filter(app => app.status === 'pending').map(req => (
+              <div key={req.id} className="bg-white border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-bold text-slate-900">{req.patient_name || 'Patient Name'}</h4>
+                    <p className="text-xs font-medium text-slate-500 uppercase">{req.reason || 'Medical Consultation'}</p>
+                  </div>
+                  <span className="text-xs text-slate-400 font-bold">{new Date(req.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button className="py-2 bg-emerald-600 text-white text-xs font-black uppercase rounded-lg">Accept</button>
+                  <button className="py-2 bg-slate-100 text-slate-600 text-xs font-black uppercase rounded-lg">View Details</button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-slate-500">No pending requests</p>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -431,6 +511,12 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="animate-in fade-in duration-500">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
       {user?.role === 'PATIENT' ? <PatientDashboard /> : <HospitalDashboard />}
     </div>
   );

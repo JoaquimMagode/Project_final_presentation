@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { authAPI } from '../services/api';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
@@ -9,12 +10,7 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-
-  // Mock credentials
-  const validCredentials = [
-    { email: 'username@patient.com', password: 'password', name: 'Samuel Mensah', role: 'PATIENT' },
-    { email: 'hospitalname@hospital.com', password: 'password', name: 'Fortis Memorial Admin', role: 'HOSPITAL' }
-  ];
+  const [loading, setLoading] = useState(false);
 
   const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
@@ -22,22 +18,36 @@ const Login: React.FC = () => {
     setError('');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
     
-    const user = validCredentials.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-      login(user.name, user.role as 'PATIENT' | 'HOSPITAL');
-      // Navigate to appropriate dashboard based on role
-      if (user.role === 'PATIENT') {
-        navigate('/patient-dashboard', { replace: true });
-      } else if (user.role === 'HOSPITAL') {
-        navigate('/hospital-dashboard', { replace: true });
+    try {
+      const response = await authAPI.login(email, password);
+      
+      if (response.success) {
+        const { user, token } = response.data;
+        
+        // Store token in localStorage
+        localStorage.setItem('token', token);
+        
+        // Update auth context
+        login(user.name, user.role.toUpperCase());
+        
+        // Navigate to appropriate dashboard based on role
+        if (user.role === 'patient') {
+          navigate('/patient-dashboard', { replace: true });
+        } else if (user.role === 'hospital_admin') {
+          navigate('/hospital-dashboard', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       }
-    } else {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -88,9 +98,10 @@ const Login: React.FC = () => {
 
         <button 
           type="submit" 
-          className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+          disabled={loading}
+          className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Sign In <ArrowRight className="w-5 h-5" />
+          {loading ? 'Signing In...' : 'Sign In'} <ArrowRight className="w-5 h-5" />
         </button>
 
         <div className="text-center">
@@ -109,17 +120,24 @@ const Login: React.FC = () => {
         <strong>Demo Credentials:</strong><br/>
         <button 
           type="button"
-          onClick={() => handleDemoLogin('username@patient.com', 'password')}
+          onClick={() => handleDemoLogin('patient@demo.com', 'password')}
           className="text-emerald-700 hover:text-emerald-900 underline hover:no-underline transition-colors mr-4"
         >
-          Patient: username@patient.com
+          Patient: patient@demo.com
         </button>
         <button 
           type="button"
-          onClick={() => handleDemoLogin('hospitalname@hospital.com', 'password')}
+          onClick={() => handleDemoLogin('hospital@demo.com', 'password')}
+          className="text-emerald-700 hover:text-emerald-900 underline hover:no-underline transition-colors mr-4"
+        >
+          Hospital: hospital@demo.com
+        </button>
+        <button 
+          type="button"
+          onClick={() => handleDemoLogin('admin@imapsolution.com', 'password')}
           className="text-emerald-700 hover:text-emerald-900 underline hover:no-underline transition-colors"
         >
-          Hospital: hospitalname@hospital.com
+          Admin: admin@imapsolution.com
         </button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState, createContext, useContext, useEffect, useRef } from 'r
 import { HashRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { Language, UserRole } from './types';
 import { LANGUAGES, APP_ICONS } from './constants';
+import { authAPI } from './services/api';
 import Home from './pages/Home';
 import Hospitals from './pages/Hospitals';
 import HospitalsAdvanced from './pages/HospitalsAdvanced';
@@ -263,9 +264,52 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const App: React.FC = () => {
   const [lang, setLang] = useState<Language>('EN');
   const [user, setUser] = useState<{ name: string; role: UserRole } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check for existing token on app load
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await authAPI.getProfile();
+          if (response.success) {
+            setUser({
+              name: response.data.user.name,
+              role: response.data.user.role.toUpperCase() as UserRole
+            });
+          }
+        } catch (error) {
+          // Token is invalid, remove it
+          localStorage.removeItem('token');
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuthStatus();
+  }, []);
 
   const login = (name: string, role: UserRole) => setUser({ name, role });
-  const logout = () => setUser(null);
+  
+  const logout = async () => {
+    try {
+      await authAPI.logout();
+    } catch (error) {
+      // Ignore logout errors
+    } finally {
+      localStorage.removeItem('token');
+      setUser(null);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

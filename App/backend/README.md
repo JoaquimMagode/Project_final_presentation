@@ -83,7 +83,10 @@ backend/
 
 4. **Set up MySQL Database**
    - Create a MySQL database named `imap_solution_db`
-   - The application will automatically create all required tables on first run
+   - Run the seed script to create tables and demo data:
+   ```bash
+   npm run seed
+   ```
 
 5. **Start the server**
    ```bash
@@ -93,6 +96,14 @@ backend/
    # Production mode
    npm start
    ```
+
+## Demo Credentials
+
+After running the seed script, you can use these demo credentials:
+
+- **Patient**: `patient@demo.com` / `password`
+- **Hospital Admin**: `hospital@demo.com` / `password`  
+- **Super Admin**: `admin@imapsolution.com` / `password`
 
 ## API Endpoints
 
