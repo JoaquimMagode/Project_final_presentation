@@ -142,9 +142,61 @@ export const patientsAPI = {
   },
 };
 
+// Upload API
+export const uploadAPI = {
+  uploadDocuments: async (files: File[]) => {
+    const formData = new FormData();
+    files.forEach(file => {
+      formData.append('documents', file);
+    });
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/upload/documents`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Upload failed');
+    }
+    return data;
+  },
+
+  uploadProfile: async (file: File) => {
+    const formData = new FormData();
+    formData.append('profile', file);
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/upload/profile`, {
+      method: 'POST',
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Upload failed');
+    }
+    return data;
+  },
+
+  deleteFile: async (filename: string) => {
+    return apiRequest(`/upload/file/${filename}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 export default {
   authAPI,
   appointmentsAPI,
   hospitalsAPI,
   patientsAPI,
+  uploadAPI,
 };

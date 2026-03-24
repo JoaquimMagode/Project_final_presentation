@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import { ShieldCheck, ArrowLeft, Upload, User, Building2, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { UserRole } from '../types';
-import { authAPI } from '../services/api';
+import { authAPI, uploadAPI } from '../services/api';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -30,9 +30,32 @@ const Register: React.FC = () => {
     if (error) setError('');
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setUploadedFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
+      const newFiles = Array.from(e.target.files);
+      
+      // Validate file types and sizes
+      const validFiles = newFiles.filter(file => {
+        const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        if (!validTypes.includes(file.type)) {
+          setError(`Invalid file type: ${file.name}. Only PDF, JPG, and PNG files are allowed.`);
+          return false;
+        }
+        
+        if (file.size > maxSize) {
+          setError(`File too large: ${file.name}. Maximum size is 10MB.`);
+          return false;
+        }
+        
+        return true;
+      });
+      
+      if (validFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...validFiles]);
+        setError(''); // Clear any previous errors
+      }
     }
   };
 
@@ -61,6 +84,16 @@ const Register: React.FC = () => {
         
         // Store token
         localStorage.setItem('token', token);
+        
+        // Upload files if any
+        if (uploadedFiles.length > 0) {
+          try {
+            await uploadAPI.uploadDocuments(uploadedFiles);
+          } catch (uploadError) {
+            console.warn('File upload failed:', uploadError);
+            // Continue with registration even if file upload fails
+          }
+        }
         
         // Update auth context
         login(user.name, user.role.toUpperCase() as UserRole);

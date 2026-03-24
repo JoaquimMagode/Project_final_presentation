@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
-import { ShieldCheck, ArrowLeft, Upload, User, FileText, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Upload, User, FileText, AlertCircle, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { authAPI, uploadAPI } from '../services/api';
 
 interface FormData {
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   phone: string;
   country: string;
   dateOfBirth: string;
@@ -26,6 +28,7 @@ const PatientRegistration: React.FC = () => {
     firstName: '',
     lastName: '',
     email: '',
+    password: '',
     phone: '',
     country: '',
     dateOfBirth: '',
@@ -37,6 +40,8 @@ const PatientRegistration: React.FC = () => {
     documents: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const medicalConditions = [
     'Diabetes', 'Hypertension', 'Heart Disease', 'Asthma', 'Cancer',
@@ -51,6 +56,8 @@ const PatientRegistration: React.FC = () => {
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) newErrors.email = 'Email is required';
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email';
+      if (!formData.password.trim()) newErrors.password = 'Password is required';
+      else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
       if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
       if (!formData.country) newErrors.country = 'Country is required';
     }
@@ -84,10 +91,33 @@ const PatientRegistration: React.FC = () => {
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFormData(prev => ({
-        ...prev,
-        documents: [...prev.documents, ...Array.from(e.target.files || [])]
-      }));
+      const newFiles = Array.from(e.target.files);
+      
+      // Validate file types and sizes
+      const validFiles = newFiles.filter(file => {
+        const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        
+        if (!validTypes.includes(file.type)) {
+          setErrors(prev => ({ ...prev, documents: `Invalid file type: ${file.name}. Only PDF, JPG, and PNG files are allowed.` }));
+          return false;
+        }
+        
+        if (file.size > maxSize) {
+          setErrors(prev => ({ ...prev, documents: `File too large: ${file.name}. Maximum size is 10MB.` }));
+          return false;
+        }
+        
+        return true;
+      });
+      
+      if (validFiles.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          documents: [...prev.documents, ...validFiles]
+        }));
+        setErrors(prev => ({ ...prev, documents: '' })); // Clear any previous errors
+      }
     }
   };
 
@@ -98,14 +128,51 @@ const PatientRegistration: React.FC = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validateStep(step)) {
       if (step < 3) {
         setStep(step + 1);
       } else {
-        login(`${formData.firstName} ${formData.lastName}`, 'PATIENT');
-        navigate('/dashboard');
+        setLoading(true);
+        try {
+          const userData = {
+            email: formData.email,
+            password: formData.password,
+            name: `${formData.firstName} ${formData.lastName}`,
+            phone: formData.phone,
+            role: 'patient'
+          };
+
+          const response = await authAPI.register(userData);
+          
+          if (response.success) {
+            const { user, token } = response.data;
+            
+            // Store token
+            localStorage.setItem('token', token);
+            
+            // Upload documents if any
+            if (formData.documents.length > 0) {
+              try {
+                await uploadAPI.uploadDocuments(formData.documents);
+              } catch (uploadError) {
+                console.warn('Document upload failed:', uploadError);
+                // Continue with registration even if file upload fails
+              }
+            }
+            
+            // Update auth context
+            login(user.name, 'PATIENT');
+            
+            // Navigate to patient dashboard
+            navigate('/patient-dashboard', { replace: true });
+          }
+        } catch (err: any) {
+          setErrors({ submit: err.message || 'Registration failed. Please try again.' });
+        } finally {
+          setLoading(false);
+        }
       }
     }
   };
@@ -187,6 +254,31 @@ const PatientRegistration: React.FC = () => {
                 placeholder="john@email.com"
               />
               {errors.email && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.email}</p>}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`w-full bg-slate-50 border rounded-xl p-4 pr-12 outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
+                    errors.password ? 'border-red-500' : 'border-slate-200'
+                  }`}
+                  placeholder="Enter password"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+              {errors.password && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.password}</p>}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -407,11 +499,20 @@ const PatientRegistration: React.FC = () => {
               Previous
             </button>
           )}
+          
+          {errors.submit && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm w-full">
+              <AlertCircle className="w-4 h-4" />
+              {errors.submit}
+            </div>
+          )}
+          
           <button
             type="submit"
-            className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all"
+            disabled={loading}
+            className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {step === 3 ? 'Complete Registration' : 'Next'}
+            {loading ? 'Creating Account...' : (step === 3 ? 'Complete Registration' : 'Next')}
           </button>
         </div>
 

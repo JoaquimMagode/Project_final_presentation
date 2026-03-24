@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth');
 const hospitalRoutes = require('./routes/hospitals');
 const patientRoutes = require('./routes/patients');
 const appointmentRoutes = require('./routes/appointments');
+const uploadRoutes = require('./routes/upload');
 
 // Initialize Express app
 const app = express();
@@ -80,6 +81,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/patients', patientRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Additional routes would be added here:
 // app.use('/api/appointments', appointmentRoutes);
