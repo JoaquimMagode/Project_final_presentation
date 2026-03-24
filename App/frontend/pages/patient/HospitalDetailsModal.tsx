@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { MOCK_HOSPITALS } from '../../constants';
-import { X, Star, MapPin, Clock, ShieldCheck, Phone, Mail, Calendar, DollarSign, Camera, Users, Award } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Star, MapPin, Clock, ShieldCheck, Phone, Mail, Calendar, DollarSign, Camera, Users, Award, Building2, AlertCircle } from 'lucide-react';
+import { hospitalsAPI, patientsAPI } from '../../services/api';
 
 interface HospitalDetailsModalProps {
   hospitalId: string;
@@ -12,25 +12,37 @@ const HospitalDetailsModal: React.FC<HospitalDetailsModalProps> = ({ hospitalId,
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
+  const [hospital, setHospital] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   const availableTimes = [
     '09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'
   ];
 
-  const hospital = MOCK_HOSPITALS.find(h => h.id === hospitalId) || MOCK_HOSPITALS[0];
+  useEffect(() => {
+    if (isOpen && hospitalId) {
+      fetchHospitalDetails();
+    }
+  }, [isOpen, hospitalId]);
 
-  const hospitalDetails = {
-    description: 'Leading multi-specialty hospital with state-of-the-art facilities and world-class medical care.',
-    established: '2001',
-    beds: '1000+',
-    doctors: '200+',
-    phone: '+91-124-496-2200',
-    email: 'info@hospital.com',
-    about: `${hospital.name} is a premier healthcare destination offering world-class medical services with cutting-edge technology and internationally trained specialists.`,
-    services: [
-      'Emergency Care', 'ICU Services', 'Surgical Procedures', 'Diagnostic Imaging',
-      'Laboratory Services', 'Pharmacy', 'Blood Bank', 'Rehabilitation'
-    ]
+  const fetchHospitalDetails = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await hospitalsAPI.getHospitalById(parseInt(hospitalId));
+      if (response.success) {
+        setHospital(response.data.hospital);
+      } else {
+        setError('Failed to load hospital details');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load hospital details');
+      console.error('Error fetching hospital details:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBookConsultation = () => {

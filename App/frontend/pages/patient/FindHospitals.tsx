@@ -28,50 +28,64 @@ const FindHospitals: React.FC = () => {
   ];
 
   useEffect(() => {
-    if (hasSearched) {
-      let filtered = MOCK_HOSPITALS;
-      
-      // If no filters are applied, show all hospitals
-      if (!city && !procedure) {
-        setFilteredHospitals(filtered);
-        return;
+    fetchAllHospitals();
+  }, []);
+
+  const fetchAllHospitals = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await hospitalsAPI.getHospitals({ limit: 100 });
+      if (response.success) {
+        setHospitals(response.data.hospitals || []);
+      } else {
+        setError('Failed to load hospitals');
       }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load hospitals');
+      console.error('Error fetching hospitals:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchHospitals = async () => {
+    try {
+      setLoading(true);
+      setError('');
+      
+      let searchParams: any = {};
       
       if (city) {
-        filtered = filtered.filter(h => 
-          h.location.toLowerCase().includes(city.toLowerCase())
-        );
+        searchParams.city = city;
       }
-      
       if (procedure) {
-        // More flexible matching for procedures
-        filtered = filtered.filter(h => 
-          h.specializations.some(s => {
-            const spec = s.toLowerCase();
-            const proc = procedure.toLowerCase();
-            
-            // Direct match
-            if (spec.includes(proc)) return true;
-            
-            // Special mappings for common searches
-            if (proc.includes('cardiac') && spec.includes('cardiology')) return true;
-            if (proc.includes('orthopedic') && spec.includes('orthopedics')) return true;
-            if (proc.includes('neuro') && spec.includes('neurology')) return true;
-            if (proc.includes('gynec') && spec.includes('obstetrics')) return true;
-            if (proc.includes('primary') && spec.includes('primary care')) return true;
-            
-            return false;
-          })
-        );
+        searchParams.specialization = procedure;
       }
       
-      setFilteredHospitals(filtered);
+      const response = city || procedure 
+        ? await hospitalsAPI.searchHospitals(searchParams)
+        : await hospitalsAPI.getHospitals({ limit: 100 });
+        
+      if (response.success) {
+        setFilteredHospitals(response.data.hospitals || []);
+      } else {
+        setError('Failed to search hospitals');
+        setFilteredHospitals([]);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to search hospitals');
+      setFilteredHospitals([]);
+      console.error('Error searching hospitals:', err);
+    } finally {
+      setLoading(false);
     }
-  }, [city, procedure, hasSearched]);
+  };
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setHasSearched(true);
+    await searchHospitals();
   };
 
   const handleViewDetails = (hospitalId: string) => {
@@ -157,6 +171,22 @@ const FindHospitals: React.FC = () => {
         </form>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2 text-red-700">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Searching hospitals...</p>
+        </div>
+      )}
+
       {/* Results */}
       {hasSearched && (
         <div className="space-y-4">
@@ -166,55 +196,56 @@ const FindHospitals: React.FC = () => {
             </h2>
           </div>
 
-          {filteredHospitals.length > 0 ? (
+          {!loading && filteredHospitals.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {filteredHospitals.map(hospital => (
                 <div key={hospital.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                   <div className="flex items-start gap-4">
-                    <img 
-                      src={hospital.logo} 
-                      alt={hospital.name}
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                    />
+                    <div className="w-16 h-16 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Building2 className="w-8 h-8 text-blue-600" />
+                    </div>
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="text-lg font-bold text-gray-900">{hospital.name}</h3>
                         <div className="text-right">
-                          <div className="text-xl font-bold text-gray-900">{hospital.rating}</div>
+                          <div className="text-xl font-bold text-gray-900">4.5</div>
                           <div className="text-xs text-gray-500">Rating</div>
                         </div>
                       </div>
                       
                       <div className="flex items-center gap-2 text-gray-600 mb-3">
                         <MapPin className="w-4 h-4" />
-                        <span className="text-sm">{hospital.location}</span>
+                        <span className="text-sm">{hospital.city}, {hospital.state}</span>
                       </div>
 
-                      <div className="flex items-center gap-2 text-gray-600 mb-3">
-                        <ShieldCheck className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-medium text-green-600">{hospital.accreditation}</span>
+                      <div className="text-sm text-gray-600 mb-3">
+                        {hospital.address}
                       </div>
 
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {hospital.specializations.slice(0, 2).map((spec, i) => (
-                          <span key={i} className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-                            {spec}
-                          </span>
-                        ))}
-                        {hospital.specializations.length > 2 && (
-                          <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
-                            +{hospital.specializations.length - 2} more
-                          </span>
-                        )}
-                      </div>
+                      {hospital.specialties && hospital.specialties.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {hospital.specialties.slice(0, 2).map((spec: string, i: number) => (
+                            <span key={i} className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                              {spec}
+                            </span>
+                          ))}
+                          {hospital.specialties.length > 2 && (
+                            <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
+                              +{hospital.specialties.length - 2} more
+                            </span>
+                          )}
+                        </div>
+                      )}
 
-                      <div className="flex items-center gap-2 text-gray-600 mb-4">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">Response: {hospital.responseTime}</span>
-                      </div>
+                      {hospital.phone && (
+                        <div className="flex items-center gap-2 text-gray-600 mb-4">
+                          <Clock className="w-4 h-4" />
+                          <span className="text-sm">{hospital.phone}</span>
+                        </div>
+                      )}
 
                       <button 
-                        onClick={() => handleViewDetails(hospital.id)}
+                        onClick={() => handleViewDetails(hospital.id.toString())}
                         className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         View Details & Book Appointment
@@ -224,7 +255,7 @@ const FindHospitals: React.FC = () => {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : hasSearched && !loading ? (
             <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search className="w-8 h-8 text-gray-400" />
