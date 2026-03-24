@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
-import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, Eye, EyeOff, Home } from 'lucide-react';
 import { authAPI } from '../services/api';
 
 const Login: React.FC = () => {
@@ -11,6 +11,8 @@ const Login: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleDemoLogin = (demoEmail: string, demoPassword: string) => {
     setEmail(demoEmail);
@@ -52,11 +54,18 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto py-12 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-black text-slate-900">Welcome Back</h1>
-        <p className="text-slate-500 font-medium">Log in to your IMAP Solution secure portal.</p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full py-12 space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="flex justify-end">
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-emerald-600 font-bold text-sm hover:text-emerald-700 transition-colors">
+            <Home className="w-4 h-4" /> Home
+          </button>
+        </div>
+        
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-black text-slate-900">Welcome Back</h1>
+          <p className="text-slate-500 font-medium">Log in to your IMAP Solution secure portal.</p>
+        </div>
 
       <form onSubmit={handleLogin} className="bg-white border border-slate-200 rounded-3xl p-8 shadow-sm space-y-6">
         <div className="space-y-4">
@@ -78,14 +87,23 @@ const Login: React.FC = () => {
             <label className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
               <Lock className="w-3 h-3" /> Password
             </label>
-            <input 
-              required 
-              type="password" 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-              placeholder="••••••••" 
-            />
+            <div className="relative">
+              <input 
+                required 
+                type={showPassword ? 'text' : 'password'} 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 pr-12 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
+                placeholder="••••••••" 
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -139,6 +157,7 @@ const Login: React.FC = () => {
         >
           Admin: admin@imapsolution.com
         </button>
+      </div>
       </div>
     </div>
   );

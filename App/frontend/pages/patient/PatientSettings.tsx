@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, Bell, Shield, Globe, Palette, Save, Eye, EyeOff, 
-  Camera, Mail, Phone, Lock, Smartphone, Monitor, Moon
+  Camera, Mail, Phone, Lock, Smartphone, Monitor, Moon, AlertCircle
 } from 'lucide-react';
+import { patientsAPI, authAPI } from '../../services/api';
+import { useAuth } from '../../App';
 
 const PatientSettings: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
   
   const [notifications, setNotifications] = useState({
     email: true,
@@ -19,15 +25,44 @@ const PatientSettings: React.FC = () => {
   });
 
   const [accountSettings, setAccountSettings] = useState({
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-05-15',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
     language: 'English',
     timezone: 'UTC-5',
     theme: 'light'
   });
+
+  useEffect(() => {
+    fetchPatientSettings();
+  }, []);
+
+  const fetchPatientSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await patientsAPI.getPatientProfile();
+      
+      if (response.success) {
+        const patient = response.data.patient;
+        setAccountSettings({
+          firstName: patient.name?.split(' ')[0] || '',
+          lastName: patient.name?.split(' ').slice(1).join(' ') || '',
+          email: patient.email || '',
+          phone: patient.phone || '',
+          dateOfBirth: patient.date_of_birth || '',
+          language: 'English',
+          timezone: 'UTC-5',
+          theme: 'light'
+        });
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [privacySettings, setPrivacySettings] = useState({
     profileVisibility: 'private',
@@ -64,13 +99,49 @@ const PatientSettings: React.FC = () => {
     }));
   };
 
-  const handleSave = () => {
-    console.log('Settings saved:', { accountSettings, notifications, privacySettings });
-    // Handle save logic here
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError('');
+      
+      // Update user basic info
+      await authAPI.updateProfile({
+        name: `${accountSettings.firstName} ${accountSettings.lastName}`,
+        phone: accountSettings.phone
+      });
+
+      // Update patient profile
+      await patientsAPI.updatePatientProfile({
+        date_of_birth: accountSettings.dateOfBirth
+      });
+
+      console.log('Settings saved successfully');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Loading settings...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
@@ -491,10 +562,20 @@ const PatientSettings: React.FC = () => {
             <div className="px-6 py-4 border-t border-gray-200">
               <button
                 onClick={handleSave}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                disabled={saving}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4" />
-                Save Changes
+                {saving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Changes
+                  </>
+                )}
               </button>
             </div>
           </div>

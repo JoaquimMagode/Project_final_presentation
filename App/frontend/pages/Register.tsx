@@ -2,22 +2,19 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
-import { ShieldCheck, ArrowLeft, Upload, User, Building2, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { UserRole } from '../types';
+import { ShieldCheck, ArrowLeft, Upload, User, Eye, EyeOff, AlertCircle, Home } from 'lucide-react';
 import { authAPI, uploadAPI } from '../services/api';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [role, setRole] = useState<UserRole>('PATIENT');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
     phone: '',
-    country: '',
-    licenseId: ''
+    country: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -74,7 +71,7 @@ const Register: React.FC = () => {
         password: formData.password,
         name: `${formData.firstName} ${formData.lastName}`,
         phone: formData.phone,
-        role: role.toLowerCase()
+        role: 'patient'
       };
 
       const response = await authAPI.register(userData);
@@ -96,16 +93,10 @@ const Register: React.FC = () => {
         }
         
         // Update auth context
-        login(user.name, user.role.toUpperCase() as UserRole);
+        login(user.name, 'PATIENT');
         
-        // Navigate based on role
-        if (user.role === 'patient') {
-          navigate('/patient-dashboard', { replace: true });
-        } else if (user.role === 'hospital_admin') {
-          navigate('/hospital-dashboard', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
+        // Navigate to patient dashboard
+        navigate('/patient-dashboard', { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'Registration failed. Please try again.');
@@ -115,158 +106,117 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 font-bold text-sm hover:text-slate-900 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Go Back
-      </button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="max-w-xl w-full space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+        <div className="flex items-center justify-between">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 font-bold text-sm hover:text-slate-900 transition-colors">
+            <ArrowLeft className="w-4 h-4" /> Go Back
+          </button>
+          <button onClick={() => navigate('/')} className="flex items-center gap-2 text-emerald-600 font-bold text-sm hover:text-emerald-700 transition-colors">
+            <Home className="w-4 h-4" /> Home
+          </button>
+        </div>
 
-      <div className="space-y-2">
-        <h1 className="text-3xl font-black text-slate-900">Create Account</h1>
-        <p className="text-slate-500 font-medium">Join IMAP Solution to start your direct medical journey.</p>
-      </div>
+        <div className="text-center space-y-2">
+          <h1 className="text-3xl font-black text-slate-900">Create Patient Account</h1>
+          <p className="text-slate-500 font-medium">Join IMAP Solution to start your medical journey.</p>
+        </div>
 
-      <div className="flex gap-4 p-1 bg-slate-100 rounded-2xl">
-        <button 
-          onClick={() => setRole('PATIENT')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${role === 'PATIENT' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}
-        >
-          <User className="w-4 h-4" /> I'm a Patient
-        </button>
-        <button 
-          onClick={() => setRole('HOSPITAL')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${role === 'HOSPITAL' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500'}`}
-        >
-          <Building2 className="w-4 h-4" /> I'm a Hospital
-        </button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-500">{role === 'PATIENT' ? 'First Name' : 'Hospital Name'}</label>
-              <input 
-                required 
-                type="text" 
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-                placeholder={role === 'PATIENT' ? 'John' : 'City General'} 
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-500">{role === 'PATIENT' ? 'Last Name' : 'City'}</label>
-              <input 
-                required 
-                type="text" 
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-                placeholder={role === 'PATIENT' ? 'Doe' : 'Mumbai'} 
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-black uppercase tracking-wider text-slate-500">Email Address</label>
-            <input 
-              required 
-              type="email" 
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-              placeholder="name@email.com" 
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-black uppercase tracking-wider text-slate-500">Password</label>
-            <div className="relative">
-              <input 
-                required 
-                type={showPassword ? 'text' : 'password'} 
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 pr-12 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-                placeholder="Enter password" 
-                minLength={6}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-
-          {role === 'PATIENT' && (
-            <>
+        <form onSubmit={handleSubmit} className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6">
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Country of Residence</label>
-                <select 
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
-                >
-                  <option value="">Select Country</option>
-                  <option value="Nigeria">Nigeria</option>
-                  <option value="Mozambique">Mozambique</option>
-                  <option value="Kenya">Kenya</option>
-                  <option value="Ghana">Ghana</option>
-                  <option value="South Africa">South Africa</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">WhatsApp Number</label>
-                <input 
-                  required 
-                  type="tel" 
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-                  placeholder="+234 ..." 
-                />
-              </div>
-            </>
-          )}
-
-          {role === 'HOSPITAL' && (
-            <>
-              <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Contact Phone</label>
-                <input 
-                  required 
-                  type="tel" 
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-                  placeholder="+91 ..." 
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-black uppercase tracking-wider text-slate-500">License / Accreditation ID</label>
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">First Name</label>
                 <input 
                   required 
                   type="text" 
-                  name="licenseId"
-                  value={formData.licenseId}
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleInputChange}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
-                  placeholder="JCI-XXXX-XXXX" 
+                  placeholder="John" 
                 />
               </div>
-            </>
-          )}
+              <div className="space-y-1.5">
+                <label className="text-xs font-black uppercase tracking-wider text-slate-500">Last Name</label>
+                <input 
+                  required 
+                  type="text" 
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
+                  placeholder="Doe" 
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Email Address</label>
+              <input 
+                required 
+                type="email" 
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
+                placeholder="name@email.com" 
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Password</label>
+              <div className="relative">
+                <input 
+                  required 
+                  type={showPassword ? 'text' : 'password'} 
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 pr-12 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
+                  placeholder="Enter password" 
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Country of Residence</label>
+              <select 
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                required
+              >
+                <option value="">Select Country</option>
+                <option value="Nigeria">Nigeria</option>
+                <option value="Mozambique">Mozambique</option>
+                <option value="Kenya">Kenya</option>
+                <option value="Ghana">Ghana</option>
+                <option value="South Africa">South Africa</option>
+              </select>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">WhatsApp Number</label>
+              <input 
+                required 
+                type="tel" 
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" 
+                placeholder="+234 ..." 
+              />
+            </div>
 
           <div className="space-y-1.5">
             <label className="text-xs font-black uppercase tracking-wider text-slate-500">Upload Verification Docs</label>
@@ -313,13 +263,13 @@ const Register: React.FC = () => {
           </div>
         )}
 
-        <button 
-          type="submit" 
-          disabled={loading}
-          className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Creating Account...' : (role === 'PATIENT' ? 'Register & Submit Case' : 'Register Hospital')}
-        </button>
+          <button 
+            type="submit" 
+            disabled={loading}
+            className="w-full py-4 bg-emerald-600 text-white font-black rounded-2xl shadow-xl shadow-emerald-200 hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Creating Account...' : 'Create Patient Account'}
+          </button>
 
         <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
           <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -331,7 +281,8 @@ const Register: React.FC = () => {
         <div className="text-center text-sm">
           <p className="text-slate-500">Already have an account? <Link to="/login" className="text-emerald-600 font-bold">Log in</Link></p>
         </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 };

@@ -1,33 +1,78 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, Mail, Phone, MapPin, Calendar, Shield, Edit2, Save, 
-  Camera, Heart, Activity, FileText, Clock, Award, X 
+  Camera, Heart, Activity, FileText, Clock, Award, X, AlertCircle 
 } from 'lucide-react';
+import { patientsAPI, authAPI } from '../../services/api';
+import { useAuth } from '../../App';
 
 const PatientProfile: React.FC = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [appointments, setAppointments] = useState<any[]>([]);
   
   const [profileData, setProfileData] = useState({
-    firstName: 'Sarah',
-    lastName: 'Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    dateOfBirth: '1990-05-15',
-    gender: 'Female',
-    bloodType: 'O+',
-    address: '123 Main Street',
-    city: 'New York',
-    state: 'NY',
-    zipCode: '10001',
-    emergencyContact: 'John Johnson',
-    emergencyPhone: '+1 (555) 987-6543',
-    allergies: 'Penicillin, Shellfish',
-    medications: 'Lisinopril 10mg daily',
-    insuranceProvider: 'Blue Cross Blue Shield',
-    policyNumber: 'BC123456789',
-    memberSince: '2022-03-15'
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '',
+    gender: '',
+    bloodType: '',
+    address: '',
+    emergencyContact: '',
+    emergencyPhone: '',
+    allergies: '',
+    medications: '',
+    insuranceProvider: '',
+    memberSince: ''
   });
+
+  useEffect(() => {
+    fetchPatientData();
+  }, []);
+
+  const fetchPatientData = async () => {
+    try {
+      setLoading(true);
+      const [profileRes, appointmentsRes] = await Promise.all([
+        patientsAPI.getPatientProfile(),
+        patientsAPI.getPatientAppointments()
+      ]);
+
+      if (profileRes.success) {
+        const patient = profileRes.data.patient;
+        setProfileData({
+          firstName: patient.name?.split(' ')[0] || '',
+          lastName: patient.name?.split(' ').slice(1).join(' ') || '',
+          email: patient.email || '',
+          phone: patient.phone || '',
+          dateOfBirth: patient.date_of_birth || '',
+          gender: patient.gender || '',
+          bloodType: patient.blood_group || '',
+          address: patient.address || '',
+          emergencyContact: patient.emergency_contact_name || '',
+          emergencyPhone: patient.emergency_contact_phone || '',
+          allergies: patient.allergies || '',
+          medications: patient.medical_history || '',
+          insuranceProvider: patient.insurance_provider || '',
+          memberSince: patient.created_at || ''
+        });
+      }
+
+      if (appointmentsRes.success) {
+        setAppointments(appointmentsRes.data.appointments || []);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to load profile data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const tabs = [
     { id: 'personal', name: 'Personal Info', icon: User },
@@ -36,16 +81,22 @@ const PatientProfile: React.FC = () => {
     { id: 'emergency', name: 'Emergency Contact', icon: Phone }
   ];
 
-  const recentActivity = [
-    { date: '2024-01-15', action: 'Appointment with Dr. Wilson', type: 'appointment' },
-    { date: '2024-01-10', action: 'Lab results uploaded', type: 'report' },
-    { date: '2024-01-05', action: 'Profile updated', type: 'profile' },
-    { date: '2023-12-20', action: 'Prescription refilled', type: 'prescription' }
-  ];
+  const upcomingAppointments = appointments.filter(apt => 
+    new Date(apt.appointment_date) >= new Date()
+  ).slice(0, 2).map(apt => ({
+    date: new Date(apt.appointment_date).toLocaleDateString(),
+    time: apt.appointment_time,
+    doctor: apt.doctor_name || 'Doctor',
+    specialty: apt.reason || 'Consultation'
+  }));
 
-  const upcomingAppointments = [
-    { date: '2024-01-20', time: '10:00 AM', doctor: 'Dr. Sarah Wilson', specialty: 'Cardiology' },
-    { date: '2024-01-25', time: '2:30 PM', doctor: 'Dr. Michael Brown', specialty: 'General Medicine' }
+  const recentActivity = [
+    { date: new Date().toISOString().split('T')[0], action: 'Profile updated', type: 'profile' },
+    ...appointments.slice(0, 3).map(apt => ({
+      date: apt.appointment_date,
+      action: `Appointment with ${apt.doctor_name || 'Doctor'}`,
+      type: 'appointment'
+    }))
   ];
 
   const handleInputChange = (field: string, value: string) => {
@@ -55,10 +106,36 @@ const PatientProfile: React.FC = () => {
     }));
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Handle save logic here
-    console.log('Profile saved:', profileData);
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError('');
+      
+      // Update user basic info
+      await authAPI.updateProfile({
+        name: `${profileData.firstName} ${profileData.lastName}`,
+        phone: profileData.phone
+      });
+
+      // Update patient profile
+      await patientsAPI.updatePatientProfile({
+        date_of_birth: profileData.dateOfBirth,
+        gender: profileData.gender,
+        blood_group: profileData.bloodType,
+        address: profileData.address,
+        emergency_contact_name: profileData.emergencyContact,
+        emergency_contact_phone: profileData.emergencyPhone,
+        allergies: profileData.allergies,
+        medical_history: profileData.medications,
+        insurance_provider: profileData.insuranceProvider
+      });
+
+      setIsEditing(false);
+    } catch (err: any) {
+      setError(err.message || 'Failed to save profile');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const getActivityIcon = (type: string) => {
@@ -81,8 +158,25 @@ const PatientProfile: React.FC = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-2 text-gray-600">Loading profile...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-6">
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
+          <AlertCircle className="w-4 h-4" />
+          {error}
+        </div>
+      )}
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between">
@@ -109,9 +203,15 @@ const PatientProfile: React.FC = () => {
           </div>
           <button
             onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+            disabled={saving}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isEditing ? (
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Saving...
+              </>
+            ) : isEditing ? (
               <>
                 <Save className="w-4 h-4" />
                 Save Changes

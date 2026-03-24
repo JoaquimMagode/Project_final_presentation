@@ -126,6 +126,11 @@ export const patientsAPI = {
     address?: string;
     emergency_contact?: string;
     medical_history?: string;
+    blood_group?: string;
+    allergies?: string;
+    insurance_provider?: string;
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
   }) => {
     return apiRequest('/patients/profile', {
       method: 'PUT',
@@ -139,6 +144,59 @@ export const patientsAPI = {
 
   getPatientMedicalHistory: async () => {
     return apiRequest('/patients/medical-history');
+  },
+
+  createAppointment: async (appointmentData: {
+    hospital_id: number;
+    doctor_name: string;
+    appointment_date: string;
+    appointment_time: string;
+    reason: string;
+  }) => {
+    return apiRequest('/patients/appointments', {
+      method: 'POST',
+      body: JSON.stringify(appointmentData),
+    });
+  },
+
+  getPatientDocuments: async () => {
+    return apiRequest('/patients/documents');
+  },
+
+  getPatientRegistration: async () => {
+    return apiRequest('/patients/registration');
+  },
+
+  updatePatientRegistration: async (registrationData: {
+    date_of_birth?: string;
+    gender?: string;
+    blood_group?: string;
+    medical_history?: string;
+    allergies?: string;
+    current_medications?: string;
+    emergency_contact_name?: string;
+    emergency_contact_phone?: string;
+  }) => {
+    return apiRequest('/patients/registration', {
+      method: 'PUT',
+      body: JSON.stringify(registrationData),
+    });
+  },
+
+  createPatientRegistration: async (registrationData: {
+    date_of_birth: string;
+    gender: string;
+    blood_group: string;
+    medical_history?: string;
+    allergies?: string;
+    current_medications?: string;
+    emergency_contact_name: string;
+    emergency_contact_phone: string;
+  }) => {
+    return apiRequest('/patients/registration', {
+      method: 'POST',
+      body: JSON.stringify(registrationData),
+    });
   },
 };
 

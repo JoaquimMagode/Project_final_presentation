@@ -538,10 +538,10 @@ router.get('/:id/payments',
   }
 );
 
-// @route   GET /api/patients/me
+// @route   GET /api/patients/profile
 // @desc    Get current patient's profile
 // @access  Private (Patient only)
-router.get('/me', 
+router.get('/profile', 
   authenticateToken,
   authorize('patient'),
   async (req, res) => {
@@ -575,6 +575,293 @@ router.get('/me',
       res.status(500).json({
         success: false,
         message: 'Failed to get patient profile'
+      });
+    }
+  }
+);
+
+// @route   PUT /api/patients/profile
+// @desc    Update current patient's profile
+// @access  Private (Patient only)
+router.put('/profile', 
+  authenticateToken,
+  authorize('patient'),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const {
+        date_of_birth, gender, blood_group, address,
+        emergency_contact_name, emergency_contact_phone, medical_history,
+        allergies, insurance_provider
+      } = req.body;
+
+      // Update patient profile
+      await pool.execute(`
+        UPDATE patients SET 
+        date_of_birth = ?, gender = ?, blood_group = ?, address = ?,
+        emergency_contact_name = ?, emergency_contact_phone = ?,
+        medical_history = ?, allergies = ?, insurance_provider = ?,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ?
+      `, [
+        date_of_birth, gender, blood_group, address,
+        emergency_contact_name, emergency_contact_phone, medical_history,
+        allergies, insurance_provider, userId
+      ]);
+
+      // Get updated patient data
+      const [updatedPatients] = await pool.execute(`
+        SELECT p.*, u.name, u.email, u.phone, u.status
+        FROM patients p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.user_id = ?
+      `, [userId]);
+
+      res.json({
+        success: true,
+        message: 'Patient profile updated successfully',
+        data: {
+          patient: updatedPatients[0]
+        }
+      });
+
+    } catch (error) {
+      console.error('Update patient profile error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update patient profile'
+      });
+    }
+  }
+);
+
+// @route   GET /api/patients/appointments
+// @desc    Get current patient's appointments
+// @access  Private (Patient only)
+router.get('/appointments', 
+  authenticateToken,
+  authorize('patient'),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Get patient ID
+      const [patients] = await pool.execute(
+        'SELECT id FROM patients WHERE user_id = ?',
+        [userId]
+      );
+
+      if (patients.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Patient profile not found'
+        });
+      }
+
+      const patientId = patients[0].id;
+
+      // Get appointments
+      const [appointments] = await pool.execute(`
+        SELECT a.*, h.name as hospital_name, h.location as hospital_location
+        FROM appointments a
+        JOIN hospitals h ON a.hospital_id = h.id
+        WHERE a.patient_id = ?
+        ORDER BY a.appointment_date DESC, a.appointment_time DESC
+      `, [patientId]);
+
+      res.json({
+        success: true,
+        data: {
+          appointments
+        }
+      });
+
+    } catch (error) {
+      console.error('Get patient appointments error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get patient appointments'
+      });
+    }
+  }
+);
+
+// @route   POST /api/patients/appointments
+// @desc    Create new appointment
+// @access  Private (Patient only)
+router.post('/appointments', 
+  authenticateToken,
+  authorize('patient'),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { hospital_id, doctor_name, appointment_date, appointment_time, reason } = req.body;
+
+      // Get patient ID
+      const [patients] = await pool.execute(
+        'SELECT id FROM patients WHERE user_id = ?',
+        [userId]
+      );
+
+      if (patients.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Patient profile not found'
+        });
+      }
+
+      const patientId = patients[0].id;
+
+      // Create appointment
+      const [result] = await pool.execute(`
+        INSERT INTO appointments (patient_id, hospital_id, doctor_name, appointment_date, appointment_time, reason, status)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending')
+      `, [patientId, hospital_id, doctor_name, appointment_date, appointment_time, reason]);
+
+      // Get created appointment with hospital details
+      const [newAppointment] = await pool.execute(`
+        SELECT a.*, h.name as hospital_name, h.location as hospital_location
+        FROM appointments a
+        JOIN hospitals h ON a.hospital_id = h.id
+        WHERE a.id = ?
+      `, [result.insertId]);
+
+      res.status(201).json({
+        success: true,
+        message: 'Appointment created successfully',
+        data: {
+          appointment: newAppointment[0]
+        }
+      });
+
+    } catch (error) {
+      console.error('Create appointment error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to create appointment'
+      });
+    }
+  }
+);
+
+// @route   GET /api/patients/registration
+// @desc    Get current patient's registration details
+// @access  Private (Patient only)
+router.get('/registration', 
+  authenticateToken,
+  authorize('patient'),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      // Get patient registration data
+      const [patients] = await pool.execute(`
+        SELECT p.*, u.name, u.email, u.phone
+        FROM patients p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.user_id = ?
+      `, [userId]);
+
+      if (patients.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Patient registration not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          registration: patients[0]
+        }
+      });
+
+    } catch (error) {
+      console.error('Get patient registration error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get patient registration'
+      });
+    }
+  }
+);
+
+// @route   PUT /api/patients/registration
+// @desc    Update current patient's registration
+// @access  Private (Patient only)
+router.put('/registration', 
+  authenticateToken,
+  authorize('patient'),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const {
+        date_of_birth, gender, blood_group, medical_history,
+        allergies, current_medications, emergency_contact_name, emergency_contact_phone
+      } = req.body;
+
+      // Update patient registration
+      await pool.execute(`
+        UPDATE patients SET 
+        date_of_birth = ?, gender = ?, blood_group = ?, medical_history = ?,
+        allergies = ?, emergency_contact_name = ?, emergency_contact_phone = ?,
+        updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = ?
+      `, [
+        date_of_birth, gender, blood_group, medical_history,
+        allergies, emergency_contact_name, emergency_contact_phone, userId
+      ]);
+
+      // Get updated registration data
+      const [updatedRegistration] = await pool.execute(`
+        SELECT p.*, u.name, u.email, u.phone
+        FROM patients p
+        JOIN users u ON p.user_id = u.id
+        WHERE p.user_id = ?
+      `, [userId]);
+
+      res.json({
+        success: true,
+        message: 'Patient registration updated successfully',
+        data: {
+          registration: updatedRegistration[0]
+        }
+      });
+
+    } catch (error) {
+      console.error('Update patient registration error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to update patient registration'
+      });
+    }
+  }
+);
+
+// @route   GET /api/patients/documents
+// @desc    Get current patient's documents
+// @access  Private (Patient only)
+router.get('/documents', 
+  authenticateToken,
+  authorize('patient'),
+  async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      // For now, return empty array as document management is handled by upload API
+      // This can be expanded to track document metadata in database
+      res.json({
+        success: true,
+        data: {
+          documents: []
+        }
+      });
+
+    } catch (error) {
+      console.error('Get patient documents error:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to get patient documents'
       });
     }
   }

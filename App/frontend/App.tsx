@@ -56,8 +56,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isPatientDashboard = location.pathname === '/patient-dashboard';
   const isSuperAdminDashboard = location.pathname === '/superadmin';
   const isLoginPage = location.pathname === '/login';
+  const isRegisterPage = location.pathname === '/register';
   const isDashboardPage = isHospitalDashboard || isPatientDashboard || isSuperAdminDashboard;
-  const hideHeaderFooter = isDashboardPage || isLoginPage;
+  const hideHeaderFooter = isDashboardPage || isLoginPage || isRegisterPage;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
