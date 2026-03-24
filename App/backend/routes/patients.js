@@ -128,7 +128,7 @@ router.get('/appointments',
 
       // Get appointments
       const [appointments] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, h.city as hospital_location
+        SELECT a.*, h.name as hospital_name, h.location as hospital_location
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
         WHERE a.patient_id = ?
@@ -186,7 +186,7 @@ router.post('/appointments',
 
       // Get created appointment with hospital details
       const [newAppointment] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, h.city as hospital_location
+        SELECT a.*, h.name as hospital_name, h.location as hospital_location
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
         WHERE a.id = ?
@@ -687,7 +687,7 @@ router.get('/:id/appointments',
       }
 
       let query = `
-        SELECT a.*, h.name as hospital_name, h.city as hospital_city, 
+        SELECT a.*, h.name as hospital_name, h.location as hospital_city, 
                d.name as doctor_name, d.specialization
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id

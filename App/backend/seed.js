@@ -8,11 +8,50 @@ const seedDatabase = async () => {
     // Create tables if they don't exist
     await createTables();
 
-    // Clear existing data
-    await pool.execute('DELETE FROM appointments');
+    // Clear existing data and recreate tables with proper schema
+    await pool.execute('SET FOREIGN_KEY_CHECKS = 0');
+    await pool.execute('DROP TABLE IF EXISTS appointments');
+    await pool.execute('DROP TABLE IF EXISTS hospitals');
     await pool.execute('DELETE FROM patients');
-    await pool.execute('DELETE FROM hospitals');
     await pool.execute('DELETE FROM users');
+    await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
+    
+    // Recreate hospitals table with address column
+    await pool.execute(`
+      CREATE TABLE hospitals (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        address TEXT,
+        specializations TEXT,
+        contact_email VARCHAR(255),
+        contact_phone VARCHAR(20),
+        admin_id INT,
+        status ENUM('active', 'inactive') DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
+      )
+    `);
+    
+    // Recreate appointments table
+    await pool.execute(`
+      CREATE TABLE appointments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        patient_id INT NOT NULL,
+        hospital_id INT NOT NULL,
+        doctor_name VARCHAR(255),
+        appointment_date DATE NOT NULL,
+        appointment_time TIME NOT NULL,
+        reason TEXT,
+        status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+        notes TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (patient_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
+      )
+    `);
 
     // Reset auto increment
     await pool.execute('ALTER TABLE users AUTO_INCREMENT = 1');
@@ -97,8 +136,8 @@ const seedDatabase = async () => {
     console.log('🏥 Seeding hospitals...');
     for (const hospital of hospitals) {
       const [result] = await pool.execute(
-        'INSERT INTO hospitals (name, location, specializations, contact_email, contact_phone, admin_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [hospital.name, hospital.location, hospital.specializations, hospital.contact_email, hospital.contact_phone, hospital.admin_id, 'active']
+        'INSERT INTO hospitals (name, location, address, specializations, contact_email, contact_phone, admin_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [hospital.name, hospital.location, `${hospital.location}, India`, hospital.specializations, hospital.contact_email, hospital.contact_phone, hospital.admin_id, 'active']
       );
       console.log(`✅ Created hospital: ${hospital.name} (ID: ${result.insertId})`);
     }
@@ -196,6 +235,7 @@ const createTables = async () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
       location VARCHAR(255) NOT NULL,
+      address TEXT,
       specializations TEXT,
       contact_email VARCHAR(255),
       contact_phone VARCHAR(20),

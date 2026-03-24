@@ -29,16 +29,16 @@ router.get('/search', validatePagination, async (req, res) => {
     }
     if (location || city) {
       const searchLocation = location || city;
-      conditions.push('(h.city LIKE ? OR h.state LIKE ? OR h.address LIKE ?)');
-      queryParams.push(`%${searchLocation}%`, `%${searchLocation}%`, `%${searchLocation}%`);
+      conditions.push('(h.location LIKE ? OR h.address LIKE ?)');
+      queryParams.push(`%${searchLocation}%`, `%${searchLocation}%`);
     }
     if (state) {
-      conditions.push('h.state LIKE ?');
+      conditions.push('h.location LIKE ?');
       queryParams.push(`%${state}%`);
     }
     if (specialization) {
-      conditions.push('(JSON_CONTAINS(h.specialties, ?) OR h.description LIKE ?)');
-      queryParams.push(`"${specialization}"`, `%${specialization}%`);
+      conditions.push('h.specializations LIKE ?');
+      queryParams.push(`%${specialization}%`);
     }
 
     const whereClause = ' WHERE ' + conditions.join(' AND ');
@@ -116,20 +116,20 @@ router.get('/', validatePagination, async (req, res) => {
 
     // Add filters
     if (city) {
-      conditions.push('h.city LIKE ?');
+      conditions.push('h.location LIKE ?');
       queryParams.push(`%${city}%`);
     }
     if (state) {
-      conditions.push('h.state LIKE ?');
+      conditions.push('h.location LIKE ?');
       queryParams.push(`%${state}%`);
     }
     if (country) {
-      conditions.push('h.country = ?');
-      queryParams.push(country);
+      conditions.push('h.location LIKE ?');
+      queryParams.push(`%${country}%`);
     }
     if (specialty) {
-      conditions.push('(JSON_CONTAINS(h.specialties, ?) OR h.description LIKE ?)');
-      queryParams.push(`"${specialty}"`, `%${specialty}%`);
+      conditions.push('h.specializations LIKE ?');
+      queryParams.push(`%${specialty}%`);
     }
 
     const whereClause = ' WHERE ' + conditions.join(' AND ');
