@@ -141,7 +141,15 @@ const PatientRegistration: React.FC = () => {
             password: formData.password,
             name: `${formData.firstName} ${formData.lastName}`,
             phone: formData.phone,
-            role: 'patient'
+            role: 'patient',
+            // Patient health information
+            dateOfBirth: formData.dateOfBirth,
+            gender: formData.gender,
+            bloodType: formData.bloodType,
+            country: formData.country,
+            medicalHistory: formData.medicalHistory,
+            allergies: formData.allergies,
+            currentMedications: formData.currentMedications
           };
 
           const response = await authAPI.register(userData);

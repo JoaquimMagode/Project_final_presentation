@@ -10,7 +10,21 @@ const router = express.Router();
 // @access  Public
 router.post('/register', validateUserRegistration, async (req, res) => {
   try {
-    const { email, password, name, phone, role } = req.body;
+    const { 
+      email, 
+      password, 
+      name, 
+      phone, 
+      role,
+      // Patient-specific fields
+      dateOfBirth,
+      gender,
+      bloodType,
+      country,
+      medicalHistory,
+      allergies,
+      currentMedications
+    } = req.body;
 
     // Check if user already exists
     const [existingUsers] = await pool.execute(
@@ -37,11 +51,31 @@ router.post('/register', validateUserRegistration, async (req, res) => {
 
     const userId = result.insertId;
 
-    // If role is patient, create patient profile
+    // If role is patient, create detailed patient profile
     if (role === 'patient') {
+      const medicalHistoryJson = medicalHistory ? JSON.stringify(medicalHistory) : null;
+      
       await pool.execute(
-        'INSERT INTO patients (user_id) VALUES (?)',
-        [userId]
+        `INSERT INTO patients (
+          user_id, 
+          date_of_birth, 
+          gender, 
+          blood_group, 
+          country, 
+          medical_history, 
+          allergies, 
+          current_medications
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          dateOfBirth || null,
+          gender || null,
+          bloodType || null,
+          country || null,
+          medicalHistoryJson,
+          allergies || null,
+          currentMedications || null
+        ]
       );
     }
 
@@ -123,6 +157,13 @@ router.post('/login', validateUserLogin, async (req, res) => {
           'SELECT * FROM patients WHERE user_id = ?',
           [user.id]
         );
+        if (patients[0] && patients[0].medical_history) {
+          try {
+            patients[0].medical_history = JSON.parse(patients[0].medical_history);
+          } catch (e) {
+            patients[0].medical_history = [];
+          }
+        }
         additionalData.patient = patients[0] || null;
       } else if (user.role === 'hospital_admin') {
         const [hospitals] = await pool.execute(
@@ -241,6 +282,13 @@ router.get('/me', authenticateToken, async (req, res) => {
         'SELECT * FROM patients WHERE user_id = ?',
         [userId]
       );
+      if (patients[0] && patients[0].medical_history) {
+        try {
+          patients[0].medical_history = JSON.parse(patients[0].medical_history);
+        } catch (e) {
+          patients[0].medical_history = [];
+        }
+      }
       additionalData.patient = patients[0] || null;
     } else if (user.role === 'hospital_admin') {
       const [hospitals] = await pool.execute(

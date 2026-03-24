@@ -29,10 +29,21 @@ router.get('/profile',
         });
       }
 
+      const patient = patients[0];
+      
+      // Parse medical_history JSON if it exists
+      if (patient.medical_history) {
+        try {
+          patient.medical_history = JSON.parse(patient.medical_history);
+        } catch (e) {
+          patient.medical_history = [];
+        }
+      }
+
       res.json({
         success: true,
         data: {
-          patient: patients[0]
+          patient
         }
       });
 
@@ -56,17 +67,54 @@ router.put('/profile',
     try {
       const userId = req.user.id;
       const {
-        date_of_birth, gender, address, emergency_contact_name, medical_history
+        date_of_birth, 
+        gender, 
+        blood_group,
+        address, 
+        city,
+        state,
+        country,
+        emergency_contact_name, 
+        emergency_contact_phone,
+        medical_history,
+        allergies,
+        current_medications
       } = req.body;
+
+      // Convert medical_history array to JSON string if provided
+      const medicalHistoryJson = medical_history ? JSON.stringify(medical_history) : null;
 
       // Update patient profile
       await pool.execute(`
         UPDATE patients SET 
-        date_of_birth = ?, gender = ?, address = ?, emergency_contact = ?, medical_history = ?,
+        date_of_birth = ?, 
+        gender = ?, 
+        blood_group = ?,
+        address = ?, 
+        city = ?,
+        state = ?,
+        country = ?,
+        emergency_contact_name = ?, 
+        emergency_contact_phone = ?,
+        medical_history = ?,
+        allergies = ?,
+        current_medications = ?,
         updated_at = CURRENT_TIMESTAMP
         WHERE user_id = ?
       `, [
-        date_of_birth, gender, address, emergency_contact_name, medical_history, userId
+        date_of_birth, 
+        gender, 
+        blood_group,
+        address, 
+        city,
+        state,
+        country,
+        emergency_contact_name, 
+        emergency_contact_phone,
+        medicalHistoryJson,
+        allergies,
+        current_medications,
+        userId
       ]);
 
       // Get updated patient data
@@ -77,11 +125,22 @@ router.put('/profile',
         WHERE p.user_id = ?
       `, [userId]);
 
+      const patient = updatedPatients[0];
+      
+      // Parse medical_history JSON if it exists
+      if (patient.medical_history) {
+        try {
+          patient.medical_history = JSON.parse(patient.medical_history);
+        } catch (e) {
+          patient.medical_history = [];
+        }
+      }
+
       res.json({
         success: true,
         message: 'Patient profile updated successfully',
         data: {
-          patient: updatedPatients[0]
+          patient
         }
       });
 

@@ -33,6 +33,35 @@ const validateUserRegistration = [
     .optional()
     .isMobilePhone()
     .withMessage('Valid phone number is required'),
+  // Patient-specific fields (optional for registration)
+  body('dateOfBirth')
+    .optional()
+    .isISO8601()
+    .withMessage('Valid date of birth is required'),
+  body('gender')
+    .optional()
+    .isIn(['Male', 'Female', 'Other'])
+    .withMessage('Gender must be Male, Female, or Other'),
+  body('bloodType')
+    .optional()
+    .isIn(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])
+    .withMessage('Valid blood type is required'),
+  body('country')
+    .optional()
+    .isLength({ min: 2 })
+    .withMessage('Country must be at least 2 characters long'),
+  body('medicalHistory')
+    .optional()
+    .isArray()
+    .withMessage('Medical history must be an array'),
+  body('allergies')
+    .optional()
+    .isString()
+    .withMessage('Allergies must be a string'),
+  body('currentMedications')
+    .optional()
+    .isString()
+    .withMessage('Current medications must be a string'),
   handleValidationErrors
 ];
 
