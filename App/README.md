@@ -1,4 +1,4 @@
-# AfriHealth Connect - Setup Instructions
+# IMAP Solution Connect - Setup Instructions
 
 ## Quick Start
 
@@ -24,4 +24,4 @@ This will run:
 ## Mock Login Credentials
 - **Patient**: `patient@example.com` / `password`
 - **Hospital**: `hospital@fortis.com` / `password`
-- **Admin**: `admin@afrihealth.com`/`password`
+- **Admin**: `admin@imapsolution.com`/`password`

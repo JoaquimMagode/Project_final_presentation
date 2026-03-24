@@ -196,7 +196,7 @@ const SuperAdminDashboard: React.FC = () => {
               <HeartPulse className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900">AfriHealth</h1>
+              <h1 className="text-xl font-bold text-slate-900">IMAP Solution</h1>
               <p className="text-sm text-slate-600">Super Admin Panel</p>
             </div>
           </div>
@@ -356,7 +356,7 @@ const SuperAdminDashboard: React.FC = () => {
             <div className="max-w-4xl">
               <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900">Add New Hospital to AfriHealth Network</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">Add New Hospital to IMAP Solution Network</h3>
                 </div>
                 
                 <form onSubmit={handleAddHospital} className="space-y-6">
@@ -699,7 +699,7 @@ const SuperAdminDashboard: React.FC = () => {
 
           {activeTab === 'SETTINGS' && (
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-6">AfriHealth Platform Settings</h3>
+              <h3 className="text-lg font-semibold text-slate-900 mb-6">IMAP Solution Platform Settings</h3>
               <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-6">
                   <div>
@@ -707,7 +707,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <input 
                       type="text" 
                       className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
-                      defaultValue="AfriHealth - Medical Tourism Platform" 
+                      defaultValue="IMAP Solution - Medical Tourism Platform" 
                     />
                   </div>
                   <div>
@@ -724,7 +724,7 @@ const SuperAdminDashboard: React.FC = () => {
                   <input 
                     type="email" 
                     className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
-                    defaultValue="support@afrihealth.com" 
+                    defaultValue="support@imapsolution.com" 
                   />
                 </div>
                 <button className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">

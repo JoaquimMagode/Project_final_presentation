@@ -298,7 +298,7 @@ const Home: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-white border border-slate-200 p-8">
               <p className="text-slate-700 mb-6 leading-relaxed">
-                "AfriHealth connected me directly to Apollo Hospital. I got my visa and treatment without any stress."
+                "IMAP Solution connected me directly to Apollo Hospital. I got my visa and treatment without any stress."
               </p>
               <div className="flex items-center gap-3">
                 <img src="https://picsum.photos/seed/pat1/48/48" className="w-12 h-12 rounded-full" />

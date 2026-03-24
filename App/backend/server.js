@@ -69,7 +69,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.get('/health', (req, res) => {
   res.json({
     success: true,
-    message: 'AfriHealth API is running',
+    message: 'IMAP Solution API is running',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -178,7 +178,7 @@ const startServer = async () => {
     const PORT = process.env.PORT || 5000;
     const server = app.listen(PORT, () => {
       console.log(`
-🚀 AfriHealth API Server is running!
+🚀 IMAP Solution API Server is running!
 📍 Environment: ${process.env.NODE_ENV || 'development'}
 🌐 Server: http://localhost:${PORT}
 📊 Health Check: http://localhost:${PORT}/health

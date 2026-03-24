@@ -1,6 +1,6 @@
-# AfriHealth Backend API
+# IMAP Solution Backend API
 
-A comprehensive backend system for the AfriHealth Medical Tourism Platform built with Node.js, Express, and MySQL.
+A comprehensive backend system for the IMAP Solution Medical Tourism Platform built with Node.js, Express, and MySQL.
 
 ## Features
 
@@ -69,7 +69,7 @@ backend/
    DB_HOST=localhost
    DB_USER=root
    DB_PASSWORD=your_password
-   DB_NAME=afrihealth_db
+   DB_NAME=imap_solution_db
    DB_PORT=3306
 
    # JWT Configuration
@@ -82,7 +82,7 @@ backend/
    ```
 
 4. **Set up MySQL Database**
-   - Create a MySQL database named `afrihealth_db`
+   - Create a MySQL database named `imap_solution_db`
    - The application will automatically create all required tables on first run
 
 5. **Start the server**

@@ -24,7 +24,7 @@ const Register: React.FC = () => {
 
       <div className="space-y-2">
         <h1 className="text-3xl font-black text-slate-900">Create Account</h1>
-        <p className="text-slate-500 font-medium">Join AfriHealth to start your direct medical journey.</p>
+        <p className="text-slate-500 font-medium">Join IMAP Solution to start your direct medical journey.</p>
       </div>
 
       <div className="flex gap-4 p-1 bg-slate-100 rounded-2xl">

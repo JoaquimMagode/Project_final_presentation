@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
             <div className="bg-emerald-600 p-1.5 rounded-lg">
               {APP_ICONS.Health}
             </div>
-            <span className="font-bold text-xl tracking-tight">AfriHealth</span>
+            <span className="font-bold text-xl tracking-tight">IMAP Solution</span>
           </div>
           <p className="text-sm leading-relaxed text-slate-400">
             Empowering African patients with direct, transparent access to world-class medical treatment in India. No middlemen, just care.
@@ -40,7 +40,7 @@ const Footer: React.FC = () => {
           <h3 className="text-white font-bold uppercase tracking-widest text-xs">Support</h3>
           <ul className="space-y-2 text-sm">
             <li className="flex items-center gap-2"><Phone className="w-4 h-4 text-emerald-500" /> +91-987-654-3210</li>
-            <li className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-500" /> care@afrihealth.in</li>
+            <li className="flex items-center gap-2"><Mail className="w-4 h-4 text-emerald-500" /> care@imapsolution.in</li>
             <li className="flex items-center gap-2"><MapPin className="w-4 h-4 text-emerald-500" /> Gurgaon, Haryana, India</li>
           </ul>
         </div>
@@ -56,7 +56,7 @@ const Footer: React.FC = () => {
       </div>
       
       <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] font-bold uppercase tracking-widest">
-        <p>&copy; 2023 AfriHealth Connect. All Rights Reserved.</p>
+        <p>&copy; 2023 IMAP Solution Connect. All Rights Reserved.</p>
         <div className="flex gap-6">
           <span className="hover:text-white cursor-pointer">Privacy Policy</span>
           <span className="hover:text-white cursor-pointer">Terms of Service</span>

@@ -1,7 +1,7 @@
 {
-  "name": "afrihealth-app",
+  "name": "imap-solution-app",
   "version": "1.0.0",
-  "description": "AfriHealth Connect - Full Stack Application",
+  "description": "IMAP Solution Connect - Full Stack Application",
   "scripts": {
     "start": "concurrently \"npm run backend\" \"npm run frontend\"",
     "backend": "cd backend && npm run dev",

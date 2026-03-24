@@ -105,7 +105,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <div className="bg-emerald-600 p-1 rounded-lg text-white group-hover:scale-105 transition-transform">
                   {APP_ICONS.Health}
                 </div>
-                <span className="font-bold text-sm tracking-tight text-black">AfriHealth</span>
+                <span className="font-bold text-sm tracking-tight text-black">IMAP Solution</span>
               </Link>
               
               <div className="hidden lg:flex items-center gap-4">

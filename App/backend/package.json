@@ -1,7 +1,7 @@
 {
-  "name": "afrihealth-backend",
+  "name": "imap-solution-backend",
   "version": "1.0.0",
-  "description": "Backend API for AfriHealth Medical Tourism Platform",
+  "description": "Backend API for IMAP Solution Medical Tourism Platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -37,6 +37,6 @@
     "api",
     "nodejs"
   ],
-  "author": "AfriHealth Team",
+  "author": "IMAP Solution Team",
   "license": "MIT"
 }

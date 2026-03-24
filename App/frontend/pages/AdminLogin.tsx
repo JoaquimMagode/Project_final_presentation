@@ -12,7 +12,7 @@ const AdminLogin: React.FC = () => {
     e.preventDefault();
     setError('');
     
-    if (email === 'admin@afrihealth.com' && password === 'password') {
+    if (email === 'admin@imapsolution.com' && password === 'password') {
       navigate('/admin');
     } else {
       setError('Invalid admin credentials');
@@ -42,7 +42,7 @@ const AdminLogin: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
-                placeholder="admin@afrihealth.com" 
+                placeholder="admin@imapsolution.com" 
               />
             </div>
 
@@ -77,7 +77,7 @@ const AdminLogin: React.FC = () => {
         </form>
         
         <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs text-blue-800 font-medium text-center">
-          <strong>Credentials:</strong> admin@afrihealth.com / password
+          <strong>Credentials:</strong> admin@imapsolution.com / password
         </div>
       </div>
     </div>

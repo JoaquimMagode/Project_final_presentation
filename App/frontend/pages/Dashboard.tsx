@@ -72,7 +72,7 @@ const Dashboard: React.FC = () => {
                 <div className="w-10 h-10 bg-gradient-to-r from-teal-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
                   <Heart className="w-6 h-6 text-white" />
                 </div>
-                <h2 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">AfriHealth</h2>
+                <h2 className="text-xl font-bold bg-gradient-to-r from-teal-600 to-blue-600 bg-clip-text text-transparent">IMAP Solution</h2>
               </div>
               <div className="flex items-center gap-4">
                 <button className="relative p-2 bg-slate-100 rounded-xl hover:bg-slate-200 transition-colors">
