@@ -264,7 +264,7 @@ router.post('/',
         INSERT INTO appointments 
         (patient_id, hospital_id, appointment_date, appointment_time, type, reason, notes, consultation_fee, status)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
-      `, [patient_id, hospital_id, appointment_date, appointment_time, type || 'consultation', reason, notes, consultation_fee]);
+      `, [patient_id, hospital_id, appointment_date, appointment_time, type || 'consultation', reason, notes || null, consultation_fee || null]);
 
       const appointmentId = result.insertId;
 
