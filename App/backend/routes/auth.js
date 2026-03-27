@@ -23,7 +23,12 @@ router.post('/register', validateUserRegistration, async (req, res) => {
       country,
       medicalHistory,
       allergies,
-      currentMedications
+      currentMedications,
+      // Insurance fields
+      hasInsurance,
+      insuranceProvider,
+      insurancePolicyNumber,
+      insuranceExpiryDate
     } = req.body;
 
     // Check if user already exists
@@ -64,8 +69,11 @@ router.post('/register', validateUserRegistration, async (req, res) => {
           country, 
           medical_history, 
           allergies, 
-          current_medications
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          current_medications,
+          insurance_provider,
+          insurance_policy_number,
+          insurance_expiry_date
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           userId,
           dateOfBirth || null,
@@ -74,7 +82,10 @@ router.post('/register', validateUserRegistration, async (req, res) => {
           country || null,
           medicalHistoryJson,
           allergies || null,
-          currentMedications || null
+          currentMedications || null,
+          (hasInsurance && insuranceProvider) ? insuranceProvider : null,
+          (hasInsurance && insurancePolicyNumber) ? insurancePolicyNumber : null,
+          (hasInsurance && insuranceExpiryDate) ? insuranceExpiryDate : null
         ]
       );
     }

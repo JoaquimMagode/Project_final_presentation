@@ -110,7 +110,7 @@ export const hospitalsAPI = {
     return apiRequest(endpoint);
   },
 
-  getHospitalById: async (id: number) => {
+  getHospitalById: async (id: string) => {
     return apiRequest(`/hospitals/${id}`);
   },
 

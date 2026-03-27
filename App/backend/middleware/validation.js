@@ -62,6 +62,22 @@ const validateUserRegistration = [
     .optional()
     .isString()
     .withMessage('Current medications must be a string'),
+  body('hasInsurance')
+    .optional()
+    .isBoolean()
+    .withMessage('Has insurance must be a boolean'),
+  body('insuranceProvider')
+    .optional()
+    .isString()
+    .withMessage('Insurance provider must be a string'),
+  body('insurancePolicyNumber')
+    .optional()
+    .isString()
+    .withMessage('Insurance policy number must be a string'),
+  body('insuranceExpiryDate')
+    .optional()
+    .isISO8601()
+    .withMessage('Valid insurance expiry date is required'),
   handleValidationErrors
 ];
 
@@ -102,7 +118,6 @@ const validateHospitalCreation = [
     .withMessage('State is required'),
   body('country')
     .optional()
-    .trim()
     .isLength({ min: 2 })
     .withMessage('Country must be at least 2 characters long'),
   body('specialties')
@@ -201,7 +216,6 @@ const validatePayment = [
     .withMessage('Valid payment method is required'),
   body('transaction_id')
     .optional()
-    .trim()
     .isLength({ min: 1 })
     .withMessage('Transaction ID cannot be empty'),
   handleValidationErrors
@@ -215,7 +229,6 @@ const validateMedicalReport = [
     .withMessage('Report title must be at least 2 characters long'),
   body('report_type')
     .optional()
-    .trim()
     .isLength({ min: 2 })
     .withMessage('Report type must be at least 2 characters long'),
   body('report_date')
@@ -246,7 +259,6 @@ const validateEmployee = [
     .withMessage('Position is required'),
   body('department')
     .optional()
-    .trim()
     .isLength({ min: 2 })
     .withMessage('Department must be at least 2 characters long'),
   body('hire_date')

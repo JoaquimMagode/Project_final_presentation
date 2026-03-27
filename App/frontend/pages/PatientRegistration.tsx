@@ -18,6 +18,11 @@ interface FormData {
   allergies: string;
   currentMedications: string;
   documents: File[];
+  // Insurance information
+  hasInsurance: boolean;
+  insuranceProvider: string;
+  insurancePolicyNumber: string;
+  insuranceExpiryDate: string;
 }
 
 const PatientRegistration: React.FC = () => {
@@ -38,6 +43,11 @@ const PatientRegistration: React.FC = () => {
     allergies: '',
     currentMedications: '',
     documents: [],
+    // Insurance information
+    hasInsurance: false,
+    insuranceProvider: '',
+    insurancePolicyNumber: '',
+    insuranceExpiryDate: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +60,8 @@ const PatientRegistration: React.FC = () => {
 
   const validateStep = (stepNum: number): boolean => {
     const newErrors: Record<string, string> = {};
+    console.log('Validating step:', stepNum);
+    console.log('Form data for validation:', formData);
 
     if (stepNum === 1) {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
@@ -68,6 +80,23 @@ const PatientRegistration: React.FC = () => {
       if (!formData.bloodType) newErrors.bloodType = 'Blood type is required';
     }
 
+    if (stepNum === 3) {
+      // Step 3 validation is optional (documents)
+      console.log('Step 3 validation - documents are optional');
+    }
+
+    if (stepNum === 4) {
+      console.log('Step 4 validation - insurance info');
+      console.log('Has insurance:', formData.hasInsurance);
+      // Insurance validation - only if user has insurance
+      if (formData.hasInsurance) {
+        if (!formData.insuranceProvider.trim()) newErrors.insuranceProvider = 'Insurance provider is required';
+        if (!formData.insurancePolicyNumber.trim()) newErrors.insurancePolicyNumber = 'Policy number is required';
+        if (!formData.insuranceExpiryDate) newErrors.insuranceExpiryDate = 'Expiry date is required';
+      }
+    }
+
+    console.log('Validation errors:', newErrors);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -130,10 +159,15 @@ const PatientRegistration: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted on step:', step);
+    console.log('Form data:', formData);
+    
     if (validateStep(step)) {
-      if (step < 3) {
+      if (step < 4) {
+        console.log('Moving to next step:', step + 1);
         setStep(step + 1);
       } else {
+        console.log('Submitting registration...');
         setLoading(true);
         try {
           const userData = {
@@ -149,10 +183,17 @@ const PatientRegistration: React.FC = () => {
             country: formData.country,
             medicalHistory: formData.medicalHistory,
             allergies: formData.allergies,
-            currentMedications: formData.currentMedications
+            currentMedications: formData.currentMedications,
+            // Insurance information
+            hasInsurance: formData.hasInsurance,
+            insuranceProvider: formData.hasInsurance ? formData.insuranceProvider : null,
+            insurancePolicyNumber: formData.hasInsurance ? formData.insurancePolicyNumber : null,
+            insuranceExpiryDate: formData.hasInsurance ? formData.insuranceExpiryDate : null
           };
 
+          console.log('Sending user data:', userData);
           const response = await authAPI.register(userData);
+          console.log('Registration response:', response);
           
           if (response.success) {
             const { user, token } = response.data;
@@ -177,11 +218,15 @@ const PatientRegistration: React.FC = () => {
             navigate('/patient-dashboard', { replace: true });
           }
         } catch (err: any) {
+          console.error('Registration error:', err);
           setErrors({ submit: err.message || 'Registration failed. Please try again.' });
         } finally {
           setLoading(false);
         }
       }
+    } else {
+      console.log('Validation failed for step:', step);
+      console.log('Errors:', errors);
     }
   };
 
@@ -196,12 +241,12 @@ const PatientRegistration: React.FC = () => {
 
       <div className="space-y-2 mb-8">
         <h1 className="text-3xl font-black text-slate-900">Patient Registration</h1>
-        <p className="text-slate-500 font-medium">Step {step} of 3 - Complete your profile</p>
+        <p className="text-slate-500 font-medium">Step {step} of 4 - Complete your profile</p>
       </div>
 
       {/* Progress Bar */}
       <div className="flex gap-2 mb-8">
-        {[1, 2, 3].map(s => (
+        {[1, 2, 3, 4].map(s => (
           <div
             key={s}
             className={`h-2 flex-1 rounded-full transition-all ${
@@ -439,7 +484,7 @@ const PatientRegistration: React.FC = () => {
             <h2 className="text-xl font-bold text-slate-900">Documents & Verification</h2>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Upload Medical Documents</label>
+              <label className="text-xs font-black uppercase tracking-wider text-slate-500">Upload Medical Documents (Optional)</label>
               <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 flex flex-col items-center justify-center gap-2 hover:border-emerald-300 transition-colors cursor-pointer bg-slate-50/50">
                 <input
                   type="file"
@@ -496,32 +541,133 @@ const PatientRegistration: React.FC = () => {
           </div>
         )}
 
+        {/* Step 4: Insurance Information */}
+        {step === 4 && (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold text-slate-900">Insurance Information</h2>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="hasInsurance"
+                  checked={formData.hasInsurance}
+                  onChange={(e) => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      hasInsurance: e.target.checked,
+                      insuranceProvider: e.target.checked ? prev.insuranceProvider : '',
+                      insurancePolicyNumber: e.target.checked ? prev.insurancePolicyNumber : '',
+                      insuranceExpiryDate: e.target.checked ? prev.insuranceExpiryDate : ''
+                    }));
+                  }}
+                  className="w-4 h-4 rounded accent-emerald-600"
+                />
+                <label htmlFor="hasInsurance" className="text-sm font-medium text-slate-700">
+                  I have medical insurance coverage
+                </label>
+              </div>
+
+              {formData.hasInsurance && (
+                <div className="space-y-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-500">Insurance Provider</label>
+                    <input
+                      type="text"
+                      name="insuranceProvider"
+                      value={formData.insuranceProvider}
+                      onChange={handleInputChange}
+                      className={`w-full bg-white border rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
+                        errors.insuranceProvider ? 'border-red-500' : 'border-slate-200'
+                      }`}
+                      placeholder="e.g., Blue Cross Blue Shield, Aetna, etc."
+                    />
+                    {errors.insuranceProvider && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.insuranceProvider}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-500">Policy Number</label>
+                    <input
+                      type="text"
+                      name="insurancePolicyNumber"
+                      value={formData.insurancePolicyNumber}
+                      onChange={handleInputChange}
+                      className={`w-full bg-white border rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
+                        errors.insurancePolicyNumber ? 'border-red-500' : 'border-slate-200'
+                      }`}
+                      placeholder="Enter your policy number"
+                    />
+                    {errors.insurancePolicyNumber && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.insurancePolicyNumber}</p>}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-black uppercase tracking-wider text-slate-500">Policy Expiry Date</label>
+                    <input
+                      type="date"
+                      name="insuranceExpiryDate"
+                      value={formData.insuranceExpiryDate}
+                      onChange={handleInputChange}
+                      className={`w-full bg-white border rounded-xl p-4 outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
+                        errors.insuranceExpiryDate ? 'border-red-500' : 'border-slate-200'
+                      }`}
+                    />
+                    {errors.insuranceExpiryDate && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.insuranceExpiryDate}</p>}
+                  </div>
+                </div>
+              )}
+
+              {!formData.hasInsurance && (
+                <div className="flex items-start gap-3 bg-blue-50 p-4 rounded-xl border border-blue-200">
+                  <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                  <div className="space-y-2">
+                    <p className="text-xs text-blue-700 leading-relaxed font-medium">
+                      No insurance? No problem! Our partner hospitals offer competitive self-pay rates and flexible payment options.
+                    </p>
+                    <p className="text-xs text-blue-600">
+                      You can still proceed with your registration and explore treatment options.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-start gap-3 bg-emerald-50 p-4 rounded-xl border border-emerald-200">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+              <p className="text-xs text-emerald-700 leading-relaxed font-medium">
+                Your insurance information is kept confidential and will only be shared with hospitals when you book appointments.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Navigation Buttons */}
-        <div className="flex gap-4 pt-6 border-t border-slate-200">
-          {step > 1 && (
-            <button
-              type="button"
-              onClick={() => setStep(step - 1)}
-              className="flex-1 px-6 py-3 border border-slate-300 text-slate-900 font-bold rounded-xl hover:bg-slate-50 transition-colors"
-            >
-              Previous
-            </button>
-          )}
-          
+        <div className="flex flex-col gap-4 pt-6 border-t border-slate-200">
           {errors.submit && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm w-full">
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
               <AlertCircle className="w-4 h-4" />
               {errors.submit}
             </div>
           )}
           
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Creating Account...' : (step === 3 ? 'Complete Registration' : 'Next')}
-          </button>
+          <div className="flex gap-4">
+            {step > 1 && (
+              <button
+                type="button"
+                onClick={() => setStep(step - 1)}
+                className="flex-1 px-6 py-3 border border-slate-300 text-slate-900 font-bold rounded-xl hover:bg-slate-50 transition-colors"
+              >
+                Previous
+              </button>
+            )}
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Creating Account...' : (step === 4 ? 'Complete Registration' : 'Next')}
+            </button>
+          </div>
         </div>
 
         <div className="text-center text-sm">

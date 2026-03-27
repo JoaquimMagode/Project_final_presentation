@@ -34,8 +34,16 @@ const Login: React.FC = () => {
         // Store token in localStorage
         localStorage.setItem('token', token);
         
+        // Map backend roles to frontend roles
+        let frontendRole = user.role.toUpperCase();
+        if (user.role === 'hospital_admin') {
+          frontendRole = 'HOSPITAL';
+        } else if (user.role === 'patient') {
+          frontendRole = 'PATIENT';
+        }
+        
         // Update auth context
-        login(user.name, user.role.toUpperCase());
+        login(user.name, frontendRole);
         
         // Navigate to appropriate dashboard based on role
         if (user.role === 'patient') {

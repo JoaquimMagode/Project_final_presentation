@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { patientsAPI, authAPI } from '../../services/api';
 import { useAuth } from '../../App';
+import UserAvatar from '../../components/UserAvatar';
 
 const PatientProfile: React.FC = () => {
   const { user } = useAuth();
@@ -190,14 +191,15 @@ const PatientProfile: React.FC = () => {
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="relative">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                {profileData.firstName[0]}{profileData.lastName[0]}
-              </div>
-              <button className="absolute -bottom-1 -right-1 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors">
-                <Camera className="w-4 h-4" />
-              </button>
-            </div>
+            <UserAvatar 
+              name={`${profileData.firstName} ${profileData.lastName}`}
+              size="xl"
+              showCamera={true}
+              onCameraClick={() => {
+                // TODO: Implement profile picture upload
+                console.log('Profile picture upload clicked');
+              }}
+            />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {profileData.firstName} {profileData.lastName}

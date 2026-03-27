@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
+import UserAvatar from '../components/UserAvatar';
 
 // Import patient pages
 import PatientRegistration from './patient/PatientRegistration';
@@ -191,10 +192,9 @@ const PatientDashboard: React.FC = () => {
                   onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                   className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <img
-                    src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=40&h=40&fit=crop&crop=face"
-                    alt="Profile"
-                    className="w-8 h-8 rounded-full"
+                  <UserAvatar 
+                    name={user?.name} 
+                    size="sm" 
                   />
                   <span className="font-medium">{user?.name}</span>
                   <ChevronDown className="w-4 h-4" />

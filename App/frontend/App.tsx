@@ -275,9 +275,17 @@ const App: React.FC = () => {
         try {
           const response = await authAPI.getProfile();
           if (response.success) {
+            // Map backend roles to frontend roles
+            let frontendRole = response.data.user.role.toUpperCase();
+            if (response.data.user.role === 'hospital_admin') {
+              frontendRole = 'HOSPITAL';
+            } else if (response.data.user.role === 'patient') {
+              frontendRole = 'PATIENT';
+            }
+            
             setUser({
               name: response.data.user.name,
-              role: response.data.user.role.toUpperCase() as UserRole
+              role: frontendRole as UserRole
             });
           }
         } catch (error) {
