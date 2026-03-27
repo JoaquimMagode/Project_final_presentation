@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Star, MapPin, Clock, ShieldCheck, Phone, Mail, Calendar, DollarSign, Camera, Users, Award, Building2, AlertCircle } from 'lucide-react';
-import { hospitalsAPI, patientsAPI } from '../../services/api';
+import { hospitalsAPI, appointmentsAPI } from '../../services/api';
 
 interface HospitalDetailsModalProps {
   hospitalId: string;
@@ -10,8 +10,13 @@ interface HospitalDetailsModalProps {
 
 const HospitalDetailsModal: React.FC<HospitalDetailsModalProps> = ({ hospitalId, isOpen, onClose }) => {
   const [showBookingForm, setShowBookingForm] = useState(false);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
+  const [bookingForm, setBookingForm] = useState({
+    date: '',
+    time: '',
+    type: 'consultation' as 'consultation' | 'procedure' | 'follow_up' | 'telemedicine',
+    reason: '',
+    notes: ''
+  });
   const [hospital, setHospital] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -45,13 +50,39 @@ const HospitalDetailsModal: React.FC<HospitalDetailsModalProps> = ({ hospitalId,
     }
   };
 
-  const handleBookConsultation = () => {
-    if (selectedDate && selectedTime) {
-      alert(`Consultation booked for ${selectedDate} at ${selectedTime}. You will receive a confirmation email shortly.`);
+  const handleBookConsultation = async () => {
+    try {
+      setBookingLoading(true);
+      setError('');
+      
+      if (!bookingForm.date || !bookingForm.time || !bookingForm.reason) {
+        setError('Please fill in all required fields');
+        return;
+      }
+
+      await appointmentsAPI.createAppointment({
+        hospital_id: parseInt(hospitalId),
+        appointment_date: bookingForm.date,
+        appointment_time: bookingForm.time,
+        type: bookingForm.type,
+        reason: bookingForm.reason,
+        notes: bookingForm.notes
+      });
+
+      alert('Appointment booked successfully! You will receive a confirmation email shortly.');
       setShowBookingForm(false);
-      setSelectedDate('');
-      setSelectedTime('');
+      setBookingForm({
+        date: '',
+        time: '',
+        type: 'consultation',
+        reason: '',
+        notes: ''
+      });
       onClose();
+    } catch (err: any) {
+      setError(err.message || 'Failed to book appointment');
+    } finally {
+      setBookingLoading(false);
     }
   };
 
@@ -212,7 +243,7 @@ const HospitalDetailsModal: React.FC<HospitalDetailsModalProps> = ({ hospitalId,
                     className="flex-1 bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                   >
                     <Calendar className="w-5 h-5" />
-                    Book Consultation
+                    Book Appointment
                   </button>
                   <button 
                     onClick={() => alert('Quote request sent! We will contact you within 24 hours.')}
@@ -226,54 +257,94 @@ const HospitalDetailsModal: React.FC<HospitalDetailsModalProps> = ({ hospitalId,
                 <div className="bg-gray-50 rounded-lg p-6">
                   <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                     <Calendar className="w-5 h-5" />
-                    Book Consultation
+                    Book Hospital Appointment
                   </h4>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Date</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Date *</label>
                       <input 
                         type="date"
-                        value={selectedDate}
-                        onChange={(e) => setSelectedDate(e.target.value)}
+                        value={bookingForm.date}
+                        onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
                         min={new Date().toISOString().split('T')[0]}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Time</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {availableTimes.map(time => (
-                          <button
-                            key={time}
-                            onClick={() => setSelectedTime(time)}
-                            className={`p-2 text-sm font-semibold rounded-lg border transition-colors ${
-                              selectedTime === time 
-                                ? 'bg-blue-600 text-white border-blue-600' 
-                                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'
-                            }`}
-                          >
-                            {time}
-                          </button>
-                        ))}
-                      </div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Select Time *</label>
+                      <select
+                        value={bookingForm.time}
+                        onChange={(e) => setBookingForm({ ...bookingForm, time: e.target.value })}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Choose time</option>
+                        <option value="09:00">9:00 AM</option>
+                        <option value="09:30">9:30 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="10:30">10:30 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="11:30">11:30 AM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="14:30">2:30 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                        <option value="15:30">3:30 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                        <option value="16:30">4:30 PM</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Appointment Type</label>
+                      <select
+                        value={bookingForm.type}
+                        onChange={(e) => setBookingForm({ ...bookingForm, type: e.target.value as any })}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="consultation">Consultation</option>
+                        <option value="procedure">Procedure</option>
+                        <option value="follow_up">Follow-up</option>
+                        <option value="telemedicine">Telemedicine</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Reason for Visit *</label>
+                      <textarea
+                        value={bookingForm.reason}
+                        onChange={(e) => setBookingForm({ ...bookingForm, reason: e.target.value })}
+                        rows={3}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Describe your symptoms or reason for the appointment"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Notes (Optional)</label>
+                      <textarea
+                        value={bookingForm.notes}
+                        onChange={(e) => setBookingForm({ ...bookingForm, notes: e.target.value })}
+                        rows={2}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Any additional information for the hospital"
+                      />
                     </div>
                     
                     <div className="bg-blue-50 p-4 rounded-lg">
-                      <h5 className="font-semibold text-blue-900 mb-2">Consultation Details</h5>
+                      <h5 className="font-semibold text-blue-900 mb-2">Hospital Appointment</h5>
                       <ul className="text-sm text-blue-700 space-y-1">
-                        <li>• 30-minute video consultation</li>
-                        <li>• Direct access to hospital specialists</li>
-                        <li>• Medical report review included</li>
-                        <li>• Treatment plan discussion</li>
+                        <li>• Direct appointment with hospital</li>
+                        <li>• Professional medical consultation</li>
+                        <li>• Access to hospital facilities</li>
+                        <li>• Comprehensive treatment options</li>
                       </ul>
                     </div>
                     
                     <div className="flex gap-3">
                       <button 
                         onClick={handleBookConsultation}
-                        disabled={!selectedDate || !selectedTime || bookingLoading}
+                        disabled={!bookingForm.date || !bookingForm.time || !bookingForm.reason || bookingLoading}
                         className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
                       >
                         {bookingLoading ? 'Booking...' : 'Confirm Booking'}
@@ -281,8 +352,13 @@ const HospitalDetailsModal: React.FC<HospitalDetailsModalProps> = ({ hospitalId,
                       <button 
                         onClick={() => {
                           setShowBookingForm(false);
-                          setSelectedDate('');
-                          setSelectedTime('');
+                          setBookingForm({
+                            date: '',
+                            time: '',
+                            type: 'consultation',
+                            reason: '',
+                            notes: ''
+                          });
                         }}
                         className="px-6 py-3 border border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
                       >
