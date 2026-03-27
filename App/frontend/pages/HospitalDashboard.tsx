@@ -27,6 +27,8 @@ const HospitalDashboard: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('Week');
   const [activePage, setActivePage] = useState('dashboard');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Mock hospital data - in real app, this would come from user context or API
@@ -48,6 +50,34 @@ const HospitalDashboard: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (activePage === 'dashboard') {
+      fetchDashboardStats();
+    }
+  }, [activePage]);
+
+  const fetchDashboardStats = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/hospital-dashboard/stats', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDashboardStats(data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
   const sidebarItems = [
     { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
@@ -359,31 +389,31 @@ const HospitalDashboard: React.FC = () => {
             <StatCard
               icon={Calendar}
               title="Appointments"
-              value="1,250"
+              value={loading ? "..." : (dashboardStats?.total_appointments || "0")}
               change="4.8% from last week"
               changeType="up"
               color="bg-blue-500"
             />
             <StatCard
               icon={Phone}
-              title="Call consultancy"
-              value="1,002"
+              title="Total Patients"
+              value={loading ? "..." : (dashboardStats?.total_patients || "0")}
               change="6.0% from last week"
               changeType="up"
               color="bg-green-500"
             />
             <StatCard
               icon={Users}
-              title="Surgeries"
-              value="60"
+              title="Completed"
+              value={loading ? "..." : (dashboardStats?.completed_appointments || "0")}
               change="2.5% from last week"
-              changeType="down"
+              changeType="up"
               color="bg-teal-500"
             />
             <StatCard
-              icon={Users}
-              title="Total patient"
-              value="1,835"
+              icon={DollarSign}
+              title="Total Revenue"
+              value={loading ? "..." : `₹${(dashboardStats?.total_revenue || 0).toLocaleString()}`}
               change="2.1% from last week"
               changeType="up"
               color="bg-blue-400"
