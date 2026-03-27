@@ -40,6 +40,8 @@ const Login: React.FC = () => {
           frontendRole = 'HOSPITAL';
         } else if (user.role === 'patient') {
           frontendRole = 'PATIENT';
+        } else if (user.role === 'admin') {
+          frontendRole = 'ADMIN';
         }
         
         // Update auth context
@@ -50,6 +52,8 @@ const Login: React.FC = () => {
           navigate('/patient-dashboard', { replace: true });
         } else if (user.role === 'hospital_admin') {
           navigate('/hospital-dashboard', { replace: true });
+        } else if (user.role === 'admin') {
+          navigate('/superadmin', { replace: true });
         } else {
           navigate('/dashboard', { replace: true });
         }
