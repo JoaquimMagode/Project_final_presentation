@@ -29,16 +29,16 @@ router.get('/search', validatePagination, async (req, res) => {
     }
     if (location || city) {
       const searchLocation = location || city;
-      conditions.push('(h.location LIKE ? OR h.address LIKE ?)');
+      conditions.push('(h.city LIKE ? OR h.address LIKE ?)');
       queryParams.push(`%${searchLocation}%`, `%${searchLocation}%`);
     }
     if (state) {
-      conditions.push('h.location LIKE ?');
+      conditions.push('h.state LIKE ?');
       queryParams.push(`%${state}%`);
     }
     if (specialization) {
-      conditions.push('h.specializations LIKE ?');
-      queryParams.push(`%${specialization}%`);
+      conditions.push('JSON_CONTAINS(h.specialties, ?)');
+      queryParams.push(`"${specialization}"`);
     }
 
     const whereClause = ' WHERE ' + conditions.join(' AND ');
@@ -54,21 +54,28 @@ router.get('/search', validatePagination, async (req, res) => {
     const [countResult] = await pool.execute(countQuery, queryParams);
     const total = countResult[0].total;
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     hospitals.forEach(hospital => {
       if (hospital.specialties) {
         try {
           hospital.specialties = JSON.parse(hospital.specialties);
         } catch (e) {
+          console.warn('Invalid JSON in specialties:', hospital.specialties);
           hospital.specialties = [];
         }
+      } else {
+        hospital.specialties = [];
       }
+      
       if (hospital.accreditations) {
         try {
           hospital.accreditations = JSON.parse(hospital.accreditations);
         } catch (e) {
+          console.warn('Invalid JSON in accreditations:', hospital.accreditations);
           hospital.accreditations = [];
         }
+      } else {
+        hospital.accreditations = [];
       }
     });
 
@@ -116,20 +123,20 @@ router.get('/', validatePagination, async (req, res) => {
 
     // Add filters
     if (city) {
-      conditions.push('h.location LIKE ?');
+      conditions.push('h.city LIKE ?');
       queryParams.push(`%${city}%`);
     }
     if (state) {
-      conditions.push('h.location LIKE ?');
+      conditions.push('h.state LIKE ?');
       queryParams.push(`%${state}%`);
     }
     if (country) {
-      conditions.push('h.location LIKE ?');
+      conditions.push('h.country LIKE ?');
       queryParams.push(`%${country}%`);
     }
     if (specialty) {
-      conditions.push('h.specializations LIKE ?');
-      queryParams.push(`%${specialty}%`);
+      conditions.push('JSON_CONTAINS(h.specialties, ?)');
+      queryParams.push(`"${specialty}"`);
     }
 
     const whereClause = ' WHERE ' + conditions.join(' AND ');
@@ -214,12 +221,27 @@ router.get('/:id', validateId, async (req, res) => {
 
     const hospital = hospitals[0];
 
-    // Parse JSON fields
+    // Parse JSON fields safely
     if (hospital.specialties) {
-      hospital.specialties = JSON.parse(hospital.specialties);
+      try {
+        hospital.specialties = JSON.parse(hospital.specialties);
+      } catch (e) {
+        console.warn('Invalid JSON in specialties:', hospital.specialties);
+        hospital.specialties = [];
+      }
+    } else {
+      hospital.specialties = [];
     }
+    
     if (hospital.accreditations) {
-      hospital.accreditations = JSON.parse(hospital.accreditations);
+      try {
+        hospital.accreditations = JSON.parse(hospital.accreditations);
+      } catch (e) {
+        console.warn('Invalid JSON in accreditations:', hospital.accreditations);
+        hospital.accreditations = [];
+      }
+    } else {
+      hospital.accreditations = [];
     }
 
     // Get hospital doctors
@@ -317,11 +339,28 @@ router.post('/',
       );
 
       const hospital = hospitals[0];
+      
+      // Parse JSON fields safely
       if (hospital.specialties) {
-        hospital.specialties = JSON.parse(hospital.specialties);
+        try {
+          hospital.specialties = JSON.parse(hospital.specialties);
+        } catch (e) {
+          console.warn('Invalid JSON in specialties:', hospital.specialties);
+          hospital.specialties = [];
+        }
+      } else {
+        hospital.specialties = [];
       }
+      
       if (hospital.accreditations) {
-        hospital.accreditations = JSON.parse(hospital.accreditations);
+        try {
+          hospital.accreditations = JSON.parse(hospital.accreditations);
+        } catch (e) {
+          console.warn('Invalid JSON in accreditations:', hospital.accreditations);
+          hospital.accreditations = [];
+        }
+      } else {
+        hospital.accreditations = [];
       }
 
       res.status(201).json({
@@ -420,11 +459,28 @@ router.put('/:id',
       );
 
       const hospital = hospitals[0];
+      
+      // Parse JSON fields safely
       if (hospital.specialties) {
-        hospital.specialties = JSON.parse(hospital.specialties);
+        try {
+          hospital.specialties = JSON.parse(hospital.specialties);
+        } catch (e) {
+          console.warn('Invalid JSON in specialties:', hospital.specialties);
+          hospital.specialties = [];
+        }
+      } else {
+        hospital.specialties = [];
       }
+      
       if (hospital.accreditations) {
-        hospital.accreditations = JSON.parse(hospital.accreditations);
+        try {
+          hospital.accreditations = JSON.parse(hospital.accreditations);
+        } catch (e) {
+          console.warn('Invalid JSON in accreditations:', hospital.accreditations);
+          hospital.accreditations = [];
+        }
+      } else {
+        hospital.accreditations = [];
       }
 
       res.json({

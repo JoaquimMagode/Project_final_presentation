@@ -71,10 +71,11 @@ export const appointmentsAPI = {
 
   createAppointment: async (appointmentData: {
     hospital_id: number;
-    doctor_name: string;
     appointment_date: string;
     appointment_time: string;
+    type?: string;
     reason: string;
+    notes?: string;
   }) => {
     return apiRequest('/appointments', {
       method: 'POST',
@@ -165,10 +166,11 @@ export const patientsAPI = {
 
   createAppointment: async (appointmentData: {
     hospital_id: number;
-    doctor_name: string;
     appointment_date: string;
     appointment_time: string;
+    type?: string;
     reason: string;
+    notes?: string;
   }) => {
     return apiRequest('/patients/appointments', {
       method: 'POST',

@@ -16,19 +16,21 @@ const seedDatabase = async () => {
     await pool.execute('DELETE FROM users');
     await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
     
-    // Recreate hospitals table with address column
+    // Recreate hospitals table with proper schema
     await pool.execute(`
       CREATE TABLE hospitals (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        location VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(20),
         address TEXT,
-        specializations TEXT,
-        contact_email VARCHAR(255),
-        contact_phone VARCHAR(20),
-        password VARCHAR(255),
+        city VARCHAR(100),
+        state VARCHAR(100),
+        country VARCHAR(100) DEFAULT 'India',
+        specialties JSON,
+        description TEXT,
+        status ENUM('active', 'pending', 'suspended') DEFAULT 'active',
         admin_id INT,
-        status ENUM('active', 'inactive') DEFAULT 'active',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
@@ -41,12 +43,13 @@ const seedDatabase = async () => {
         id INT AUTO_INCREMENT PRIMARY KEY,
         patient_id INT NOT NULL,
         hospital_id INT NOT NULL,
-        doctor_name VARCHAR(255),
         appointment_date DATE NOT NULL,
         appointment_time TIME NOT NULL,
-        reason TEXT,
-        status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+        type ENUM('consultation', 'procedure', 'follow_up', 'telemedicine') DEFAULT 'consultation',
+        reason TEXT NOT NULL,
         notes TEXT,
+        status ENUM('pending', 'confirmed', 'cancelled', 'completed', 'no_show') DEFAULT 'pending',
+        consultation_fee DECIMAL(10,2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
@@ -110,26 +113,47 @@ const seedDatabase = async () => {
     const hospitals = [
       {
         name: 'Apollo Hospitals Mumbai',
-        location: 'Mumbai',
-        specializations: 'Cardiology, Orthopedics, Neurology',
-        contact_email: 'info@apollomumbai.com',
-        contact_phone: '+91-22-6767-4444',
-        admin_id: 2 // hospital admin user
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        specialties: ['Cardiology', 'Orthopedics', 'Neurology', 'Cancer Treatment'],
+        email: 'info@apollomumbai.com',
+        phone: '+91-22-6767-4444',
+        admin_id: 2
       },
       {
         name: 'Fortis Memorial Research Institute',
-        location: 'Delhi',
-        specializations: 'Cardiology, Neurosurgery, Oncology',
-        contact_email: 'info@fortismemorial.com',
-        contact_phone: '+91-11-4277-6222',
+        city: 'Delhi',
+        state: 'Delhi',
+        specialties: ['Cardiology', 'Neurosurgery', 'Oncology', 'Kidney Transplant'],
+        email: 'info@fortismemorial.com',
+        phone: '+91-11-4277-6222',
         admin_id: 2
       },
       {
         name: 'Max Healthcare',
-        location: 'Delhi',
-        specializations: 'Orthopedics, Cardiology, Gastroenterology',
-        contact_email: 'info@maxhealthcare.com',
-        contact_phone: '+91-11-2651-5050',
+        city: 'Delhi',
+        state: 'Delhi',
+        specialties: ['Orthopedics', 'Cardiology', 'Gastroenterology', 'Joint Replacement'],
+        email: 'info@maxhealthcare.com',
+        phone: '+91-11-2651-5050',
+        admin_id: 2
+      },
+      {
+        name: 'Manipal Hospitals',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        specialties: ['Neurology', 'Cardiac Surgery', 'IVF Treatment', 'Eye Surgery'],
+        email: 'info@manipalhospitals.com',
+        phone: '+91-80-2502-4444',
+        admin_id: 2
+      },
+      {
+        name: 'Medanta - The Medicity',
+        city: 'Gurgaon',
+        state: 'Haryana',
+        specialties: ['Liver Transplant', 'Spine Surgery', 'Cosmetic Surgery', 'Dental Treatment'],
+        email: 'info@medanta.org',
+        phone: '+91-124-414-1414',
         admin_id: 2
       }
     ];
@@ -137,8 +161,19 @@ const seedDatabase = async () => {
     console.log('🏥 Seeding hospitals...');
     for (const hospital of hospitals) {
       const [result] = await pool.execute(
-        'INSERT INTO hospitals (name, location, address, specializations, contact_email, contact_phone, password, admin_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [hospital.name, hospital.location, `${hospital.location}, India`, hospital.specializations, hospital.contact_email, hospital.contact_phone, hashedPassword, hospital.admin_id, 'active']
+        'INSERT INTO hospitals (name, city, state, address, specialties, email, phone, admin_id, status, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [
+          hospital.name, 
+          hospital.city, 
+          hospital.state, 
+          `${hospital.city}, ${hospital.state}, India`, 
+          JSON.stringify(hospital.specialties), 
+          hospital.email, 
+          hospital.phone, 
+          hospital.admin_id, 
+          'active',
+          `Leading healthcare provider in ${hospital.city} offering comprehensive medical services.`
+        ]
       );
       console.log(`✅ Created hospital: ${hospital.name} (ID: ${result.insertId})`);
     }
@@ -146,51 +181,87 @@ const seedDatabase = async () => {
     // Seed appointments
     const appointments = [
       {
-        patient_id: 1, // This should be the patient.id, not user.id
+        patient_id: 1,
         hospital_id: 1,
-        doctor_name: 'Dr. Sandeep Vaishya',
         appointment_date: '2024-04-20',
         appointment_time: '10:00:00',
-        reason: 'Neurology consultation',
-        status: 'confirmed'
+        type: 'consultation',
+        reason: 'Cardiology consultation for chest pain and irregular heartbeat',
+        status: 'confirmed',
+        consultation_fee: 150.00
       },
       {
         patient_id: 1,
         hospital_id: 2,
-        doctor_name: 'Dr. Robert Coelho',
-        appointment_time: '14:30:00',
         appointment_date: '2024-04-25',
-        reason: 'Cardiac surgery consultation',
-        status: 'pending'
+        appointment_time: '14:30:00',
+        type: 'consultation',
+        reason: 'Neurosurgery consultation for chronic headaches',
+        status: 'pending',
+        consultation_fee: 200.00
       },
       {
         patient_id: 1,
         hospital_id: 3,
-        doctor_name: 'Dr. Priya Sharma',
         appointment_date: '2024-05-01',
         appointment_time: '09:00:00',
-        reason: 'General checkup',
-        status: 'confirmed'
+        type: 'consultation',
+        reason: 'General health checkup and blood work',
+        status: 'confirmed',
+        consultation_fee: 100.00
+      },
+      {
+        patient_id: 1,
+        hospital_id: 4,
+        appointment_date: '2024-03-15',
+        appointment_time: '11:00:00',
+        type: 'procedure',
+        reason: 'Eye surgery consultation for vision correction',
+        status: 'completed',
+        consultation_fee: 300.00
+      },
+      {
+        patient_id: 1,
+        hospital_id: 5,
+        appointment_date: '2024-03-10',
+        appointment_time: '15:00:00',
+        type: 'follow_up',
+        reason: 'Follow-up appointment for previous dental treatment',
+        status: 'completed',
+        consultation_fee: 75.00
+      },
+      {
+        patient_id: 1,
+        hospital_id: 1,
+        appointment_date: '2024-02-20',
+        appointment_time: '16:00:00',
+        type: 'telemedicine',
+        reason: 'Online consultation for medication review',
+        status: 'completed',
+        consultation_fee: 50.00
       }
     ];
 
     console.log('📅 Seeding appointments...');
     for (const appointment of appointments) {
       const [result] = await pool.execute(
-        'INSERT INTO appointments (patient_id, hospital_id, doctor_name, appointment_date, appointment_time, reason, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [appointment.patient_id, appointment.hospital_id, appointment.doctor_name, appointment.appointment_date, appointment.appointment_time, appointment.reason, appointment.status]
+        'INSERT INTO appointments (patient_id, hospital_id, appointment_date, appointment_time, type, reason, status, consultation_fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        [appointment.patient_id, appointment.hospital_id, appointment.appointment_date, appointment.appointment_time, appointment.type, appointment.reason, appointment.status, appointment.consultation_fee]
       );
-      console.log(`✅ Created appointment: ${appointment.doctor_name} (ID: ${result.insertId})`);
+      console.log(`✅ Created appointment: ${appointment.reason.substring(0, 30)}... (ID: ${result.insertId})`);
     }
 
     console.log('🎉 Database seeding completed successfully!');
     console.log('\n📋 Demo Credentials:');
     console.log('Patient: patient@demo.com / password');
-    console.log('Hospital Admin (User): hospital@demo.com / password');
-    console.log('Hospital Login: info@apollomumbai.com / password');
-    console.log('Hospital Login: info@fortismemorial.com / password');
-    console.log('Hospital Login: info@maxhealthcare.com / password');
+    console.log('Hospital Admin: hospital@demo.com / password');
     console.log('Super Admin: admin@imapsolution.com / password');
+    console.log('\n🏥 Sample hospitals with direct appointment booking:');
+    console.log('- Apollo Hospitals Mumbai (Cardiology, Orthopedics)');
+    console.log('- Fortis Memorial Research Institute (Neurosurgery, Oncology)');
+    console.log('- Max Healthcare (Orthopedics, Gastroenterology)');
+    console.log('- Manipal Hospitals (Neurology, Cardiac Surgery)');
+    console.log('- Medanta - The Medicity (Liver Transplant, Spine Surgery)');
 
   } catch (error) {
     console.error('❌ Error seeding database:', error);
@@ -238,14 +309,16 @@ const createTables = async () => {
     CREATE TABLE IF NOT EXISTS hospitals (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
-      location VARCHAR(255) NOT NULL,
+      email VARCHAR(255),
+      phone VARCHAR(20),
       address TEXT,
-      specializations TEXT,
-      contact_email VARCHAR(255),
-      contact_phone VARCHAR(20),
-      password VARCHAR(255),
+      city VARCHAR(100),
+      state VARCHAR(100),
+      country VARCHAR(100) DEFAULT 'India',
+      specialties JSON,
+      description TEXT,
+      status ENUM('active', 'pending', 'suspended') DEFAULT 'active',
       admin_id INT,
-      status ENUM('active', 'inactive') DEFAULT 'active',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
@@ -258,12 +331,13 @@ const createTables = async () => {
       id INT AUTO_INCREMENT PRIMARY KEY,
       patient_id INT NOT NULL,
       hospital_id INT NOT NULL,
-      doctor_name VARCHAR(255),
       appointment_date DATE NOT NULL,
       appointment_time TIME NOT NULL,
-      reason TEXT,
-      status ENUM('pending', 'confirmed', 'cancelled', 'completed') DEFAULT 'pending',
+      type ENUM('consultation', 'procedure', 'follow_up', 'telemedicine') DEFAULT 'consultation',
+      reason TEXT NOT NULL,
       notes TEXT,
+      status ENUM('pending', 'confirmed', 'cancelled', 'completed', 'no_show') DEFAULT 'pending',
+      consultation_fee DECIMAL(10,2),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
       FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,

@@ -1,352 +1,340 @@
-import React, { useState } from 'react';
-import { 
-  Calendar, Clock, Plus, Search, Filter, Eye, Edit2, Trash2, 
-  User, Phone, Mail, CheckCircle, XCircle, AlertCircle 
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Calendar, Clock, User, Phone, Filter, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
 
 interface Appointment {
-  id: string;
-  patientName: string;
-  doctorName: string;
-  date: string;
-  time: string;
+  id: number;
+  appointment_date: string;
+  appointment_time: string;
   type: string;
-  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'No Show';
-  duration: string;
-  notes: string;
-  patientPhone: string;
-  patientEmail: string;
+  reason: string;
+  status: string;
+  consultation_fee: number;
+  patient_name: string;
+  patient_email: string;
+  patient_phone: string;
+  notes?: string;
 }
 
 const Appointments: React.FC = () => {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
 
-  const [appointments] = useState<Appointment[]>([
-    {
-      id: '1',
-      patientName: 'John Smith',
-      doctorName: 'Dr. Sarah Wilson',
-      date: '2024-01-15',
-      time: '09:00',
-      type: 'Consultation',
-      status: 'Scheduled',
-      duration: '30 min',
-      notes: 'Regular checkup',
-      patientPhone: '+1 234 567 8900',
-      patientEmail: 'john.smith@email.com'
-    },
-    {
-      id: '2',
-      patientName: 'Maria Garcia',
-      doctorName: 'Dr. Michael Brown',
-      date: '2024-01-15',
-      time: '10:30',
-      type: 'Follow-up',
-      status: 'Completed',
-      duration: '45 min',
-      notes: 'Post-surgery checkup',
-      patientPhone: '+1 234 567 8901',
-      patientEmail: 'maria.garcia@email.com'
-    },
-    {
-      id: '3',
-      patientName: 'David Johnson',
-      doctorName: 'Dr. Emily Davis',
-      date: '2024-01-15',
-      time: '14:00',
-      type: 'Surgery',
-      status: 'Scheduled',
-      duration: '120 min',
-      notes: 'Knee replacement surgery',
-      patientPhone: '+1 234 567 8902',
-      patientEmail: 'david.johnson@email.com'
-    },
-    {
-      id: '4',
-      patientName: 'Lisa Anderson',
-      doctorName: 'Dr. James Miller',
-      date: '2024-01-15',
-      time: '11:15',
-      type: 'Consultation',
-      status: 'No Show',
-      duration: '30 min',
-      notes: 'Cardiology consultation',
-      patientPhone: '+1 234 567 8903',
-      patientEmail: 'lisa.anderson@email.com'
-    }
-  ]);
+  useEffect(() => {
+    fetchAppointments();
+  }, [statusFilter, dateFilter]);
 
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.doctorName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'All' || appointment.status === filterStatus;
-    const matchesDate = appointment.date === selectedDate;
-    return matchesSearch && matchesFilter && matchesDate;
-  });
+  const fetchAppointments = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams();
+      if (statusFilter) params.append('status', statusFilter);
+      if (dateFilter) params.append('date', dateFilter);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Scheduled': return 'bg-blue-100 text-blue-800';
-      case 'Completed': return 'bg-green-100 text-green-800';
-      case 'Cancelled': return 'bg-red-100 text-red-800';
-      case 'No Show': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      const response = await fetch(
+        `http://localhost:5000/api/hospital-dashboard/appointments?${params.toString()}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAppointments(data.data.appointments);
+      }
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Scheduled': return <Clock className="w-4 h-4" />;
-      case 'Completed': return <CheckCircle className="w-4 h-4" />;
-      case 'Cancelled': return <XCircle className="w-4 h-4" />;
-      case 'No Show': return <AlertCircle className="w-4 h-4" />;
-      default: return <Clock className="w-4 h-4" />;
+  const updateAppointmentStatus = async (appointmentId: number, newStatus: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:5000/api/appointments/${appointmentId}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        fetchAppointments(); // Refresh the list
+      }
+    } catch (error) {
+      console.error('Error updating appointment:', error);
     }
   };
 
-  const todayStats = {
-    total: appointments.filter(a => a.date === selectedDate).length,
-    scheduled: appointments.filter(a => a.date === selectedDate && a.status === 'Scheduled').length,
-    completed: appointments.filter(a => a.date === selectedDate && a.status === 'Completed').length,
-    cancelled: appointments.filter(a => a.date === selectedDate && (a.status === 'Cancelled' || a.status === 'No Show')).length
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { color: 'bg-yellow-100 text-yellow-800', icon: AlertCircle },
+      confirmed: { color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+      completed: { color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      cancelled: { color: 'bg-red-100 text-red-800', icon: XCircle },
+      no_show: { color: 'bg-gray-100 text-gray-800', icon: XCircle }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    const Icon = config.icon;
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        <Icon className="w-3 h-3" />
+        {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+      </span>
+    );
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount || 0);
+  };
+
+  const getAppointmentStats = () => {
+    const stats = {
+      total: appointments.length,
+      pending: appointments.filter(a => a.status === 'pending').length,
+      confirmed: appointments.filter(a => a.status === 'confirmed').length,
+      completed: appointments.filter(a => a.status === 'completed').length,
+      cancelled: appointments.filter(a => a.status === 'cancelled').length
+    };
+    return stats;
+  };
+
+  const stats = getAppointmentStats();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Appointments</h1>
-          <p className="text-gray-600">Manage patient appointments and schedules</p>
+          <p className="text-gray-600">Manage hospital appointments</p>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Schedule Appointment
-        </button>
-      </div>
-
-      {/* Date Selector and Filters */}
-      <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-gray-400" />
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-          </div>
-          <div className="flex-1 relative">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search appointments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="All">All Status</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="Completed">Completed</option>
-              <option value="Cancelled">Cancelled</option>
-              <option value="No Show">No Show</option>
-            </select>
-          </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-gray-900">{todayStats.total}</div>
-          <div className="text-sm text-gray-600">Total Appointments</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-blue-600">{todayStats.scheduled}</div>
-          <div className="text-sm text-gray-600">Scheduled</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-green-600">{todayStats.completed}</div>
-          <div className="text-sm text-gray-600">Completed</div>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-          <div className="text-2xl font-bold text-red-600">{todayStats.cancelled}</div>
-          <div className="text-sm text-gray-600">Cancelled/No Show</div>
-        </div>
-      </div>
-
-      {/* Appointments List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-        <div className="p-4 border-b border-gray-200">
-          <h3 className="font-semibold text-gray-900">
-            Appointments for {new Date(selectedDate).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </h3>
-        </div>
-        
-        <div className="divide-y divide-gray-100">
-          {filteredAppointments.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No appointments found for the selected date and filters.</p>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total</p>
+              <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
-          ) : (
-            filteredAppointments.map((appointment) => (
-              <div key={appointment.id} className="p-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <div className="text-lg font-bold text-gray-900">{appointment.time}</div>
-                      <div className="text-xs text-gray-500">{appointment.duration}</div>
-                    </div>
-                    
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-semibold text-gray-900">{appointment.patientName}</h4>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(appointment.status)}`}>
-                          {getStatusIcon(appointment.status)}
-                          {appointment.status}
-                        </span>
-                      </div>
-                      <div className="text-sm text-gray-600 mb-1">
-                        <span className="font-medium">Dr:</span> {appointment.doctorName} • 
-                        <span className="font-medium"> Type:</span> {appointment.type}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            {appointment.patientPhone}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3" />
-                            {appointment.patientEmail}
-                          </span>
-                        </div>
-                      </div>
-                      {appointment.notes && (
-                        <div className="text-sm text-gray-600 mt-1">
-                          <span className="font-medium">Notes:</span> {appointment.notes}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <Eye className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <Edit2 className="w-4 h-4 text-gray-600" />
-                    </button>
-                    <button className="p-2 hover:bg-gray-100 rounded-lg">
-                      <Trash2 className="w-4 h-4 text-red-600" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Add Appointment Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Schedule New Appointment</h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Doctor</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option>Dr. Sarah Wilson</option>
-                    <option>Dr. Michael Brown</option>
-                    <option>Dr. Emily Davis</option>
-                    <option>Dr. James Miller</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Time</label>
-                  <input type="time" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option>Consultation</option>
-                    <option>Follow-up</option>
-                    <option>Surgery</option>
-                    <option>Emergency</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Duration</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option>30 min</option>
-                    <option>45 min</option>
-                    <option>60 min</option>
-                    <option>90 min</option>
-                    <option>120 min</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Patient Phone</label>
-                  <input type="tel" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Patient Email</label>
-                  <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
-                  <textarea className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" rows={3}></textarea>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex gap-3">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
-                Schedule Appointment
-              </button>
-            </div>
+            <Calendar className="w-6 h-6 text-gray-400" />
           </div>
         </div>
-      )}
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Pending</p>
+              <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
+            </div>
+            <AlertCircle className="w-6 h-6 text-yellow-400" />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Confirmed</p>
+              <p className="text-2xl font-bold text-blue-600">{stats.confirmed}</p>
+            </div>
+            <CheckCircle className="w-6 h-6 text-blue-400" />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Completed</p>
+              <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
+            </div>
+            <CheckCircle className="w-6 h-6 text-green-400" />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Cancelled</p>
+              <p className="text-2xl font-bold text-red-600">{stats.cancelled}</p>
+            </div>
+            <XCircle className="w-6 h-6 text-red-400" />
+          </div>
+        </div>
+      </div>
+
+      {/* Appointments Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Appointment List</h3>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Patient
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date & Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type & Reason
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fee
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {appointments.map((appointment) => (
+                <tr key={appointment.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-teal-600" />
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{appointment.patient_name}</div>
+                        <div className="text-sm text-gray-500 flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          {appointment.patient_phone}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                      <Calendar className="w-4 h-4 text-gray-400" />
+                      {formatDate(appointment.appointment_date)}
+                    </div>
+                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      {formatTime(appointment.appointment_time)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-gray-900 capitalize">
+                      {appointment.type}
+                    </div>
+                    <div className="text-sm text-gray-500 max-w-xs truncate">
+                      {appointment.reason}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(appointment.status)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {formatCurrency(appointment.consultation_fee)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      {appointment.status === 'pending' && (
+                        <>
+                          <button
+                            onClick={() => updateAppointmentStatus(appointment.id, 'confirmed')}
+                            className="text-green-600 hover:text-green-900 text-xs px-2 py-1 bg-green-50 rounded"
+                          >
+                            Confirm
+                          </button>
+                          <button
+                            onClick={() => updateAppointmentStatus(appointment.id, 'cancelled')}
+                            className="text-red-600 hover:text-red-900 text-xs px-2 py-1 bg-red-50 rounded"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                      {appointment.status === 'confirmed' && (
+                        <button
+                          onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                          className="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 bg-blue-50 rounded"
+                        >
+                          Complete
+                        </button>
+                      )}
+                      <button className="text-gray-600 hover:text-gray-900">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {appointments.length === 0 && (
+          <div className="text-center py-12">
+            <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No appointments found</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

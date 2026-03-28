@@ -18,13 +18,11 @@ router.get('/',
       let query = `
         SELECT a.*, 
                p.user_id as patient_user_id, pu.name as patient_name, pu.email as patient_email,
-               h.name as hospital_name, h.city as hospital_city,
-               d.name as doctor_name, d.specialization
+               h.name as hospital_name, h.city as hospital_city, h.address as hospital_address
         FROM appointments a
         JOIN patients p ON a.patient_id = p.id
         JOIN users pu ON p.user_id = pu.id
         JOIN hospitals h ON a.hospital_id = h.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
       `;
       
       let countQuery = `
@@ -91,14 +89,13 @@ router.get('/',
         countQuery += whereClause;
       }
 
-      query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?';
-      queryParams.push(parseInt(limit), parseInt(offset));
+      query += ` ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}`;
 
       // Get appointments
       const [appointments] = await pool.execute(query, queryParams);
       
       // Get total count
-      const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
+      const [countResult] = await pool.execute(countQuery, queryParams);
       const total = countResult[0].total;
 
       res.json({
@@ -137,13 +134,11 @@ router.get('/:id',
       const [appointments] = await pool.execute(`
         SELECT a.*, 
                p.user_id as patient_user_id, pu.name as patient_name, pu.email as patient_email, pu.phone as patient_phone,
-               h.name as hospital_name, h.address as hospital_address, h.city as hospital_city, h.phone as hospital_phone,
-               d.name as doctor_name, d.specialization, d.qualification, d.consultation_fee
+               h.name as hospital_name, h.address as hospital_address, h.city as hospital_city, h.phone as hospital_phone
         FROM appointments a
         JOIN patients p ON a.patient_id = p.id
         JOIN users pu ON p.user_id = pu.id
         JOIN hospitals h ON a.hospital_id = h.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
         WHERE a.id = ?
       `, [appointmentId]);
 
@@ -210,9 +205,17 @@ router.post('/',
   async (req, res) => {
     try {
       const {
-        hospital_id, doctor_id, appointment_date, appointment_time,
-        type, notes, consultation_fee
+        hospital_id, appointment_date, appointment_time,
+        type, reason, notes, consultation_fee
       } = req.body;
+
+      // Validate required fields
+      if (!reason || !reason.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Reason for appointment is required'
+        });
+      }
 
       // Get patient ID
       const [patients] = await pool.execute(
@@ -242,21 +245,6 @@ router.post('/',
         });
       }
 
-      // Verify doctor exists and belongs to hospital (if doctor_id provided)
-      if (doctor_id) {
-        const [doctors] = await pool.execute(
-          'SELECT id FROM doctors WHERE id = ? AND hospital_id = ? AND status = "active"',
-          [doctor_id, hospital_id]
-        );
-
-        if (doctors.length === 0) {
-          return res.status(400).json({
-            success: false,
-            message: 'Doctor not found or not available at this hospital'
-          });
-        }
-      }
-
       // Check for appointment conflicts (same patient, same date/time)
       const [conflicts] = await pool.execute(`
         SELECT id FROM appointments 
@@ -274,20 +262,18 @@ router.post('/',
       // Create appointment
       const [result] = await pool.execute(`
         INSERT INTO appointments 
-        (patient_id, hospital_id, doctor_id, appointment_date, appointment_time, type, notes, consultation_fee, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'scheduled')
-      `, [patient_id, hospital_id, doctor_id, appointment_date, appointment_time, type, notes, consultation_fee]);
+        (patient_id, hospital_id, appointment_date, appointment_time, type, reason, notes, consultation_fee, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+      `, [patient_id, hospital_id, appointment_date, appointment_time, type || 'consultation', reason, notes || null, consultation_fee || null]);
 
       const appointmentId = result.insertId;
 
       // Get created appointment with details
       const [newAppointments] = await pool.execute(`
         SELECT a.*, 
-               h.name as hospital_name, h.city as hospital_city,
-               d.name as doctor_name, d.specialization
+               h.name as hospital_name, h.city as hospital_city
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
         WHERE a.id = ?
       `, [appointmentId]);
 
@@ -318,7 +304,7 @@ router.put('/:id',
   async (req, res) => {
     try {
       const appointmentId = req.params.id;
-      const { appointment_date, appointment_time, notes, status } = req.body;
+      const { appointment_date, appointment_time, reason, notes, status } = req.body;
 
       // Get appointment details
       const [appointments] = await pool.execute(`
@@ -341,11 +327,11 @@ router.put('/:id',
       let canUpdate = false;
       if (req.user.role === 'patient' && appointment.patient_user_id === req.user.id) {
         canUpdate = true;
-        // Patients can only update date, time, and notes, and only if appointment is scheduled
-        if (appointment.status !== 'scheduled') {
+        // Patients can only update date, time, notes, and reason, and only if appointment is pending
+        if (appointment.status !== 'pending') {
           return res.status(400).json({
             success: false,
-            message: 'Can only modify scheduled appointments'
+            message: 'Can only modify pending appointments'
           });
         }
       } else if (req.user.role === 'hospital_admin') {
@@ -377,12 +363,16 @@ router.put('/:id',
         updateFields.push('appointment_time = ?');
         updateValues.push(appointment_time);
       }
+      if (reason !== undefined) {
+        updateFields.push('reason = ?');
+        updateValues.push(reason);
+      }
       if (notes !== undefined) {
         updateFields.push('notes = ?');
         updateValues.push(notes);
       }
       if (status && req.user.role !== 'patient') {
-        if (!['scheduled', 'confirmed', 'completed', 'cancelled', 'no_show'].includes(status)) {
+        if (!['pending', 'confirmed', 'completed', 'cancelled', 'no_show'].includes(status)) {
           return res.status(400).json({
             success: false,
             message: 'Invalid status'
@@ -411,11 +401,9 @@ router.put('/:id',
       // Get updated appointment
       const [updatedAppointments] = await pool.execute(`
         SELECT a.*, 
-               h.name as hospital_name, h.city as hospital_city,
-               d.name as doctor_name, d.specialization
+               h.name as hospital_name, h.city as hospital_city
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
         WHERE a.id = ?
       `, [appointmentId]);
 
@@ -521,7 +509,7 @@ router.get('/available-slots',
   authenticateToken,
   async (req, res) => {
     try {
-      const { hospital_id, doctor_id, date } = req.query;
+      const { hospital_id, date } = req.query;
 
       if (!hospital_id || !date) {
         return res.status(400).json({
@@ -531,20 +519,13 @@ router.get('/available-slots',
       }
 
       // Get existing appointments for the date
-      let query = `
+      const [bookedSlots] = await pool.execute(`
         SELECT appointment_time 
         FROM appointments 
         WHERE hospital_id = ? AND appointment_date = ? 
         AND status NOT IN ('cancelled', 'no_show')
-      `;
-      let queryParams = [hospital_id, date];
+      `, [hospital_id, date]);
 
-      if (doctor_id) {
-        query += ' AND doctor_id = ?';
-        queryParams.push(doctor_id);
-      }
-
-      const [bookedSlots] = await pool.execute(query, queryParams);
       const bookedTimes = bookedSlots.map(slot => slot.appointment_time);
 
       // Generate available time slots (9 AM to 5 PM, 30-minute intervals)

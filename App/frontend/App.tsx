@@ -281,6 +281,8 @@ const App: React.FC = () => {
               frontendRole = 'HOSPITAL';
             } else if (response.data.user.role === 'patient') {
               frontendRole = 'PATIENT';
+            } else if (response.data.user.role === 'admin') {
+              frontendRole = 'ADMIN';
             }
             
             setUser({
