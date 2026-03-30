@@ -30,33 +30,22 @@ const Login: React.FC = () => {
       
       if (response.success) {
         const { user, token } = response.data;
-        
-        // Store token in localStorage
+
+        const roleMap: Record<string, string> = {
+          super_admin: 'superadmin',
+          hospital_admin: 'hospital',
+          patient: 'patient',
+        };
+        const role = roleMap[user.role] ?? 'patient';
+
         localStorage.setItem('token', token);
-        
-        // Map backend roles to frontend roles
-        let frontendRole = user.role.toUpperCase();
-        if (user.role === 'hospital_admin') {
-          frontendRole = 'HOSPITAL';
-        } else if (user.role === 'patient') {
-          frontendRole = 'PATIENT';
-        } else if (user.role === 'admin') {
-          frontendRole = 'ADMIN';
-        }
-        
-        // Update auth context
-        login(user.name, frontendRole);
-        
-        // Navigate to appropriate dashboard based on role
-        if (user.role === 'patient') {
-          navigate('/patient-dashboard', { replace: true });
-        } else if (user.role === 'hospital_admin') {
-          navigate('/hospital-dashboard', { replace: true });
-        } else if (user.role === 'admin') {
-          navigate('/superadmin', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
+        localStorage.setItem('user', JSON.stringify({ name: user.name, role }));
+
+        login(user.name, role as any);
+
+        if (role === 'superadmin') navigate('/superadmin', { replace: true });
+        else if (role === 'hospital') navigate('/hospital', { replace: true });
+        else navigate('/patient', { replace: true });
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');

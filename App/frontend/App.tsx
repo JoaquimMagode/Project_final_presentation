@@ -52,13 +52,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   
-  const isHospitalDashboard = location.pathname === '/hospital-dashboard';
-  const isPatientDashboard = location.pathname === '/patient-dashboard';
-  const isSuperAdminDashboard = location.pathname === '/superadmin';
-  const isLoginPage = location.pathname === '/login';
-  const isRegisterPage = location.pathname === '/register';
-  const isDashboardPage = isHospitalDashboard || isPatientDashboard || isSuperAdminDashboard;
-  const hideHeaderFooter = isDashboardPage || isLoginPage || isRegisterPage;
+  const isDashboardPage = ['/superadmin', '/hospital', '/patient'].includes(location.pathname);
+  const hideHeaderFooter = isDashboardPage || location.pathname === '/login' || location.pathname === '/register';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -84,7 +79,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   ];
 
   if (user) {
-    navItems.push({ path: '/dashboard', label: 'Dashboard', icon: APP_ICONS.Dashboard });
+    const dashPath = user.role === 'superadmin' ? '/superadmin' : user.role === 'hospital' ? '/hospital' : '/patient';
+    navItems.push({ path: dashPath, label: 'Dashboard', icon: APP_ICONS.Dashboard });
   }
 
   const handleSearch = (e: React.FormEvent) => {
@@ -240,9 +236,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </Link>
         ))}
         {user ? (
-          <Link 
-            to="/dashboard"
-            className={`flex flex-col items-center gap-1 p-2 transition-all ${location.pathname === '/dashboard' ? 'text-emerald-600' : 'text-slate-400'}`}
+          <Link
+            to={user.role === 'superadmin' ? '/superadmin' : user.role === 'hospital' ? '/hospital' : '/patient'}
+            className={`flex flex-col items-center gap-1 p-2 transition-all ${isDashboardPage ? 'text-emerald-600' : 'text-slate-400'}`}
           >
             {APP_ICONS.Dashboard}
             <span className="text-[10px] font-bold uppercase tracking-wider">Profile</span>
@@ -275,15 +271,12 @@ const App: React.FC = () => {
         try {
           const response = await authAPI.getProfile();
           if (response.success) {
-            // Map backend roles to frontend roles
-            let frontendRole = response.data.user.role.toUpperCase();
-            if (response.data.user.role === 'hospital_admin') {
-              frontendRole = 'HOSPITAL';
-            } else if (response.data.user.role === 'patient') {
-              frontendRole = 'PATIENT';
-            } else if (response.data.user.role === 'admin') {
-              frontendRole = 'ADMIN';
-            }
+            const roleMap: Record<string, string> = {
+              super_admin: 'superadmin',
+              hospital_admin: 'hospital',
+              patient: 'patient',
+            };
+            const frontendRole = roleMap[response.data.user.role] ?? 'patient';
             
             setUser({
               name: response.data.user.name,
@@ -310,6 +303,7 @@ const App: React.FC = () => {
       // Ignore logout errors
     } finally {
       localStorage.removeItem('token');
+      localStorage.removeItem('user');
       setUser(null);
     }
   };
@@ -339,23 +333,23 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/superadmin" element={<SuperAdminDashboard />} />
-              <Route path="/hospital-dashboard" element={
-                <ProtectedRoute requiredRole="HOSPITAL">
-                  <HospitalDashboard />
-                </ProtectedRoute>
+              <Route element={<ProtectedRoute role="superadmin" />}>
+                <Route path="/superadmin" element={<SuperAdminDashboard />} />
+              </Route>
+              <Route element={<ProtectedRoute role="hospital" />}>
+                <Route path="/hospital" element={<HospitalDashboard />} />
+              </Route>
+              <Route element={<ProtectedRoute role="patient" />}>
+                <Route path="/patient" element={<PatientDashboard />} />
+              </Route>
+              <Route path="/unauthorized" element={
+                <div className="min-h-screen flex flex-col items-center justify-center gap-4">
+                  <h1 className="text-3xl font-black text-slate-900">Acesso Negado</h1>
+                  <p className="text-slate-500">Você não tem permissão para acessar esta página.</p>
+                  <a href="#/" className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700">Voltar ao Início</a>
+                </div>
               } />
-              <Route path="/patient-dashboard" element={
-                <ProtectedRoute requiredRole="PATIENT">
-                  <PatientDashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
         </HashRouter>
