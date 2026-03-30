@@ -1,24 +1,17 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../App';
+import { Navigate, Outlet } from 'react-router-dom';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: 'PATIENT' | 'HOSPITAL';
+  role: 'superadmin' | 'hospital' | 'patient';
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole }) => {
-  const { user } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ role }) => {
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== role) return <Navigate to="/unauthorized" replace />;
 
-  if (requiredRole && user.role !== requiredRole) {
-    return <Navigate to="/login" replace />;
-  }
-
-  return <>{children}</>;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

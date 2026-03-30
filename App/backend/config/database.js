@@ -123,45 +123,25 @@ const createTables = async () => {
       )
     `);
 
-    // Doctors table
-    await connection.execute(`
-      CREATE TABLE IF NOT EXISTS doctors (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        hospital_id INT NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        email VARCHAR(255),
-        phone VARCHAR(20),
-        specialization VARCHAR(255),
-        qualification VARCHAR(500),
-        experience_years INT,
-        consultation_fee DECIMAL(10,2),
-        availability JSON,
-        status ENUM('active', 'inactive') DEFAULT 'active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
-      )
-    `);
+    // Remove doctors table as we're doing direct hospital appointments
 
-    // Appointments table
+    // Appointments table (patient to hospital direct)
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS appointments (
         id INT PRIMARY KEY AUTO_INCREMENT,
         patient_id INT NOT NULL,
         hospital_id INT NOT NULL,
-        doctor_id INT,
-        doctor_name VARCHAR(255),
         appointment_date DATE NOT NULL,
         appointment_time TIME NOT NULL,
-        type ENUM('consultation', 'procedure', 'follow_up', 'telemedicine') NOT NULL,
-        status ENUM('scheduled', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'scheduled',
+        type ENUM('consultation', 'procedure', 'follow_up', 'telemedicine') DEFAULT 'consultation',
+        status ENUM('pending', 'confirmed', 'completed', 'cancelled', 'no_show') DEFAULT 'pending',
+        reason TEXT NOT NULL,
         notes TEXT,
         consultation_fee DECIMAL(10,2),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
-        FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE,
-        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL
+        FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE CASCADE
       )
     `);
 
@@ -171,7 +151,6 @@ const createTables = async () => {
         id INT PRIMARY KEY AUTO_INCREMENT,
         patient_id INT NOT NULL,
         hospital_id INT,
-        doctor_id INT,
         appointment_id INT,
         report_type VARCHAR(100),
         title VARCHAR(255) NOT NULL,
@@ -184,7 +163,6 @@ const createTables = async () => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         FOREIGN KEY (patient_id) REFERENCES patients(id) ON DELETE CASCADE,
         FOREIGN KEY (hospital_id) REFERENCES hospitals(id) ON DELETE SET NULL,
-        FOREIGN KEY (doctor_id) REFERENCES doctors(id) ON DELETE SET NULL,
         FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
       )
     `);

@@ -4,7 +4,7 @@ import {
   TrendingUp, TrendingDown, MoreHorizontal, Plus, Settings, HelpCircle,
   BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
   Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown,
-  Upload, Heart, Shield, LogOut
+  Upload, Heart, Shield, LogOut, HeartPulse
 } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
@@ -117,14 +117,14 @@ const PatientDashboard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-blue-800 transition-all duration-300 flex flex-col`}>
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-emerald-600 transition-all duration-300 flex flex-col`}>
         {/* Logo */}
-        <div className="p-6 border-b border-blue-700">
+        <div className="p-6 border-b border-emerald-500">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <Heart className="w-5 h-5 text-blue-800" />
+            <div className="bg-white p-1 rounded-lg text-emerald-600">
+              <HeartPulse className="w-5 h-5" />
             </div>
-            {sidebarOpen && <span className="text-white font-bold text-lg">HealthCare</span>}
+            {sidebarOpen && <span className="text-white font-bold text-lg tracking-tight">IMAP Solution</span>}
           </div>
         </div>
 
@@ -137,8 +137,8 @@ const PatientDashboard: React.FC = () => {
                 onClick={() => setActivePage(item.page)}
                 className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
                   item.active 
-                    ? 'bg-blue-700 text-white' 
-                    : 'text-blue-100 hover:bg-blue-700 hover:text-white'
+                    ? 'bg-emerald-500 text-white' 
+                    : 'text-emerald-100 hover:bg-emerald-500 hover:text-white'
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -150,8 +150,8 @@ const PatientDashboard: React.FC = () => {
 
         {/* Patient Menu */}
         {sidebarOpen && (
-          <div className="p-4 border-t border-blue-700">
-            <div className="text-blue-300 text-xs font-semibold mb-3 uppercase tracking-wider">Patient Portal</div>
+          <div className="p-4 border-t border-emerald-500">
+            <div className="text-emerald-200 text-xs font-semibold mb-3 uppercase tracking-wider">Patient Portal</div>
           </div>
         )}
       </div>

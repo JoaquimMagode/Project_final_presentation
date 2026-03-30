@@ -181,7 +181,7 @@ router.get('/appointments',
 
       // Get appointments
       const [appointments] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, h.location as hospital_location
+        SELECT a.*, h.name as hospital_name, h.city as hospital_city, h.address as hospital_address
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
         WHERE a.patient_id = ?
@@ -214,7 +214,7 @@ router.post('/appointments',
   async (req, res) => {
     try {
       const userId = req.user.id;
-      const { hospital_id, doctor_name, appointment_date, appointment_time, reason } = req.body;
+      const { hospital_id, appointment_date, appointment_time, reason } = req.body;
 
       // Get patient ID
       const [patients] = await pool.execute(
@@ -233,13 +233,13 @@ router.post('/appointments',
 
       // Create appointment
       const [result] = await pool.execute(`
-        INSERT INTO appointments (patient_id, hospital_id, doctor_name, appointment_date, appointment_time, notes, status, type)
-        VALUES (?, ?, ?, ?, ?, ?, 'scheduled', 'consultation')
-      `, [patientId, hospital_id, doctor_name || 'Doctor', appointment_date, appointment_time, reason]);
+        INSERT INTO appointments (patient_id, hospital_id, appointment_date, appointment_time, reason, notes, status, type)
+        VALUES (?, ?, ?, ?, ?, ?, 'pending', 'consultation')
+      `, [patientId, hospital_id, appointment_date, appointment_time, reason, reason]);
 
       // Get created appointment with hospital details
       const [newAppointment] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, h.location as hospital_location
+        SELECT a.*, h.name as hospital_name, h.city as hospital_city, h.address as hospital_address
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
         WHERE a.id = ?
@@ -567,10 +567,9 @@ router.get('/:id',
 
       // Get patient's appointments
       const [appointments] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, d.name as doctor_name
+        SELECT a.*, h.name as hospital_name
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
         WHERE a.patient_id = ?
         ORDER BY a.appointment_date DESC, a.appointment_time DESC
         LIMIT 10
@@ -578,10 +577,9 @@ router.get('/:id',
 
       // Get patient's medical reports
       const [reports] = await pool.execute(`
-        SELECT mr.*, h.name as hospital_name, d.name as doctor_name
+        SELECT mr.*, h.name as hospital_name
         FROM medical_reports mr
         LEFT JOIN hospitals h ON mr.hospital_id = h.id
-        LEFT JOIN doctors d ON mr.doctor_id = d.id
         WHERE mr.patient_id = ?
         ORDER BY mr.report_date DESC, mr.created_at DESC
         LIMIT 10
@@ -727,11 +725,9 @@ router.get('/:id/appointments',
       }
 
       let query = `
-        SELECT a.*, h.name as hospital_name, h.location as hospital_city, 
-               d.name as doctor_name, d.specialization
+        SELECT a.*, h.name as hospital_name, h.city as hospital_city
         FROM appointments a
         JOIN hospitals h ON a.hospital_id = h.id
-        LEFT JOIN doctors d ON a.doctor_id = d.id
         WHERE a.patient_id = ?
       `;
       let countQuery = `
@@ -820,10 +816,9 @@ router.get('/:id/reports',
       }
 
       let query = `
-        SELECT mr.*, h.name as hospital_name, d.name as doctor_name
+        SELECT mr.*, h.name as hospital_name
         FROM medical_reports mr
         LEFT JOIN hospitals h ON mr.hospital_id = h.id
-        LEFT JOIN doctors d ON mr.doctor_id = d.id
         WHERE mr.patient_id = ?
       `;
       let countQuery = `

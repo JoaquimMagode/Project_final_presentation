@@ -13,7 +13,7 @@ const AdminLogin: React.FC = () => {
     setError('');
     
     if (email === 'admin@imapsolution.com' && password === 'password') {
-      navigate('/admin');
+      navigate('/SuperAdminDashboard');
     } else {
       setError('Invalid admin credentials');
     }

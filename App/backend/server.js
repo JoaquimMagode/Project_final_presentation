@@ -17,6 +17,7 @@ const patientRoutes = require('./routes/patients');
 const appointmentRoutes = require('./routes/appointments');
 const uploadRoutes = require('./routes/upload');
 const hospitalEmployeeRoutes = require('./routes/hospital-employees');
+const hospitalDashboardRoutes = require('./routes/hospital-dashboard');
 
 // Initialize Express app
 const app = express();
@@ -31,7 +32,7 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -84,6 +85,7 @@ app.use('/api/patients', patientRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/hospital-employees', hospitalEmployeeRoutes);
+app.use('/api/hospital-dashboard', hospitalDashboardRoutes);
 
 // Additional routes would be added here:
 // app.use('/api/appointments', appointmentRoutes);

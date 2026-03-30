@@ -132,37 +132,24 @@ const authorizeHospitalAdmin = async (req, res, next) => {
       });
     }
 
-    // Get hospital ID from request params or body
-    const hospitalId = req.params.hospitalId || req.body.hospitalId;
-    
-    if (!hospitalId) {
-      return res.status(400).json({
-        success: false,
-        message: 'Hospital ID required'
-      });
-    }
-
-    // If this is a hospital token, check if it matches the requested hospital
+    // For hospital dashboard routes, get hospital ID from user's hospital association
     if (req.user.isHospital) {
-      if (req.user.id !== parseInt(hospitalId)) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied - not authorized for this hospital'
-        });
-      }
+      req.user.hospital_id = req.user.id;
     } else {
-      // Check if user is admin of this hospital
+      // Get hospital ID from user's admin relationship
       const [hospitals] = await pool.execute(
-        'SELECT id FROM hospitals WHERE id = ? AND admin_id = ?',
-        [hospitalId, req.user.id]
+        'SELECT id FROM hospitals WHERE admin_id = ?',
+        [req.user.id]
       );
 
       if (hospitals.length === 0) {
         return res.status(403).json({
           success: false,
-          message: 'Access denied - not authorized for this hospital'
+          message: 'No hospital associated with this admin account'
         });
       }
+
+      req.user.hospital_id = hospitals[0].id;
     }
 
     next();

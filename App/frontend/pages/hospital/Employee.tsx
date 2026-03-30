@@ -1,371 +1,325 @@
-import React, { useState } from 'react';
-import { 
-  Users, Plus, Search, Filter, Edit2, Trash2, Eye, Phone, Mail, 
-  MapPin, Calendar, Award, Clock, UserCheck, UserX 
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, UserPlus, Mail, Phone, Calendar, MapPin, Eye, Edit, Trash2 } from 'lucide-react';
 
 interface Employee {
-  id: string;
+  id: number;
+  user_id: number;
   name: string;
-  position: string;
-  department: string;
   email: string;
   phone: string;
-  hireDate: string;
+  position: string;
+  department: string;
   salary: number;
-  status: 'Active' | 'Inactive' | 'On Leave';
-  avatar: string;
-  experience: string;
-  shift: string;
+  hire_date: string;
+  status: string;
+  employee_id: string;
 }
 
 const Employee: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterDepartment, setFilterDepartment] = useState('All');
-  const [filterStatus, setFilterStatus] = useState('All');
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const [employees] = useState<Employee[]>([
-    {
-      id: '1',
-      name: 'Dr. Sarah Wilson',
-      position: 'Senior Cardiologist',
-      department: 'Cardiology',
-      email: 'sarah.wilson@hospital.com',
-      phone: '+1 234 567 8900',
-      hireDate: '2020-03-15',
-      salary: 180000,
-      status: 'Active',
-      avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=40&h=40&fit=crop&crop=face',
-      experience: '12 years',
-      shift: 'Day'
-    },
-    {
-      id: '2',
-      name: 'Michael Brown',
-      position: 'Head Nurse',
-      department: 'Emergency',
-      email: 'michael.brown@hospital.com',
-      phone: '+1 234 567 8901',
-      hireDate: '2019-07-22',
-      salary: 75000,
-      status: 'Active',
-      avatar: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=face',
-      experience: '8 years',
-      shift: 'Night'
-    },
-    {
-      id: '3',
-      name: 'Emily Davis',
-      position: 'Radiologist',
-      department: 'Radiology',
-      email: 'emily.davis@hospital.com',
-      phone: '+1 234 567 8902',
-      hireDate: '2021-01-10',
-      salary: 160000,
-      status: 'On Leave',
-      avatar: 'https://images.unsplash.com/photo-1594824388853-d0c2b8e8e8e8?w=40&h=40&fit=crop&crop=face',
-      experience: '6 years',
-      shift: 'Day'
-    },
-    {
-      id: '4',
-      name: 'James Miller',
-      position: 'Lab Technician',
-      department: 'Laboratory',
-      email: 'james.miller@hospital.com',
-      phone: '+1 234 567 8903',
-      hireDate: '2022-05-18',
-      salary: 55000,
-      status: 'Active',
-      avatar: 'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=40&h=40&fit=crop&crop=face',
-      experience: '3 years',
-      shift: 'Day'
-    },
-    {
-      id: '5',
-      name: 'Lisa Anderson',
-      position: 'Pharmacist',
-      department: 'Pharmacy',
-      email: 'lisa.anderson@hospital.com',
-      phone: '+1 234 567 8904',
-      hireDate: '2018-11-30',
-      salary: 95000,
-      status: 'Inactive',
-      avatar: 'https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=40&h=40&fit=crop&crop=face',
-      experience: '10 years',
-      shift: 'Evening'
-    }
-  ]);
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
-  const departments = ['All', 'Cardiology', 'Emergency', 'Radiology', 'Laboratory', 'Pharmacy', 'Surgery', 'Pediatrics'];
+  const fetchEmployees = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        'http://localhost:5000/api/hospital-dashboard/employees',
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-  const filteredEmployees = employees.filter(employee => {
-    const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         employee.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = filterDepartment === 'All' || employee.department === filterDepartment;
-    const matchesStatus = filterStatus === 'All' || employee.status === filterStatus;
-    return matchesSearch && matchesDepartment && matchesStatus;
-  });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      case 'Inactive': return 'bg-gray-100 text-gray-800';
-      case 'On Leave': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      if (response.ok) {
+        const data = await response.json();
+        setEmployees(data.data.employees);
+      }
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'Active': return <UserCheck className="w-4 h-4" />;
-      case 'Inactive': return <UserX className="w-4 h-4" />;
-      case 'On Leave': return <Clock className="w-4 h-4" />;
-      default: return <UserCheck className="w-4 h-4" />;
-    }
+  const formatDate = (dateString: string) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
   };
 
-  const totalEmployees = employees.length;
-  const activeEmployees = employees.filter(e => e.status === 'Active').length;
-  const onLeaveEmployees = employees.filter(e => e.status === 'On Leave').length;
-  const inactiveEmployees = employees.filter(e => e.status === 'Inactive').length;
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount || 0);
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusConfig = {
+      active: { color: 'bg-green-100 text-green-800' },
+      inactive: { color: 'bg-red-100 text-red-800' },
+      on_leave: { color: 'bg-yellow-100 text-yellow-800' }
+    };
+
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.active;
+
+    return (
+      <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+      </span>
+    );
+  };
+
+  const getDepartmentStats = () => {
+    const departments = employees.reduce((acc, emp) => {
+      const dept = emp.department || 'General';
+      acc[dept] = (acc[dept] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    return Object.entries(departments).map(([name, count]) => ({ name, count }));
+  };
+
+  const departmentStats = getDepartmentStats();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Employee Management</h1>
-          <p className="text-gray-600">Manage hospital staff and employee information</p>
+          <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
+          <p className="text-gray-600">Manage hospital staff and employees</p>
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center gap-2"
+          className="flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
         >
-          <Plus className="w-4 h-4" />
+          <UserPlus className="w-4 h-4" />
           Add Employee
         </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 bg-blue-100 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Total Employees</p>
+              <p className="text-2xl font-bold text-gray-900">{employees.length}</p>
+            </div>
+            <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-900">{totalEmployees}</div>
-          <div className="text-sm text-gray-600">Total Employees</div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <UserCheck className="w-6 h-6 text-green-600" />
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Active Staff</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {employees.filter(e => e.status === 'active').length}
+              </p>
+            </div>
+            <div className="p-3 bg-green-100 rounded-lg">
+              <Users className="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-green-600">{activeEmployees}</div>
-          <div className="text-sm text-gray-600">Active Staff</div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 bg-yellow-100 rounded-lg">
-              <Clock className="w-6 h-6 text-yellow-600" />
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Departments</p>
+              <p className="text-2xl font-bold text-gray-900">{departmentStats.length}</p>
+            </div>
+            <div className="p-3 bg-teal-100 rounded-lg">
+              <MapPin className="w-6 h-6 text-teal-600" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-yellow-600">{onLeaveEmployees}</div>
-          <div className="text-sm text-gray-600">On Leave</div>
         </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 bg-gray-100 rounded-lg">
-              <UserX className="w-6 h-6 text-gray-600" />
+        
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600">Avg. Salary</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {formatCurrency(
+                  employees.reduce((sum, e) => sum + (e.salary || 0), 0) / employees.length || 0
+                )}
+              </p>
+            </div>
+            <div className="p-3 bg-yellow-100 rounded-lg">
+              <Calendar className="w-6 h-6 text-yellow-600" />
             </div>
           </div>
-          <div className="text-2xl font-bold text-gray-600">{inactiveEmployees}</div>
-          <div className="text-sm text-gray-600">Inactive</div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-100">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search employees..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            />
-          </div>
-          <div className="flex gap-2">
-            <select
-              value={filterDepartment}
-              onChange={(e) => setFilterDepartment(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              {departments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
+      {/* Department Distribution */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Department Distribution</h3>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {departmentStats.map((dept) => (
+            <div key={dept.name} className="text-center p-4 bg-gray-50 rounded-lg">
+              <div className="text-2xl font-bold text-gray-900">{dept.count}</div>
+              <div className="text-sm text-gray-600">{dept.name}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Employees Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">Employee List</h3>
+        </div>
+        
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Employee
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Position
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Department
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Salary
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {employees.map((employee) => (
+                <tr key={employee.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                        <span className="text-teal-600 font-medium">
+                          {employee.name?.charAt(0)?.toUpperCase() || 'E'}
+                        </span>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{employee.name}</div>
+                        <div className="text-sm text-gray-500">ID: {employee.employee_id || employee.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 flex items-center gap-1">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      {employee.email}
+                    </div>
+                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      {employee.phone}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{employee.position}</div>
+                    <div className="text-sm text-gray-500">
+                      Joined: {formatDate(employee.hire_date)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{employee.department || 'General'}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {formatCurrency(employee.salary)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {getStatusBadge(employee.status)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <button className="text-teal-600 hover:text-teal-900">
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button className="text-blue-600 hover:text-blue-900">
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button className="text-red-600 hover:text-red-900">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </select>
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="All">All Status</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="On Leave">On Leave</option>
-            </select>
-          </div>
+            </tbody>
+          </table>
         </div>
-      </div>
 
-      {/* Employees Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEmployees.map((employee) => (
-          <div key={employee.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <img
-                  src={employee.avatar}
-                  alt={employee.name}
-                  className="w-12 h-12 rounded-full object-cover"
-                />
-                <div>
-                  <h3 className="font-semibold text-gray-900">{employee.name}</h3>
-                  <p className="text-sm text-gray-600">{employee.position}</p>
-                </div>
-              </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(employee.status)}`}>
-                {getStatusIcon(employee.status)}
-                {employee.status}
-              </span>
-            </div>
-
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Award className="w-4 h-4" />
-                <span>{employee.department}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Mail className="w-4 h-4" />
-                <span>{employee.email}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Phone className="w-4 h-4" />
-                <span>{employee.phone}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="w-4 h-4" />
-                <span>Hired: {new Date(employee.hireDate).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="w-4 h-4" />
-                <span>{employee.shift} Shift • {employee.experience}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-              <div className="text-sm">
-                <span className="text-gray-600">Salary: </span>
-                <span className="font-semibold text-gray-900">${employee.salary.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <Eye className="w-4 h-4 text-gray-600" />
-                </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <Edit2 className="w-4 h-4 text-gray-600" />
-                </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <Trash2 className="w-4 h-4 text-red-600" />
-                </button>
-              </div>
-            </div>
+        {employees.length === 0 && (
+          <div className="text-center py-12">
+            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-500">No employees found</p>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="mt-4 text-teal-600 hover:text-teal-700 font-medium"
+            >
+              Add your first employee
+            </button>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Add Employee Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900">Add New Employee</h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Position</label>
-                  <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    {departments.slice(1).map(dept => (
-                      <option key={dept} value={dept}>{dept}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input type="email" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                  <input type="tel" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Hire Date</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Salary</label>
-                  <input type="number" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Shift</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option>Day</option>
-                    <option>Evening</option>
-                    <option>Night</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Experience</label>
-                  <input type="text" placeholder="e.g., 5 years" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option>Active</option>
-                    <option>Inactive</option>
-                    <option>On Leave</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex gap-3">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Employee</h3>
+            <p className="text-gray-600 mb-4">
+              Employee management functionality would be implemented here with form fields for:
+            </p>
+            <ul className="text-sm text-gray-600 space-y-1 mb-6">
+              <li>• Personal Information (Name, Email, Phone)</li>
+              <li>• Position and Department</li>
+              <li>• Salary and Benefits</li>
+              <li>• Employment Details</li>
+            </ul>
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>
-              <button className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="flex-1 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              >
                 Add Employee
               </button>
             </div>

@@ -9,6 +9,8 @@
     "create-db": "node create-db.js",
     "seed": "node seed.js",
     "setup-db": "node setup-database.js",
+    "migrate": "node migrate-to-hospital-appointments.js",
+    "reset-db": "node reset-db.js",
     "test": "jest"
   },
   "dependencies": {
