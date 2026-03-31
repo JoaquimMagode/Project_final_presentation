@@ -1,12 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MOCK_HOSPITALS } from '../constants';
-import { Search, MapPin, ArrowRight, Clock, ShieldCheck } from 'lucide-react';
+import { Search, MapPin, ArrowRight, Clock, ShieldCheck, Lock } from 'lucide-react';
+
+const GUEST_LIMIT = 3;
 
 const Hospitals: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('user');
   const [condition, setCondition] = useState('');
   const [location, setLocation] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -150,12 +152,14 @@ const Hospitals: React.FC = () => {
             {/* Results Count */}
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
               Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
+              {!isLoggedIn && ` — showing ${Math.min(GUEST_LIMIT, filteredHospitals.length)} of ${filteredHospitals.length}`}
             </p>
 
             {/* Hospitals Grid */}
             {filteredHospitals.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredHospitals.map(hospital => (
+              <>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {(isLoggedIn ? filteredHospitals : filteredHospitals.slice(0, GUEST_LIMIT)).map(hospital => (
                   <div 
                     key={hospital.id} 
                     onClick={() => handleHospitalClick(hospital.id)}
@@ -221,7 +225,21 @@ const Hospitals: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+
+                {/* Login prompt for guests */}
+                {!isLoggedIn && filteredHospitals.length > GUEST_LIMIT && (
+                  <div className="mt-8 p-6 bg-slate-50 border border-slate-200 rounded-xl text-center space-y-3">
+                    <Lock className="w-8 h-8 text-slate-400 mx-auto" />
+                    <p className="font-bold text-slate-800">Sign in to see all {filteredHospitals.length} hospitals</p>
+                    <p className="text-sm text-slate-500">Create a free account to access full listings, contact details, and booking.</p>
+                    <div className="flex gap-3 justify-center">
+                      <button onClick={() => navigate('/login')} className="px-5 py-2 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors">Sign In</button>
+                      <button onClick={() => navigate('/register')} className="px-5 py-2 border border-slate-300 text-slate-700 rounded font-bold hover:bg-slate-100 transition-colors">Register</button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="py-20 text-center space-y-4">
                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto">

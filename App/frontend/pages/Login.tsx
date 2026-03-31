@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Mail, Lock, ArrowRight, ShieldCheck, AlertCircle, Eye, EyeOff, Home } from 'lucide-react';
 import { authAPI } from '../services/api';
@@ -7,6 +7,8 @@ import { authAPI } from '../services/api';
 const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as any)?.from;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -43,9 +45,15 @@ const Login: React.FC = () => {
 
         login(user.name, role as any);
 
-        if (role === 'superadmin') navigate('/superadmin', { replace: true });
-        else if (role === 'hospital') navigate('/hospital', { replace: true });
-        else navigate('/patient', { replace: true });
+        if (from) {
+          navigate(from, { replace: true });
+        } else if (role === 'superadmin') {
+          navigate('/superadmin', { replace: true });
+        } else if (role === 'hospital') {
+          navigate('/hospital', { replace: true });
+        } else {
+          navigate('/patient', { replace: true });
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');
