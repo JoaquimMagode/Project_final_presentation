@@ -10,7 +10,6 @@ import HospitalDetail from './pages/HospitalDetail';
 import Payment from './pages/Payment';
 import Feedback from './pages/Feedback';
 
-import AdminDashboard from './pages/AdminDashboard';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Dashboard from './pages/Dashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
@@ -108,8 +107,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               
               <div className="hidden lg:flex items-center gap-4">
                 <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Patients</button>
-                <Link to="/hospital-dashboard" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Hospitals</Link>
-                <Link to="/patient-dashboard" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Portal</Link>
+                <Link to="/hospital" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Hospitals</Link>
+                <Link to="/patient" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Portal</Link>
                 <Link to="/superadmin" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Super Admin</Link>
                 <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Health Sciences University</button>
               </div>
@@ -342,13 +341,9 @@ const App: React.FC = () => {
               <Route element={<ProtectedRoute role="patient" />}>
                 <Route path="/patient" element={<PatientDashboard />} />
               </Route>
-              <Route path="/unauthorized" element={
-                <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                  <h1 className="text-3xl font-black text-slate-900">Acesso Negado</h1>
-                  <p className="text-slate-500">Você não tem permissão para acessar esta página.</p>
-                  <a href="#/" className="px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700">Voltar ao Início</a>
-                </div>
-              } />
+              <Route path="/superadmin" element={<SuperAdminDashboard />} />
+              <Route path="/hospital" element={<HospitalDashboard />} />
+              <Route path="/patient" element={<PatientDashboard />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>

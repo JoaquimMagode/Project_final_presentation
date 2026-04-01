@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 
 const SuperAdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('DASHBOARD');
+  const [activeTab, setActiveTab] = useState('HOSPITAL_MANAGEMENT');
   const [showAddHospital, setShowAddHospital] = useState(false);
   const [newHospital, setNewHospital] = useState({
     name: '',
@@ -100,6 +100,7 @@ const SuperAdminDashboard: React.FC = () => {
 
   const sidebarItems = [
     { id: 'DASHBOARD', label: 'Dashboard', icon: Building2 },
+    { id: 'HOSPITAL_MANAGEMENT', label: 'Hospital Management', icon: Stethoscope },
     { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: Plus },
     { id: 'MANAGE_HOSPITALS', label: 'Manage Hospitals', icon: Building2 },
     { id: 'PATIENTS', label: 'Patient Overview', icon: Users },
@@ -251,6 +252,81 @@ const SuperAdminDashboard: React.FC = () => {
 
         {/* Content Area */}
         <main className="flex-1 p-6 overflow-y-auto">
+          {activeTab === 'HOSPITAL_MANAGEMENT' && (
+            <div className="space-y-6">
+              {/* Header */}
+              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">IMAP Solution Admin</h1>
+                <p className="text-lg text-slate-600">Hospital Management Dashboard</p>
+              </div>
+
+              {/* Stats Cards */}
+              <div className="grid grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Total Doctors</p>
+                      <p className="text-3xl font-bold text-slate-900">42</p>
+                    </div>
+                    <Stethoscope className="w-10 h-10 text-emerald-600" />
+                  </div>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Requests</p>
+                      <p className="text-3xl font-bold text-slate-900">12</p>
+                    </div>
+                    <Clock className="w-10 h-10 text-yellow-600" />
+                  </div>
+                </div>
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500 mb-1">Confirmed</p>
+                      <p className="text-3xl font-bold text-slate-900">128</p>
+                    </div>
+                    <CheckCircle className="w-10 h-10 text-green-600" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Navigation Tabs */}
+              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+                <div className="border-b border-slate-200">
+                  <nav className="flex space-x-8 px-6">
+                    <button className="py-4 px-1 border-b-2 border-emerald-500 text-emerald-600 font-medium text-sm">
+                      DOCTORS
+                    </button>
+                    <button className="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">
+                      REQUESTS
+                    </button>
+                    <button className="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">
+                      AVAILABILITY
+                    </button>
+                  </nav>
+                </div>
+                
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-semibold text-slate-900">Medical Staff</h3>
+                    <button className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Add Doctor
+                    </button>
+                  </div>
+                  
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Building2 className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <p className="text-slate-500 text-lg">No hospitals found</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'DASHBOARD' && (
             <div className="space-y-6">
               {/* Summary Cards */}

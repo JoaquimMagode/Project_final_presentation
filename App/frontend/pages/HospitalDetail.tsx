@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Star, MapPin, Clock, ShieldCheck, Phone, Mail, Users, Award, Camera, X, Calendar, 
   DollarSign, Building2, Stethoscope, Heart, Activity, FileText, Globe, 
-  CheckCircle, AlertCircle, Bed, UserCheck, TrendingUp, ArrowLeft
+  CheckCircle, AlertCircle, Bed, UserCheck, TrendingUp, ArrowLeft, Lock
 } from 'lucide-react';
 import { hospitalsAPI } from '../services/api';
 
@@ -61,6 +61,7 @@ interface Statistics {
 const HospitalDetail: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const isLoggedIn = !!localStorage.getItem('user');
   const [hospital, setHospital] = useState<Hospital | null>(null);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [statistics, setStatistics] = useState<Statistics | null>(null);
@@ -228,30 +229,38 @@ const HospitalDetail: React.FC = () => {
 
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {hospital.phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium">Phone:</span>
-                  <span>{hospital.phone}</span>
-                </div>
-              )}
-              {hospital.email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium">Email:</span>
-                  <span>{hospital.email}</span>
+              {isLoggedIn ? (
+                <>
+                  {hospital.phone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium">Phone:</span>
+                      <span>{hospital.phone}</span>
+                    </div>
+                  )}
+                  {hospital.email && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mail className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium">Email:</span>
+                      <span>{hospital.email}</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="col-span-2 flex items-center gap-2 text-sm text-slate-500 bg-slate-50 p-3 rounded-lg">
+                  <Lock className="w-4 h-4" />
+                  <span>Sign in to view contact details</span>
+                  <button onClick={() => navigate('/login')} className="ml-auto text-emerald-600 font-bold hover:underline">Sign In</button>
                 </div>
               )}
               {hospital.website_url && (
                 <div className="flex items-center gap-2 text-sm">
                   <Globe className="w-4 h-4 text-blue-600" />
                   <span className="font-medium">Website:</span>
-                  <a href={hospital.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    Visit Website
-                  </a>
+                  <a href={hospital.website_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Visit Website</a>
                 </div>
               )}
-              {hospital.admin_name && (
+              {hospital.admin_name && isLoggedIn && (
                 <div className="flex items-center gap-2 text-sm">
                   <UserCheck className="w-4 h-4 text-blue-600" />
                   <span className="font-medium">Administrator:</span>
@@ -262,20 +271,22 @@ const HospitalDetail: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="flex gap-3 mb-6">
-              <button 
-                onClick={() => setShowBookingModal(true)}
-                className="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <Calendar className="w-5 h-5" />
-                Book Consultation
-              </button>
-              <button 
-                onClick={() => alert('Quote request sent! We will contact you within 24 hours.')}
-                className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <DollarSign className="w-5 h-5" />
-                Get Quote
-              </button>
+              {isLoggedIn ? (
+                <>
+                  <button onClick={() => setShowBookingModal(true)} className="flex-1 px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                    <Calendar className="w-5 h-5" /> Book Consultation
+                  </button>
+                  <button onClick={() => alert('Quote request sent! We will contact you within 24 hours.')} className="flex-1 px-6 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
+                    <DollarSign className="w-5 h-5" /> Get Quote
+                  </button>
+                </>
+              ) : (
+                <div className="flex-1 p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+                  <Lock className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                  <span className="text-sm text-slate-600">Sign in to book a consultation</span>
+                  <button onClick={() => navigate('/login', { state: { from: `/hospital/${id}` } })} className="ml-auto px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700">Sign In</button>
+                </div>
+              )}
             </div>
 
             {/* Hospital Statistics */}
