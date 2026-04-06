@@ -1,443 +1,206 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Menu, X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
-  TrendingUp, TrendingDown, MoreHorizontal, Plus, Settings, HelpCircle,
-  BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
-  Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown,
-  Upload, Heart, Shield, LogOut, HeartPulse
+import React, { useState } from 'react';
+import {
+  Home, Building2, Calendar, FileText, User,
+  Settings, HelpCircle, Phone, Upload, ChevronRight,
+  CheckCircle, Clock, AlertCircle
 } from 'lucide-react';
 import { useAuth } from '../App';
-import { useNavigate } from 'react-router-dom';
-import UserAvatar from '../components/UserAvatar';
-
-// Import patient pages
+import FindHospitals from './patient/FindHospitals';
 import PatientRegistration from './patient/PatientRegistration';
 import PatientProfile from './patient/PatientProfile';
 import MedicalReports from './patient/MedicalReports';
 import AppointmentRequests from './patient/AppointmentRequests';
 import PatientSettings from './patient/PatientSettings';
 import PatientHelp from './patient/PatientHelp';
-import FindHospitals from './patient/FindHospitals';
+
+type Page = 'dashboard' | 'hospitals' | 'registration' | 'profile' | 'reports' | 'appointments' | 'settings' | 'help';
+
+const NAV = [
+  { page: 'dashboard' as Page,     icon: Home,       label: 'Home' },
+  { page: 'hospitals' as Page,     icon: Building2,  label: 'Find Hospitals' },
+  { page: 'appointments' as Page,  icon: Calendar,   label: 'Appointments' },
+  { page: 'reports' as Page,       icon: FileText,   label: 'My Reports' },
+  { page: 'profile' as Page,       icon: User,       label: 'My Profile' },
+  { page: 'settings' as Page,      icon: Settings,   label: 'Settings' },
+  { page: 'help' as Page,          icon: HelpCircle, label: 'Help' },
+];
+
+const QUICK_ACTIONS = [
+  { page: 'hospitals' as Page,    icon: Building2, label: 'Find a Hospital',    desc: 'Search by city or treatment', color: 'bg-emerald-50 text-emerald-600' },
+  { page: 'appointments' as Page, icon: Calendar,  label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
+  { page: 'reports' as Page,      icon: FileText,  label: 'Medical Reports',    desc: 'View your test results',      color: 'bg-violet-50 text-violet-600' },
+  { page: 'profile' as Page,      icon: Upload,    label: 'Upload Documents',   desc: 'Share medical files',         color: 'bg-orange-50 text-orange-600' },
+];
+
+const upcomingAppointments = [
+  { hospital: 'Apollo Hospital Mumbai', type: 'Cardiology Consultation', date: 'Jan 20, 2024', time: '10:00 AM', status: 'confirmed' },
+  { hospital: 'Fortis Delhi',           type: 'General Check-up',        date: 'Jan 22, 2024', time: '2:30 PM',  status: 'pending' },
+];
+
+const statusIcon = (s: string) =>
+  s === 'confirmed' ? <CheckCircle className="w-4 h-4 text-emerald-500" /> :
+  s === 'pending'   ? <Clock        className="w-4 h-4 text-amber-500"   /> :
+                      <AlertCircle  className="w-4 h-4 text-red-500"     />;
+
+const statusLabel = (s: string) =>
+  s === 'confirmed' ? 'Confirmed' : s === 'pending' ? 'Pending' : 'Cancelled';
 
 const PatientDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [selectedPeriod, setSelectedPeriod] = useState('Week');
-  const [activePage, setActivePage] = useState('dashboard');
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const [activePage, setActivePage] = useState<Page>('dashboard');
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setProfileDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-  
-  const sidebarItems = [
-    { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
-    { icon: Building2, label: 'Find Hospitals', active: activePage === 'hospitals', page: 'hospitals' },
-    { icon: UserCheck, label: 'Registration', active: activePage === 'registration', page: 'registration' },
-    { icon: User, label: 'My Profile', active: activePage === 'profile', page: 'profile' },
-    { icon: FileText, label: 'Medical Reports', active: activePage === 'reports', page: 'reports' },
-    { icon: Calendar, label: 'Appointments', active: activePage === 'appointments', page: 'appointments' },
-    { icon: Settings, label: 'Settings', active: activePage === 'settings', page: 'settings' },
-    { icon: HelpCircle, label: 'Help & Support', active: activePage === 'help', page: 'help' }
-  ];
-
-  const upcomingAppointments = [
-    { time: '10:00', doctor: 'Dr. Sarah Wilson', specialty: 'Cardiology', date: '2024-01-20' },
-    { time: '14:30', doctor: 'Dr. Michael Brown', specialty: 'General Medicine', date: '2024-01-22' }
-  ];
-
-  const recentReports = [
-    { title: 'Blood Test Results', date: '2024-01-15', status: 'Available', doctor: 'Dr. Emily Davis' },
-    { title: 'X-Ray Report', date: '2024-01-10', status: 'Available', doctor: 'Dr. James Miller' }
-  ];
-
-  const StatCard = ({ icon: Icon, title, value, subtitle, color }: any) => (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-      </div>
-      <div className="text-2xl font-bold text-gray-900 mb-1">{value}</div>
-      <div className="text-gray-600 text-sm font-medium">{title}</div>
-      {subtitle && <div className="text-xs text-gray-500 mt-1">{subtitle}</div>}
-    </div>
-  );
-
-  const HealthChart = () => (
-    <div className="relative h-64">
-      <svg className="w-full h-full" viewBox="0 0 400 200">
-        {/* Grid lines */}
-        <defs>
-          <pattern id="healthGrid" width="40" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#healthGrid)" />
-        
-        {/* Health trend line */}
-        <path
-          d="M 20 150 Q 60 140 100 130 T 180 120 T 260 110 T 340 100 T 380 95"
-          fill="none"
-          stroke="#10b981"
-          strokeWidth="3"
-          className="drop-shadow-sm"
-        />
-        
-        {/* Highlight circle */}
-        <circle cx="340" cy="100" r="8" fill="#10b981" className="drop-shadow-sm" />
-        <circle cx="340" cy="100" r="4" fill="white" />
-        
-        {/* Month labels */}
-        {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN'].map((month, i) => (
-          <text key={month} x={20 + i * 60} y="190" textAnchor="middle" fill="#6b7280" fontSize="10">
-            {month}
-          </text>
-        ))}
-      </svg>
-      
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span className="text-xs text-gray-600">Health Score</span>
-        </div>
-      </div>
-    </div>
-  );
+  const firstName = user?.name?.split(' ')[0] ?? 'Patient';
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-emerald-600 transition-all duration-300 flex flex-col`}>
-        {/* Logo */}
-        <div className="p-6 border-b border-emerald-500">
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded-lg text-emerald-600">
-              <HeartPulse className="w-5 h-5" />
-            </div>
-            {sidebarOpen && <span className="text-white font-bold text-lg tracking-tight">IMAP Solution</span>}
-          </div>
-        </div>
+    <div className="flex min-h-screen bg-gray-50">
 
-        {/* Menu Items */}
-        <nav className="flex-1 p-4">
-          <div className="space-y-2">
-            {sidebarItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => setActivePage(item.page)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                  item.active 
-                    ? 'bg-emerald-500 text-white' 
-                    : 'text-emerald-100 hover:bg-emerald-500 hover:text-white'
-                }`}
-              >
-                <item.icon className="w-5 h-5" />
-                {sidebarOpen && <span className="font-medium">{item.label}</span>}
-              </button>
-            ))}
-          </div>
+      {/* ── Sidebar ── */}
+      <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-100 py-6 px-3 gap-1">
+        {NAV.map(({ page, icon: Icon, label }) => (
+          <button
+            key={page}
+            onClick={() => setActivePage(page)}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors w-full text-left
+              ${activePage === page
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            <Icon className="w-5 h-5 flex-shrink-0" />
+            {label}
+          </button>
+        ))}
+      </aside>
+
+      {/* ── Main ── */}
+      <main className="flex-1 overflow-auto">
+
+        {/* ── Bottom nav (mobile) ── */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex justify-around py-2">
+          {NAV.slice(0, 5).map(({ page, icon: Icon, label }) => (
+            <button
+              key={page}
+              onClick={() => setActivePage(page)}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs
+                ${activePage === page ? 'text-emerald-600' : 'text-gray-500'}`}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{label}</span>
+            </button>
+          ))}
         </nav>
 
-        {/* Patient Menu */}
-        {sidebarOpen && (
-          <div className="p-4 border-t border-emerald-500">
-            <div className="text-emerald-200 text-xs font-semibold mb-3 uppercase tracking-wider">Patient Portal</div>
-          </div>
-        )}
-      </div>
+        <div className="p-4 md:p-8 pb-24 md:pb-8">
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Menu className="w-5 h-5 text-gray-600" />
-              </button>
-              
-              <div className="relative">
-                <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Search doctors, appointments..."
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                Book Appointment
-              </button>
-              <button className="p-2 hover:bg-gray-100 rounded-lg relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-              </button>
-              <div className="relative" ref={dropdownRef}>
-                <button 
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <UserAvatar 
-                    name={user?.name} 
-                    size="sm" 
-                  />
-                  <span className="font-medium">{user?.name}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                
-                {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                    <button 
-                      onClick={() => {
-                        setActivePage('profile');
-                        setProfileDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                    >
-                      <User className="w-4 h-4" />
-                      Profile Settings
-                    </button>
-                    <button 
-                      onClick={() => {
-                        setActivePage('help');
-                        setProfileDropdownOpen(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                    >
-                      <HelpCircle className="w-4 h-4" />
-                      FAQ
-                    </button>
-                    <hr className="my-1" />
-                    <button 
-                      onClick={() => {
-                        logout();
-                        navigate('/login');
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Dashboard Content */}
-        <main className="flex-1 overflow-auto p-6">
-          {/* Render different pages based on activePage */}
+          {/* ── Dashboard Home ── */}
           {activePage === 'dashboard' && (
-            <>
-              {/* Welcome Section */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {user?.name}! 👋</h1>
-                    <p className="text-gray-600">Here's your health overview and upcoming appointments</p>
-                  </div>
-                  <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">Today, January 15th</span>
-                  </div>
-                </div>
-              </div>
+            <div className="max-w-3xl mx-auto space-y-8">
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard
-                  icon={Calendar}
-                  title="Next Appointment"
-                  value="Jan 20"
-                  subtitle="Dr. Sarah Wilson - Cardiology"
-                  color="bg-blue-500"
-                />
-                <StatCard
-                  icon={FileText}
-                  title="Medical Reports"
-                  value="8"
-                  subtitle="2 new reports available"
-                  color="bg-green-500"
-                />
-                <StatCard
-                  icon={Heart}
-                  title="Health Score"
-                  value="85%"
-                  subtitle="Good overall health"
-                  color="bg-red-500"
-                />
-                <StatCard
-                  icon={Shield}
-                  title="Insurance"
-                  value="Active"
-                  subtitle="Premium Plan - Expires Dec 2024"
-                  color="bg-purple-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Health Trends Chart */}
-                <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900">Health Trends</h3>
-                    <div className="flex gap-2">
-                      {['Week', 'Month', 'Year'].map((period) => (
-                        <button
-                          key={period}
-                          onClick={() => setSelectedPeriod(period)}
-                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                            selectedPeriod === period
-                              ? 'bg-gray-900 text-white'
-                              : 'text-gray-600 hover:bg-gray-100'
-                          }`}
-                        >
-                          {period}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <HealthChart />
-                </div>
-
-                {/* Right Column */}
-                <div className="space-y-6">
-                  {/* Upcoming Appointments */}
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900">Upcoming Appointments</h3>
-                      <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
-                        View All
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {upcomingAppointments.map((apt, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-blue-600" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900">{apt.doctor}</div>
-                            <div className="text-sm text-gray-600">{apt.specialty}</div>
-                            <div className="text-xs text-gray-500">{apt.date} at {apt.time}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Recent Reports */}
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900">Recent Reports</h3>
-                      <button className="text-blue-600 text-sm font-medium hover:text-blue-700">
-                        View All
-                      </button>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      {recentReports.map((report, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                            <FileText className="w-4 h-4 text-green-600" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="text-sm font-medium text-gray-900 mb-1">{report.title}</div>
-                            <div className="text-xs text-gray-500">By {report.doctor}</div>
-                            <div className="text-xs text-gray-500">{report.date}</div>
-                          </div>
-                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                            {report.status}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              {/* Greeting */}
+              <div className="bg-emerald-600 rounded-2xl p-6 text-white">
+                <p className="text-emerald-100 text-sm mb-1">Welcome back 👋</p>
+                <h1 className="text-2xl font-bold">{firstName}</h1>
+                <p className="text-emerald-100 text-sm mt-1">How can we help you today?</p>
               </div>
 
               {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-                <div 
-                  onClick={() => setActivePage('hospitals')}
-                  className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer"
+              <section>
+                <h2 className="text-base font-semibold text-gray-700 mb-3">What would you like to do?</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc, color }) => (
+                    <button
+                      key={page}
+                      onClick={() => setActivePage(page)}
+                      className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left flex flex-col gap-3"
+                    >
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
+                        <Icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm">{label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+              {/* Upcoming Appointments */}
+              <section>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-base font-semibold text-gray-700">Upcoming Appointments</h2>
+                  <button
+                    onClick={() => setActivePage('appointments')}
+                    className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:underline"
+                  >
+                    See all <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {upcomingAppointments.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-6 text-center text-gray-400 border border-dashed border-gray-200">
+                    <Calendar className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">No upcoming appointments</p>
+                    <button
+                      onClick={() => setActivePage('hospitals')}
+                      className="mt-3 text-emerald-600 text-sm font-medium hover:underline"
+                    >
+                      Book one now →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {upcomingAppointments.map((apt, i) => (
+                      <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <Calendar className="w-6 h-6 text-blue-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital}</p>
+                          <p className="text-xs text-gray-500">{apt.type}</p>
+                          <p className="text-xs text-gray-400 mt-0.5">{apt.date} · {apt.time}</p>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs font-medium flex-shrink-0">
+                          {statusIcon(apt.status)}
+                          <span className={apt.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-600'}>
+                            {statusLabel(apt.status)}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+
+              {/* Need Help */}
+              <section>
+                <button
+                  onClick={() => setActivePage('help')}
+                  className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Find Hospitals</h4>
-                      <p className="text-sm text-gray-600">Search by city and procedure</p>
-                    </div>
+                  <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
+                    <Phone className="w-5 h-5 text-gray-600" />
                   </div>
-                </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-gray-900 text-sm">Need Help?</p>
+                    <p className="text-xs text-gray-500">Contact our support team anytime</p>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+                </button>
+              </section>
 
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Book Appointment</h4>
-                      <p className="text-sm text-gray-600">Schedule with your preferred doctor</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <Upload className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Upload Reports</h4>
-                      <p className="text-sm text-gray-600">Share your medical documents</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                      <Phone className="w-6 h-6 text-orange-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-900">Telemedicine</h4>
-                      <p className="text-sm text-gray-600">Consult doctors online</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </>
+            </div>
           )}
-          
-          {/* Other Pages */}
-          {activePage === 'hospitals' && <FindHospitals />}
+
+          {activePage === 'hospitals'    && <FindHospitals />}
           {activePage === 'registration' && <PatientRegistration />}
-          {activePage === 'profile' && <PatientProfile />}
-          {activePage === 'reports' && <MedicalReports />}
+          {activePage === 'profile'      && <PatientProfile />}
+          {activePage === 'reports'      && <MedicalReports />}
           {activePage === 'appointments' && <AppointmentRequests />}
-          {activePage === 'settings' && <PatientSettings />}
-          {activePage === 'help' && <PatientHelp />}
-        </main>
-      </div>
+          {activePage === 'settings'     && <PatientSettings />}
+          {activePage === 'help'         && <PatientHelp />}
+
+        </div>
+      </main>
     </div>
   );
 };

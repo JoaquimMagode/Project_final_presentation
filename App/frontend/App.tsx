@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useEffect, useRef } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Language, UserRole } from './types';
 import { LANGUAGES, APP_ICONS } from './constants';
 import { authAPI } from './services/api';
@@ -48,11 +48,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { lang, setLang } = useLang();
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   
   const isDashboardPage = ['/superadmin', '/hospital', '/patient'].includes(location.pathname);
-  const hideHeaderFooter = isDashboardPage || location.pathname === '/login' || location.pathname === '/register';
+  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -114,19 +115,69 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </div>
             </div>
 
+            
+
             <div className="flex items-center gap-4">
-                           <Link to="/login" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Sign In</Link>
-              <div className="flex items-center gap-1 text-black text-xs">
-                <Phone className="w-3 h-3" />
-                <span className="font-normal">1-800-CEDARS-1</span>
-              </div>
-              <select 
+
+                 <select 
                 value={lang}
                 onChange={(e) => setLang(e.target.value as Language)}
                 className="text-xs font-normal bg-transparent border-none outline-none cursor-pointer text-black"
               >
                 {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.code}</option>)}
               </select>
+
+              <div className="flex items-center gap-1 text-black text-xs">
+                <Phone className="w-3 h-3" />
+                <span className="font-normal">1-800-CEDARS-1</span>
+              </div>
+              {user ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button 
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-black hover:text-slate-700 font-normal border-b-2 border-transparent hover:border-emerald-600 transition-colors"
+                  >
+                    <UserIcon className="w-4 h-4" />
+                    <span>{user.name}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                  
+                  {isDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <Link 
+                        to={user.role === 'superadmin' ? '/superadmin' : user.role === 'hospital' ? '/hospital' : '/patient'}
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <Settings className="w-4 h-4" />
+                        Dashboard
+                      </Link>
+                      <button 
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <AlertTriangle className="w-4 h-4" />
+                        Support
+                      </button>
+                      <hr className="my-1" />
+                      <button 
+                        onClick={() => {
+                          logout();
+                          setIsDropdownOpen(false);
+                          navigate('/login');
+                        }}
+                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link to="/login" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Sign In</Link>
+              )}
+             
             </div>
           </div>
         </div>
@@ -134,18 +185,32 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         {/* Main Navigation Bar */}
         <div className="bg-white">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="hidden md:flex items-center gap-6">
-              <Link to="/services" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Get Care</Link>
-              <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Find a Hospitals</Link>
-              <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</Link>
-              <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</Link>
-              <Link to="/payment" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Records & Billing</Link>
+            <div className="flex items-center gap-6">
+              {isDashboardPage && user && (
+                <button 
+                  onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <Menu className="w-5 h-5 text-gray-600" />
+                </button>
+              )}
+              {!isDashboardPage && (
+                <div className="hidden md:flex items-center gap-6">
+                  <Link to="/services" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Get Care</Link>
+                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Find a Hospitals</Link>
+                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</Link>
+                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</Link>
+                  <Link to="/payment" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Records & Billing</Link>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-4 ml-auto">
-              <button className="hidden md:block px-5 py-2 bg-black text-white rounded text-sm font-bold hover:bg-slate-800 transition-colors">
-                Make an Appointment
-              </button>
+              {!isDashboardPage && (
+                <button className="hidden md:block px-5 py-2 bg-black text-white rounded text-sm font-bold hover:bg-slate-800 transition-colors">
+                  Make an Appointment
+                </button>
+              )}
               
               {isSearchOpen ? (
                 <form onSubmit={handleSearch} className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, Plus, Users, DollarSign, FileText, Settings, 
   Bell, User, Search, CheckCircle, XCircle, Edit, Ban, Eye,
@@ -8,6 +8,7 @@ import {
 const SuperAdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('HOSPITAL_MANAGEMENT');
   const [showAddHospital, setShowAddHospital] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [newHospital, setNewHospital] = useState({
     name: '',
     state: '',
@@ -25,6 +26,19 @@ const SuperAdminDashboard: React.FC = () => {
   });
   const [currentSpecialty, setCurrentSpecialty] = useState('');
   const [currentAccreditation, setCurrentAccreditation] = useState('');
+
+  // Add sidebar toggle event listener
+  useEffect(() => {
+    const handleToggleSidebar = () => {
+      setSidebarOpen(prev => !prev);
+    };
+    
+    window.addEventListener('toggleSidebar', handleToggleSidebar);
+    
+    return () => {
+      window.removeEventListener('toggleSidebar', handleToggleSidebar);
+    };
+  }, []);
 
   // Indian States and Cities data
   const indianStates = [
@@ -190,7 +204,7 @@ const SuperAdminDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg border-r border-slate-200">
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg border-r border-slate-200 transition-all duration-300`}>
         <div className="p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-600 p-2 rounded-lg text-white">
@@ -198,7 +212,7 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900">IMAP Solution</h1>
-              <p className="text-sm text-slate-600">Super Admin Panel</p>
+              {sidebarOpen && <p className="text-sm text-slate-600">Super Admin Panel</p>}
             </div>
           </div>
         </div>
@@ -215,7 +229,7 @@ const SuperAdminDashboard: React.FC = () => {
                 }`}
               >
                 <IconComponent className="w-5 h-5" />
-                <span className="text-sm font-medium">{item.label}</span>
+                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
               </button>
             );
           })}
@@ -224,32 +238,6 @@ const SuperAdminDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-slate-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-slate-900">
-                {sidebarItems.find(item => item.id === activeTab)?.label}
-              </h2>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="relative p-2 text-slate-400 hover:text-slate-600">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-              </button>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900">Super Admin</p>
-                  <p className="text-xs text-slate-500">System Administrator</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
         {/* Content Area */}
         <main className="flex-1 p-6 overflow-y-auto">
           {activeTab === 'HOSPITAL_MANAGEMENT' && (
