@@ -22,6 +22,10 @@ import DoctorProfile from './pages/DoctorProfile';
 import Services from './pages/Services';
 import QuoteWizard from './pages/QuoteWizard';
 import QuoteExtras from './pages/QuoteExtras';
+import Locations from './pages/Locations';
+import LocationDetail from './pages/LocationDetail';
+import Specialties from './pages/Specialties';
+import SpecialtyDetail from './pages/SpecialtyDetail';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Menu, X, User as UserIcon, LogOut, Settings, AlertTriangle, ChevronDown, Phone, Search } from 'lucide-react';
@@ -200,8 +204,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <div className="hidden md:flex items-center gap-6">
                   <Link to="/services" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Get Care</Link>
                   <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Find a Hospitals</Link>
-                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</Link>
-                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</Link>
+                  <Link to="/locations" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</Link>
+                  <Link to="/specialties" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</Link>
                   <Link to="/payment" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Records & Billing</Link>
                 </div>
               )}
@@ -401,6 +405,10 @@ const App: React.FC = () => {
               <Route path="/services" element={<Services />} />
               <Route path="/quote" element={<QuoteWizard />} />
               <Route path="/quote/extras" element={<QuoteExtras />} />
+              <Route path="/locations" element={<Locations />} />
+              <Route path="/locations/:city" element={<LocationDetail />} />
+              <Route path="/specialties" element={<Specialties />} />
+              <Route path="/specialties/:type" element={<SpecialtyDetail />} />
               <Route element={<ProtectedRoute role="superadmin" />}>
                 <Route path="/superadmin" element={<SuperAdminDashboard />} />
               </Route>
