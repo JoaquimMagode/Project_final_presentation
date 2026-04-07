@@ -244,12 +244,6 @@ router.get('/:id', validateId, async (req, res) => {
       hospital.accreditations = [];
     }
 
-    // Get hospital doctors
-    const [doctors] = await pool.execute(
-      'SELECT * FROM doctors WHERE hospital_id = ? AND status = "active"',
-      [hospitalId]
-    );
-
     // Get hospital statistics
     const [stats] = await pool.execute(`
       SELECT 
@@ -268,7 +262,7 @@ router.get('/:id', validateId, async (req, res) => {
       success: true,
       data: {
         hospital,
-        doctors,
+        doctors: [],
         statistics: stats[0]
       }
     });

@@ -20,6 +20,8 @@ import Login from './pages/Login';
 import VisaGuidance from './pages/VisaGuidance';
 import DoctorProfile from './pages/DoctorProfile';
 import Services from './pages/Services';
+import QuoteWizard from './pages/QuoteWizard';
+import QuoteExtras from './pages/QuoteExtras';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Menu, X, User as UserIcon, LogOut, Settings, AlertTriangle, ChevronDown, Phone, Search } from 'lucide-react';
@@ -397,6 +399,8 @@ const App: React.FC = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/visa" element={<VisaGuidance />} />
               <Route path="/services" element={<Services />} />
+              <Route path="/quote" element={<QuoteWizard />} />
+              <Route path="/quote/extras" element={<QuoteExtras />} />
               <Route element={<ProtectedRoute role="superadmin" />}>
                 <Route path="/superadmin" element={<SuperAdminDashboard />} />
               </Route>
