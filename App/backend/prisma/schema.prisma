@@ -1,0 +1,412 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model appointments {
+  id               Int                  @id @default(autoincrement())
+  patient_id       Int
+  hospital_id      Int
+  appointment_date DateTime             @db.Date
+  appointment_time DateTime             @db.Time(0)
+  type             appointments_type?   @default(consultation)
+  reason           String               @db.Text
+  notes            String?              @db.Text
+  status           appointments_status? @default(pending)
+  consultation_fee Decimal?             @db.Decimal(10, 2)
+  created_at       DateTime?            @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?            @default(now()) @db.Timestamp(0)
+  patients         patients             @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_ibfk_1")
+  hospitals        hospitals            @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "appointments_ibfk_2")
+  medical_reports  medical_reports[]
+  payments         payments[]
+  reviews_ratings  reviews_ratings[]
+
+  @@index([hospital_id], map: "hospital_id")
+  @@index([patient_id], map: "patient_id")
+}
+
+model doctors {
+  id                  Int               @id @default(autoincrement())
+  hospital_id         Int
+  name                String            @db.VarChar(255)
+  email               String?           @db.VarChar(255)
+  phone               String?           @db.VarChar(20)
+  specialization      String            @db.VarChar(255)
+  sub_specialization  String?           @db.VarChar(255)
+  qualification       String?           @db.VarChar(500)
+  experience_years    Int?              @default(0)
+  consultation_fee    Decimal?          @db.Decimal(10, 2)
+  languages_spoken    Json?
+  availability        Json?
+  bio                 String?           @db.Text
+  profile_picture_url String?           @db.VarChar(500)
+  license_number      String?           @db.VarChar(100)
+  status              doctors_status?   @default(active)
+  created_at          DateTime?         @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?         @default(now()) @db.Timestamp(0)
+  hospitals           hospitals         @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "doctors_ibfk_1")
+  reviews_ratings     reviews_ratings[]
+
+  @@index([hospital_id], map: "idx_hospital_id")
+  @@index([name], map: "idx_name")
+  @@index([specialization], map: "idx_specialization")
+  @@index([status], map: "idx_status")
+}
+
+model hospital_employees {
+  id          Int                        @id @default(autoincrement())
+  hospital_id Int
+  name        String                     @db.VarChar(255)
+  email       String?                    @db.VarChar(255)
+  phone       String?                    @db.VarChar(20)
+  position    String?                    @db.VarChar(100)
+  department  String?                    @db.VarChar(100)
+  employee_id String?                    @db.VarChar(50)
+  hire_date   DateTime?                  @db.Date
+  salary      Decimal?                   @db.Decimal(10, 2)
+  status      hospital_employees_status? @default(active)
+  created_at  DateTime?                  @default(now()) @db.Timestamp(0)
+  updated_at  DateTime?                  @default(now()) @db.Timestamp(0)
+  hospitals   hospitals                  @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "hospital_employees_ibfk_1")
+
+  @@index([hospital_id], map: "hospital_id")
+}
+
+model hospital_services {
+  id               Int       @id @default(autoincrement())
+  hospital_id      Int
+  service_name     String    @db.VarChar(255)
+  service_category String?   @db.VarChar(100)
+  description      String?   @db.Text
+  price            Decimal?  @db.Decimal(10, 2)
+  currency         String?   @default("INR") @db.VarChar(3)
+  duration_minutes Int?
+  is_active        Boolean?  @default(true)
+  created_at       DateTime? @default(now()) @db.Timestamp(0)
+  updated_at       DateTime? @default(now()) @db.Timestamp(0)
+  hospitals        hospitals @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "hospital_services_ibfk_1")
+
+  @@index([hospital_id], map: "idx_hospital_id")
+  @@index([is_active], map: "idx_is_active")
+  @@index([service_category], map: "idx_service_category")
+}
+
+model hospitals {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(255)
+  email              String?              @db.VarChar(255)
+  phone              String?              @db.VarChar(20)
+  address            String?              @db.Text
+  city               String?              @db.VarChar(100)
+  state              String?              @db.VarChar(100)
+  country            String?              @default("India") @db.VarChar(100)
+  specialties        Json?
+  description        String?              @db.Text
+  status             hospitals_status?    @default(active)
+  admin_id           Int?
+  created_at         DateTime?            @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(0)
+  appointments       appointments[]
+  doctors            doctors[]
+  hospital_employees hospital_employees[]
+  hospital_services  hospital_services[]
+  users              users?               @relation(fields: [admin_id], references: [id], onUpdate: NoAction, map: "hospitals_ibfk_1")
+  medical_packages   medical_packages[]
+  medical_reports    medical_reports[]
+  payments           payments[]
+  reviews_ratings    reviews_ratings[]
+
+  @@index([admin_id], map: "admin_id")
+}
+
+model medical_packages {
+  id                  Int                @id @default(autoincrement())
+  hospital_id         Int
+  package_name        String             @db.VarChar(255)
+  package_code        String?            @unique(map: "package_code") @db.VarChar(50)
+  category            String?            @db.VarChar(100)
+  description         String?            @db.Text
+  included_services   Json?
+  excluded_services   Json?
+  duration_days       Int?
+  price               Decimal            @db.Decimal(10, 2)
+  currency            String?            @default("INR") @db.VarChar(3)
+  discount_percentage Decimal?           @default(0.00) @db.Decimal(5, 2)
+  discounted_price    Decimal?           @db.Decimal(10, 2)
+  is_active           Boolean?           @default(true)
+  is_featured         Boolean?           @default(false)
+  max_bookings        Int?
+  current_bookings    Int?               @default(0)
+  valid_from          DateTime?          @db.Date
+  valid_until         DateTime?          @db.Date
+  terms_conditions    String?            @db.Text
+  created_at          DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?          @default(now()) @db.Timestamp(0)
+  hospitals           hospitals          @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medical_packages_ibfk_1")
+  package_bookings    package_bookings[]
+
+  @@index([category], map: "idx_category")
+  @@index([hospital_id], map: "idx_hospital_id")
+  @@index([is_active], map: "idx_is_active")
+  @@index([is_featured], map: "idx_is_featured")
+  @@index([package_code], map: "idx_package_code")
+  @@index([valid_from], map: "idx_valid_from")
+  @@index([valid_until], map: "idx_valid_until")
+}
+
+model medical_reports {
+  id             Int           @id @default(autoincrement())
+  patient_id     Int
+  hospital_id    Int?
+  appointment_id Int?
+  report_type    String?       @db.VarChar(100)
+  title          String        @db.VarChar(255)
+  description    String?       @db.Text
+  file_url       String?       @db.VarChar(500)
+  file_type      String?       @db.VarChar(50)
+  file_size      Int?
+  report_date    DateTime?     @db.Date
+  created_at     DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?     @default(now()) @db.Timestamp(0)
+  patients       patients      @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "medical_reports_ibfk_1")
+  hospitals      hospitals?    @relation(fields: [hospital_id], references: [id], onUpdate: NoAction, map: "medical_reports_ibfk_2")
+  appointments   appointments? @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, map: "medical_reports_ibfk_3")
+
+  @@index([appointment_id], map: "appointment_id")
+  @@index([hospital_id], map: "hospital_id")
+  @@index([patient_id], map: "patient_id")
+}
+
+model notifications {
+  id          Int                @id @default(autoincrement())
+  user_id     Int
+  title       String             @db.VarChar(255)
+  message     String             @db.Text
+  type        notifications_type
+  read_status Boolean?           @default(false)
+  created_at  DateTime?          @default(now()) @db.Timestamp(0)
+  users       users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "notifications_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model package_bookings {
+  id                   Int                      @id @default(autoincrement())
+  patient_id           Int
+  package_id           Int
+  booking_reference    String?                  @unique(map: "booking_reference") @db.VarChar(100)
+  booking_date         DateTime                 @db.Date
+  travel_date          DateTime?                @db.Date
+  number_of_people     Int?                     @default(1)
+  total_amount         Decimal                  @db.Decimal(10, 2)
+  paid_amount          Decimal?                 @default(0.00) @db.Decimal(10, 2)
+  status               package_bookings_status? @default(pending)
+  special_requirements String?                  @db.Text
+  contact_person_name  String?                  @db.VarChar(255)
+  contact_person_phone String?                  @db.VarChar(20)
+  created_at           DateTime?                @default(now()) @db.Timestamp(0)
+  updated_at           DateTime?                @default(now()) @db.Timestamp(0)
+  patients             patients                 @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "package_bookings_ibfk_1")
+  medical_packages     medical_packages         @relation(fields: [package_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "package_bookings_ibfk_2")
+
+  @@index([booking_date], map: "idx_booking_date")
+  @@index([booking_reference], map: "idx_booking_reference")
+  @@index([package_id], map: "idx_package_id")
+  @@index([patient_id], map: "idx_patient_id")
+  @@index([status], map: "idx_status")
+}
+
+model patients {
+  id                Int                @id @default(autoincrement())
+  user_id           Int
+  date_of_birth     DateTime?          @db.Date
+  gender            patients_gender?
+  address           String?            @db.Text
+  emergency_contact String?            @db.VarChar(20)
+  medical_history   String?            @db.Text
+  created_at        DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?          @default(now()) @db.Timestamp(0)
+  appointments      appointments[]
+  medical_reports   medical_reports[]
+  package_bookings  package_bookings[]
+  users             users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "patients_ibfk_1")
+  payments          payments[]
+  reviews_ratings   reviews_ratings[]
+
+  @@index([user_id], map: "user_id")
+}
+
+model payments {
+  id                Int                      @id @default(autoincrement())
+  patient_id        Int
+  hospital_id       Int
+  appointment_id    Int?
+  amount            Decimal                  @db.Decimal(10, 2)
+  commission_amount Decimal?                 @db.Decimal(10, 2)
+  payment_method    payments_payment_method
+  payment_status    payments_payment_status? @default(pending)
+  transaction_id    String?                  @db.VarChar(255)
+  payment_date      DateTime?                @db.Timestamp(0)
+  description       String?                  @db.Text
+  created_at        DateTime?                @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?                @default(now()) @db.Timestamp(0)
+  patients          patients                 @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "payments_ibfk_1")
+  hospitals         hospitals                @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "payments_ibfk_2")
+  appointments      appointments?            @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, map: "payments_ibfk_3")
+
+  @@index([appointment_id], map: "appointment_id")
+  @@index([hospital_id], map: "hospital_id")
+  @@index([patient_id], map: "patient_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model reviews_ratings {
+  id                  Int           @id @default(autoincrement())
+  patient_id          Int
+  hospital_id         Int
+  doctor_id           Int?
+  appointment_id      Int?
+  overall_rating      Decimal?      @db.Decimal(2, 1)
+  service_rating      Decimal?      @db.Decimal(2, 1)
+  cleanliness_rating  Decimal?      @db.Decimal(2, 1)
+  staff_rating        Decimal?      @db.Decimal(2, 1)
+  review_title        String?       @db.VarChar(255)
+  review_text         String?       @db.Text
+  would_recommend     Boolean?
+  is_verified         Boolean?      @default(false)
+  is_published        Boolean?      @default(true)
+  admin_response      String?       @db.Text
+  admin_response_date DateTime?     @db.Timestamp(0)
+  created_at          DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?     @default(now()) @db.Timestamp(0)
+  patients            patients      @relation(fields: [patient_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_ratings_ibfk_1")
+  hospitals           hospitals     @relation(fields: [hospital_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "reviews_ratings_ibfk_2")
+  doctors             doctors?      @relation(fields: [doctor_id], references: [id], onUpdate: NoAction, map: "reviews_ratings_ibfk_3")
+  appointments        appointments? @relation(fields: [appointment_id], references: [id], onUpdate: NoAction, map: "reviews_ratings_ibfk_4")
+
+  @@unique([patient_id, hospital_id, appointment_id], map: "unique_review")
+  @@index([appointment_id], map: "appointment_id")
+  @@index([created_at], map: "idx_created_at")
+  @@index([doctor_id], map: "idx_doctor_id")
+  @@index([hospital_id], map: "idx_hospital_id")
+  @@index([is_published], map: "idx_is_published")
+  @@index([overall_rating], map: "idx_overall_rating")
+  @@index([patient_id], map: "idx_patient_id")
+}
+
+model system_logs {
+  id          Int       @id @default(autoincrement())
+  user_id     Int?
+  action      String    @db.VarChar(255)
+  entity_type String?   @db.VarChar(100)
+  entity_id   Int?
+  details     Json?
+  ip_address  String?   @db.VarChar(45)
+  user_agent  String?   @db.Text
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  users       users?    @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "system_logs_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model users {
+  id            Int             @id @default(autoincrement())
+  email         String          @unique(map: "email") @db.VarChar(255)
+  password      String          @db.VarChar(255)
+  name          String          @db.VarChar(255)
+  phone         String?         @db.VarChar(20)
+  role          users_role
+  status        users_status?   @default(active)
+  created_at    DateTime?       @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?       @default(now()) @db.Timestamp(0)
+  hospitals     hospitals[]
+  notifications notifications[]
+  patients      patients[]
+  system_logs   system_logs[]
+}
+
+enum patients_gender {
+  male
+  female
+  other
+}
+
+enum notifications_type {
+  appointment
+  payment
+  report
+  system
+  reminder
+}
+
+enum appointments_type {
+  consultation
+  procedure
+  follow_up
+  telemedicine
+}
+
+enum users_role {
+  patient
+  hospital_admin
+  super_admin
+}
+
+enum payments_payment_method {
+  card
+  bank_transfer
+  cash
+  insurance
+}
+
+enum users_status {
+  active
+  inactive
+  suspended
+}
+
+enum payments_payment_status {
+  pending
+  completed
+  failed
+  refunded
+}
+
+enum appointments_status {
+  pending
+  confirmed
+  cancelled
+  completed
+  no_show
+}
+
+enum package_bookings_status {
+  pending
+  confirmed
+  in_progress
+  completed
+  cancelled
+  refunded
+}
+
+enum hospital_employees_status {
+  active
+  inactive
+  terminated
+}
+
+enum hospitals_status {
+  active
+  pending
+  suspended
+}
+
+enum doctors_status {
+  active
+  inactive
+  on_leave
+}

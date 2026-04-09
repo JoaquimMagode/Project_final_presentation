@@ -9,6 +9,7 @@ require('dotenv').config();
 
 // Import database configuration
 const { testConnection, initializeDatabase } = require('./config/database');
+const prisma = require('./config/prisma');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -165,6 +166,7 @@ const gracefulShutdown = (signal) => {
   
   server.close(() => {
     console.log('HTTP server closed.');
+    prisma.$disconnect();
     process.exit(0);
   });
 
@@ -183,6 +185,10 @@ const startServer = async () => {
     
     // Initialize database tables
     await initializeDatabase();
+
+    // Connect Prisma
+    await prisma.$connect();
+    console.log('✅ Prisma connected successfully');
     
     // Start server
     const PORT = process.env.PORT || 5000;

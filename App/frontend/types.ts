@@ -1,6 +1,6 @@
 
 export type Language = 'EN' | 'PT' | 'FR' | 'SW';
-export type UserRole = 'PATIENT' | 'HOSPITAL' | 'ADMIN';
+export type UserRole = 'patient' | 'hospital' | 'superadmin';
 
 export interface Hospital {
   id: string;

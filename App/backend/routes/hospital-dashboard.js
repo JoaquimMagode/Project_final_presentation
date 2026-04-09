@@ -188,11 +188,10 @@ router.get('/employees', authenticateToken, authorizeHospitalAdmin, async (req, 
     const hospitalId = req.user.hospital_id;
 
     const [employees] = await pool.execute(`
-      SELECT he.*, u.name, u.email, u.phone
-      FROM hospital_employees he
-      JOIN users u ON he.user_id = u.id
-      WHERE he.hospital_id = ? AND he.status = 'active'
-      ORDER BY he.created_at DESC
+      SELECT *
+      FROM hospital_employees
+      WHERE hospital_id = ? AND status = 'active'
+      ORDER BY created_at DESC
     `, [hospitalId]);
 
     res.json({ success: true, data: { employees } });

@@ -182,6 +182,9 @@ router.post('/login', validateUserLogin, async (req, res) => {
           [user.id]
         );
         additionalData.hospital = hospitals[0] || null;
+        if (hospitals[0]) {
+          user.hospital_id = hospitals[0].id;
+        }
       }
 
       return res.json({
@@ -307,6 +310,9 @@ router.get('/me', authenticateToken, async (req, res) => {
         [userId]
       );
       additionalData.hospital = hospitals[0] || null;
+      if (hospitals[0]) {
+        user.hospital_id = hospitals[0].id;
+      }
     }
 
     res.json({

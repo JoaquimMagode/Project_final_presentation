@@ -41,7 +41,11 @@ const Login: React.FC = () => {
         const role = roleMap[user.role] ?? 'patient';
 
         localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify({ name: user.name, role }));
+        localStorage.setItem('user', JSON.stringify({ 
+          name: user.name, 
+          role,
+          ...(role === 'hospital' && user.hospital_id ? { hospital_id: user.hospital_id } : {})
+        }));
 
         login(user.name, role as any);
 

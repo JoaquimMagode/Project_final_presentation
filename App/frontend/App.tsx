@@ -59,7 +59,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const searchRef = useRef<HTMLInputElement>(null);
   
   const isDashboardPage = ['/superadmin', '/hospital', '/patient'].includes(location.pathname);
-  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register';
+  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/patient-registration';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -416,9 +416,6 @@ const App: React.FC = () => {
               <Route element={<ProtectedRoute role="patient" />}>
                 <Route path="/patient" element={<PatientDashboard />} />
               </Route>
-              <Route path="/superadmin" element={<SuperAdminDashboard />} />
-              <Route path="/hospital" element={<HospitalDashboard />} />
-              <Route path="/patient" element={<PatientDashboard />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
