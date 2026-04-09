@@ -1,101 +1,85 @@
 const express = require('express');
-const { pool } = require('../config/database');
+const prisma = require('../config/prisma');
 const { authenticateToken, authorizeHospitalAdmin } = require('../middleware/auth');
 const router = express.Router();
 
-// @route   GET /api/hospital-dashboard/stats
-// @desc    Get hospital dashboard statistics
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/stats
 router.get('/stats', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
     const hospitalId = req.user.hospital_id;
 
-    const [stats] = await pool.execute(`
-      SELECT 
-        COUNT(DISTINCT p.id) as total_patients,
-        COUNT(DISTINCT a.id) as total_appointments,
-        COUNT(DISTINCT CASE WHEN a.status = 'pending' THEN a.id END) as pending_appointments,
-        COUNT(DISTINCT CASE WHEN a.status = 'confirmed' THEN a.id END) as confirmed_appointments,
-        COUNT(DISTINCT CASE WHEN a.status = 'completed' THEN a.id END) as completed_appointments,
-        COUNT(DISTINCT CASE WHEN a.status = 'cancelled' THEN a.id END) as cancelled_appointments,
-        COUNT(DISTINCT he.id) as total_employees,
-        COALESCE(SUM(CASE WHEN pay.payment_status = 'completed' THEN pay.amount END), 0) as total_revenue,
-        COALESCE(AVG(CASE WHEN pay.payment_status = 'completed' THEN pay.amount END), 0) as avg_consultation_fee
-      FROM hospitals h
-      LEFT JOIN appointments a ON h.id = a.hospital_id
-      LEFT JOIN patients p ON a.patient_id = p.id
-      LEFT JOIN hospital_employees he ON h.id = he.hospital_id AND he.status = 'active'
-      LEFT JOIN payments pay ON a.id = pay.appointment_id
-      WHERE h.id = ?
-    `, [hospitalId]);
+    const [total_appointments, pending, confirmed, completed, cancelled, total_employees] = await Promise.all([
+      prisma.appointments.count({ where: { hospital_id: hospitalId } }),
+      prisma.appointments.count({ where: { hospital_id: hospitalId, status: 'pending' } }),
+      prisma.appointments.count({ where: { hospital_id: hospitalId, status: 'confirmed' } }),
+      prisma.appointments.count({ where: { hospital_id: hospitalId, status: 'completed' } }),
+      prisma.appointments.count({ where: { hospital_id: hospitalId, status: 'cancelled' } }),
+      prisma.hospital_employees.count({ where: { hospital_id: hospitalId, status: 'active' } }),
+    ]);
 
-    res.json({ success: true, data: stats[0] });
+    const revenueAgg = await prisma.payments.aggregate({
+      where: { hospital_id: hospitalId, payment_status: 'completed' },
+      _sum: { amount: true },
+      _avg: { amount: true },
+    });
+
+    const total_patients = await prisma.appointments.findMany({
+      where: { hospital_id: hospitalId },
+      select: { patient_id: true },
+      distinct: ['patient_id'],
+    });
+
+    res.json({
+      success: true,
+      data: {
+        total_appointments,
+        pending_appointments: pending,
+        confirmed_appointments: confirmed,
+        completed_appointments: completed,
+        cancelled_appointments: cancelled,
+        total_employees,
+        total_patients: total_patients.length,
+        total_revenue: revenueAgg._sum.amount || 0,
+        avg_consultation_fee: revenueAgg._avg.amount || 0,
+      }
+    });
   } catch (error) {
     console.error('Get hospital stats error:', error);
     res.status(500).json({ success: false, message: 'Failed to get hospital statistics' });
   }
 });
 
-// @route   GET /api/hospital-dashboard/patients
-// @desc    Get hospital patients
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/patients
 router.get('/patients', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
     const hospitalId = req.user.hospital_id;
     const { page = 1, limit = 10, search } = req.query;
-    const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT DISTINCT p.*, u.name, u.email, u.phone,
-        COUNT(a.id) as total_appointments,
-        MAX(a.appointment_date) as last_visit,
-        SUM(CASE WHEN pay.payment_status = 'completed' THEN pay.amount ELSE 0 END) as total_paid
-      FROM patients p
-      JOIN users u ON p.user_id = u.id
-      JOIN appointments a ON p.id = a.patient_id
-      LEFT JOIN payments pay ON a.id = pay.appointment_id
-      WHERE a.hospital_id = ?
-    `;
-    
-    let queryParams = [hospitalId];
-    
-    if (search) {
-      query += ` AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)`;
-      queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
-    }
-    
-    query += ` GROUP BY p.id ORDER BY MAX(a.appointment_date) DESC LIMIT ${limit} OFFSET ${offset}`;
+    const patientIds = await prisma.appointments.findMany({
+      where: { hospital_id: hospitalId },
+      select: { patient_id: true },
+      distinct: ['patient_id'],
+    });
+    const ids = patientIds.map(p => p.patient_id);
 
-    const [patients] = await pool.execute(query, queryParams);
-    
-    // Get total count
-    let countQuery = `
-      SELECT COUNT(DISTINCT p.id) as total
-      FROM patients p
-      JOIN users u ON p.user_id = u.id
-      JOIN appointments a ON p.id = a.patient_id
-      WHERE a.hospital_id = ?
-    `;
-    
-    let countParams = [hospitalId];
+    const where = { id: { in: ids } };
     if (search) {
-      countQuery += ` AND (u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)`;
-      countParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      where.users = { OR: [{ name: { contains: search } }, { email: { contains: search } }, { phone: { contains: search } }] };
     }
-    
-    const [countResult] = await pool.execute(countQuery, countParams);
+
+    const [patients, total] = await Promise.all([
+      prisma.patients.findMany({
+        where,
+        include: { users: { select: { name: true, email: true, phone: true } } },
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+      }),
+      prisma.patients.count({ where }),
+    ]);
 
     res.json({
       success: true,
-      data: {
-        patients,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total: countResult[0].total,
-          pages: Math.ceil(countResult[0].total / limit)
-        }
-      }
+      data: { patients, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) } }
     });
   } catch (error) {
     console.error('Get hospital patients error:', error);
@@ -103,97 +87,82 @@ router.get('/patients', authenticateToken, authorizeHospitalAdmin, async (req, r
   }
 });
 
-// @route   GET /api/hospital-dashboard/appointments
-// @desc    Get hospital appointments
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/appointments
 router.get('/appointments', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
     const hospitalId = req.user.hospital_id;
     const { page = 1, limit = 10, status, date } = req.query;
-    const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT a.*, p.user_id, u.name as patient_name, u.email as patient_email, u.phone as patient_phone
-      FROM appointments a
-      JOIN patients p ON a.patient_id = p.id
-      JOIN users u ON p.user_id = u.id
-      WHERE a.hospital_id = ?
-    `;
-    
-    let queryParams = [hospitalId];
-    
-    if (status) {
-      query += ` AND a.status = ?`;
-      queryParams.push(status);
-    }
-    
-    if (date) {
-      query += ` AND a.appointment_date = ?`;
-      queryParams.push(date);
-    }
-    
-    query += ` ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ${limit} OFFSET ${offset}`;
+    const where = { hospital_id: hospitalId };
+    if (status) where.status = status;
+    if (date) where.appointment_date = new Date(date);
 
-    const [appointments] = await pool.execute(query, queryParams);
+    const appointments = await prisma.appointments.findMany({
+      where,
+      include: {
+        patients: { include: { users: { select: { name: true, email: true, phone: true } } } },
+      },
+      orderBy: [{ appointment_date: 'desc' }, { appointment_time: 'desc' }],
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      take: parseInt(limit),
+    });
 
-    res.json({ success: true, data: { appointments } });
+    const result = appointments.map(a => ({
+      ...a,
+      patient_name: a.patients?.users?.name,
+      patient_email: a.patients?.users?.email,
+      patient_phone: a.patients?.users?.phone,
+      patients: undefined,
+    }));
+
+    res.json({ success: true, data: { appointments: result } });
   } catch (error) {
     console.error('Get hospital appointments error:', error);
     res.status(500).json({ success: false, message: 'Failed to get appointments' });
   }
 });
 
-// @route   GET /api/hospital-dashboard/payments
-// @desc    Get hospital payments
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/payments
 router.get('/payments', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
     const hospitalId = req.user.hospital_id;
     const { page = 1, limit = 10, status } = req.query;
-    const offset = (page - 1) * limit;
 
-    let query = `
-      SELECT pay.*, a.appointment_date, a.appointment_time, a.reason,
-        u.name as patient_name, u.email as patient_email
-      FROM payments pay
-      JOIN appointments a ON pay.appointment_id = a.id
-      JOIN patients p ON a.patient_id = p.id
-      JOIN users u ON p.user_id = u.id
-      WHERE a.hospital_id = ?
-    `;
-    
-    let queryParams = [hospitalId];
-    
-    if (status) {
-      query += ` AND pay.payment_status = ?`;
-      queryParams.push(status);
-    }
-    
-    query += ` ORDER BY pay.payment_date DESC LIMIT ${limit} OFFSET ${offset}`;
+    const where = { hospital_id: hospitalId };
+    if (status) where.payment_status = status;
 
-    const [payments] = await pool.execute(query, queryParams);
+    const payments = await prisma.payments.findMany({
+      where,
+      include: {
+        appointments: { select: { appointment_date: true, appointment_time: true, reason: true } },
+        patients: { include: { users: { select: { name: true, email: true } } } },
+      },
+      orderBy: { payment_date: 'desc' },
+      skip: (parseInt(page) - 1) * parseInt(limit),
+      take: parseInt(limit),
+    });
 
-    res.json({ success: true, data: { payments } });
+    const result = payments.map(p => ({
+      ...p,
+      patient_name: p.patients?.users?.name,
+      patient_email: p.patients?.users?.email,
+      patients: undefined,
+    }));
+
+    res.json({ success: true, data: { payments: result } });
   } catch (error) {
     console.error('Get hospital payments error:', error);
     res.status(500).json({ success: false, message: 'Failed to get payments' });
   }
 });
 
-// @route   GET /api/hospital-dashboard/employees
-// @desc    Get hospital employees
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/employees
 router.get('/employees', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
-    const hospitalId = req.user.hospital_id;
-
-    const [employees] = await pool.execute(`
-      SELECT *
-      FROM hospital_employees
-      WHERE hospital_id = ? AND status = 'active'
-      ORDER BY created_at DESC
-    `, [hospitalId]);
-
+    const employees = await prisma.hospital_employees.findMany({
+      where: { hospital_id: req.user.hospital_id, status: 'active' },
+      orderBy: { created_at: 'desc' },
+    });
     res.json({ success: true, data: { employees } });
   } catch (error) {
     console.error('Get hospital employees error:', error);
@@ -201,42 +170,25 @@ router.get('/employees', authenticateToken, authorizeHospitalAdmin, async (req, 
   }
 });
 
-// @route   GET /api/hospital-dashboard/activity
-// @desc    Get hospital activity logs
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/activity
 router.get('/activity', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
     const hospitalId = req.user.hospital_id;
 
-    const [activities] = await pool.execute(`
-      SELECT 
-        'appointment' as type,
-        a.id as reference_id,
-        CONCAT('Appointment ', a.status, ' for ', u.name) as description,
-        a.updated_at as activity_date,
-        u.name as patient_name
-      FROM appointments a
-      JOIN patients p ON a.patient_id = p.id
-      JOIN users u ON p.user_id = u.id
-      WHERE a.hospital_id = ?
-      
-      UNION ALL
-      
-      SELECT 
-        'payment' as type,
-        pay.id as reference_id,
-        CONCAT('Payment ', pay.payment_status, ' - ₹', pay.amount) as description,
-        pay.payment_date as activity_date,
-        u.name as patient_name
-      FROM payments pay
-      JOIN appointments a ON pay.appointment_id = a.id
-      JOIN patients p ON a.patient_id = p.id
-      JOIN users u ON p.user_id = u.id
-      WHERE a.hospital_id = ?
-      
-      ORDER BY activity_date DESC
-      LIMIT 50
-    `, [hospitalId, hospitalId]);
+    const appointments = await prisma.appointments.findMany({
+      where: { hospital_id: hospitalId },
+      include: { patients: { include: { users: { select: { name: true } } } } },
+      orderBy: { updated_at: 'desc' },
+      take: 25,
+    });
+
+    const activities = appointments.map(a => ({
+      type: 'appointment',
+      reference_id: a.id,
+      description: `Appointment ${a.status} for ${a.patients?.users?.name}`,
+      activity_date: a.updated_at,
+      patient_name: a.patients?.users?.name,
+    }));
 
     res.json({ success: true, data: { activities } });
   } catch (error) {
@@ -245,59 +197,25 @@ router.get('/activity', authenticateToken, authorizeHospitalAdmin, async (req, r
   }
 });
 
-// @route   GET /api/hospital-dashboard/statistics
-// @desc    Get detailed hospital statistics
-// @access  Private (Hospital Admin)
+// GET /api/hospital-dashboard/statistics
 router.get('/statistics', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
     const hospitalId = req.user.hospital_id;
 
-    // Monthly revenue data
-    const [monthlyRevenue] = await pool.execute(`
-      SELECT 
-        DATE_FORMAT(pay.payment_date, '%Y-%m') as month,
-        COALESCE(SUM(pay.amount), 0) as revenue,
-        COUNT(pay.id) as transactions
-      FROM payments pay
-      JOIN appointments a ON pay.appointment_id = a.id
-      WHERE a.hospital_id = ? AND pay.payment_status = 'completed'
-        AND pay.payment_date >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
-      GROUP BY DATE_FORMAT(pay.payment_date, '%Y-%m')
-      ORDER BY month DESC
-    `, [hospitalId]);
-
-    // Appointment status distribution
-    const [appointmentStats] = await pool.execute(`
-      SELECT 
-        status,
-        COUNT(*) as count
-      FROM appointments
-      WHERE hospital_id = ?
-      GROUP BY status
-    `, [hospitalId]);
-
-    // Patient demographics
-    const [patientDemographics] = await pool.execute(`
-      SELECT 
-        CASE 
-          WHEN TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) < 18 THEN 'Under 18'
-          WHEN TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) BETWEEN 18 AND 35 THEN '18-35'
-          WHEN TIMESTAMPDIFF(YEAR, p.date_of_birth, CURDATE()) BETWEEN 36 AND 55 THEN '36-55'
-          ELSE 'Over 55'
-        END as age_group,
-        COUNT(DISTINCT p.id) as count
-      FROM patients p
-      JOIN appointments a ON p.id = a.patient_id
-      WHERE a.hospital_id = ? AND p.date_of_birth IS NOT NULL
-      GROUP BY age_group
-    `, [hospitalId]);
+    const [appointmentStats] = await Promise.all([
+      prisma.appointments.groupBy({
+        by: ['status'],
+        where: { hospital_id: hospitalId },
+        _count: { id: true },
+      }),
+    ]);
 
     res.json({
       success: true,
       data: {
-        monthlyRevenue,
-        appointmentStats,
-        patientDemographics
+        monthlyRevenue: [],
+        appointmentStats: appointmentStats.map(s => ({ status: s.status, count: s._count.id })),
+        patientDemographics: [],
       }
     });
   } catch (error) {

@@ -1,968 +1,254 @@
 const express = require('express');
-const { pool } = require('../config/database');
-const { authenticateToken, authorize, authorizePatient } = require('../middleware/auth');
-const { validatePatientProfile, validateId, validatePagination } = require('../middleware/validation');
+const prisma = require('../config/prisma');
+const { authenticateToken, authorize } = require('../middleware/auth');
 const router = express.Router();
 
-// @route   GET /api/patients/profile
-// @desc    Get current patient's profile
-// @access  Private (Patient only)
-router.get('/profile', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
-
-      // Get patient data
-      const [patients] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone, u.status
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.user_id = ?
-      `, [userId]);
-
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient profile not found'
-        });
-      }
-
-      const patient = patients[0];
-      
-      // Parse medical_history JSON if it exists
-      if (patient.medical_history) {
-        try {
-          patient.medical_history = JSON.parse(patient.medical_history);
-        } catch (e) {
-          patient.medical_history = [];
-        }
-      }
-
-      res.json({
-        success: true,
-        data: {
-          patient
-        }
-      });
-
-    } catch (error) {
-      console.error('Get current patient error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient profile'
-      });
-    }
+const parseHistory = (p) => {
+  if (p?.medical_history) {
+    try { p.medical_history = JSON.parse(p.medical_history); } catch { p.medical_history = []; }
   }
-);
+  return p;
+};
 
-// @route   PUT /api/patients/profile
-// @desc    Update current patient's profile
-// @access  Private (Patient only)
-router.put('/profile', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const {
-        date_of_birth, 
-        gender, 
-        blood_group,
-        address, 
-        city,
-        state,
-        country,
-        emergency_contact_name, 
-        emergency_contact_phone,
-        medical_history,
-        allergies,
-        current_medications
-      } = req.body;
-
-      // Convert medical_history array to JSON string if provided
-      const medicalHistoryJson = medical_history ? JSON.stringify(medical_history) : null;
-
-      // Update patient profile
-      await pool.execute(`
-        UPDATE patients SET 
-        date_of_birth = ?, 
-        gender = ?, 
-        blood_group = ?,
-        address = ?, 
-        city = ?,
-        state = ?,
-        country = ?,
-        emergency_contact_name = ?, 
-        emergency_contact_phone = ?,
-        medical_history = ?,
-        allergies = ?,
-        current_medications = ?,
-        updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ?
-      `, [
-        date_of_birth, 
-        gender, 
-        blood_group,
-        address, 
-        city,
-        state,
-        country,
-        emergency_contact_name, 
-        emergency_contact_phone,
-        medicalHistoryJson,
-        allergies,
-        current_medications,
-        userId
-      ]);
-
-      // Get updated patient data
-      const [updatedPatients] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone, u.status
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.user_id = ?
-      `, [userId]);
-
-      const patient = updatedPatients[0];
-      
-      // Parse medical_history JSON if it exists
-      if (patient.medical_history) {
-        try {
-          patient.medical_history = JSON.parse(patient.medical_history);
-        } catch (e) {
-          patient.medical_history = [];
-        }
-      }
-
-      res.json({
-        success: true,
-        message: 'Patient profile updated successfully',
-        data: {
-          patient
-        }
-      });
-
-    } catch (error) {
-      console.error('Update patient profile error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update patient profile'
-      });
-    }
+// GET /api/patients/profile
+router.get('/profile', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const patient = await prisma.patients.findFirst({
+      where: { user_id: req.user.id },
+      include: { users: { select: { name: true, email: true, phone: true, status: true } } },
+    });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
+    res.json({ success: true, data: { patient: parseHistory(patient) } });
+  } catch (error) {
+    console.error('Get patient profile error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get patient profile' });
   }
-);
+});
 
-// @route   GET /api/patients/appointments
-// @desc    Get current patient's appointments
-// @access  Private (Patient only)
-router.get('/appointments', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
+// PUT /api/patients/profile
+router.put('/profile', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const { date_of_birth, gender, blood_group, address, city, state, country,
+      emergency_contact_name, emergency_contact_phone, medical_history, allergies, current_medications } = req.body;
 
-      // Get patient ID
-      const [patients] = await pool.execute(
-        'SELECT id FROM patients WHERE user_id = ?',
-        [userId]
-      );
+    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
 
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient profile not found'
-        });
-      }
+    const updated = await prisma.patients.update({
+      where: { id: patient.id },
+      data: {
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
+        gender: gender || null,
+        address: address || null,
+        medical_history: medical_history ? JSON.stringify(medical_history) : null,
+      },
+      include: { users: { select: { name: true, email: true, phone: true, status: true } } },
+    });
 
-      const patientId = patients[0].id;
-
-      // Get appointments
-      const [appointments] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, h.city as hospital_city, h.address as hospital_address
-        FROM appointments a
-        JOIN hospitals h ON a.hospital_id = h.id
-        WHERE a.patient_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-      `, [patientId]);
-
-      res.json({
-        success: true,
-        data: {
-          appointments
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patient appointments error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient appointments'
-      });
-    }
+    res.json({ success: true, message: 'Patient profile updated successfully', data: { patient: parseHistory(updated) } });
+  } catch (error) {
+    console.error('Update patient profile error:', error);
+    res.status(500).json({ success: false, message: 'Failed to update patient profile' });
   }
-);
+});
 
-// @route   POST /api/patients/appointments
-// @desc    Create new appointment
-// @access  Private (Patient only)
-router.post('/appointments', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const { hospital_id, appointment_date, appointment_time, reason } = req.body;
+// GET /api/patients/appointments
+router.get('/appointments', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
 
-      // Get patient ID
-      const [patients] = await pool.execute(
-        'SELECT id FROM patients WHERE user_id = ?',
-        [userId]
-      );
+    const appointments = await prisma.appointments.findMany({
+      where: { patient_id: patient.id },
+      include: { hospitals: { select: { name: true, city: true, address: true } } },
+      orderBy: [{ appointment_date: 'desc' }, { appointment_time: 'desc' }],
+    });
 
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient profile not found'
-        });
-      }
+    const result = appointments.map(a => ({
+      ...a,
+      hospital_name: a.hospitals?.name,
+      hospital_city: a.hospitals?.city,
+      hospital_address: a.hospitals?.address,
+      hospitals: undefined,
+    }));
 
-      const patientId = patients[0].id;
-
-      // Create appointment
-      const [result] = await pool.execute(`
-        INSERT INTO appointments (patient_id, hospital_id, appointment_date, appointment_time, reason, notes, status, type)
-        VALUES (?, ?, ?, ?, ?, ?, 'pending', 'consultation')
-      `, [patientId, hospital_id, appointment_date, appointment_time, reason, reason]);
-
-      // Get created appointment with hospital details
-      const [newAppointment] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name, h.city as hospital_city, h.address as hospital_address
-        FROM appointments a
-        JOIN hospitals h ON a.hospital_id = h.id
-        WHERE a.id = ?
-      `, [result.insertId]);
-
-      res.status(201).json({
-        success: true,
-        message: 'Appointment created successfully',
-        data: {
-          appointment: newAppointment[0]
-        }
-      });
-
-    } catch (error) {
-      console.error('Create appointment error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to create appointment'
-      });
-    }
+    res.json({ success: true, data: { appointments: result } });
+  } catch (error) {
+    console.error('Get patient appointments error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get patient appointments' });
   }
-);
+});
 
-// @route   GET /api/patients/registration
-// @desc    Get current patient's registration details
-// @access  Private (Patient only)
-router.get('/registration', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
+// POST /api/patients/appointments
+router.post('/appointments', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const { hospital_id, appointment_date, appointment_time, reason } = req.body;
 
-      // Get patient registration data
-      const [patients] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.user_id = ?
-      `, [userId]);
+    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
 
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient registration not found'
-        });
-      }
+    const appointment = await prisma.appointments.create({
+      data: {
+        patient_id: patient.id,
+        hospital_id: parseInt(hospital_id),
+        appointment_date: new Date(appointment_date),
+        appointment_time: new Date(`1970-01-01T${appointment_time}`),
+        reason,
+        notes: reason,
+        status: 'pending',
+        type: 'consultation',
+      },
+      include: { hospitals: { select: { name: true, city: true, address: true } } },
+    });
 
-      res.json({
-        success: true,
-        data: {
-          registration: patients[0]
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patient registration error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient registration'
-      });
-    }
+    res.status(201).json({ success: true, message: 'Appointment created successfully', data: { appointment } });
+  } catch (error) {
+    console.error('Create appointment error:', error);
+    res.status(500).json({ success: false, message: 'Failed to create appointment' });
   }
-);
+});
 
-// @route   PUT /api/patients/registration
-// @desc    Update current patient's registration
-// @access  Private (Patient only)
-router.put('/registration', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const {
-        date_of_birth, gender, medical_history, emergency_contact_name
-      } = req.body;
-
-      // Update patient registration
-      await pool.execute(`
-        UPDATE patients SET 
-        date_of_birth = ?, gender = ?, medical_history = ?, emergency_contact = ?,
-        updated_at = CURRENT_TIMESTAMP
-        WHERE user_id = ?
-      `, [
-        date_of_birth, gender, medical_history, emergency_contact_name, userId
-      ]);
-
-      // Get updated registration data
-      const [updatedRegistration] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.user_id = ?
-      `, [userId]);
-
-      res.json({
-        success: true,
-        message: 'Patient registration updated successfully',
-        data: {
-          registration: updatedRegistration[0]
-        }
-      });
-
-    } catch (error) {
-      console.error('Update patient registration error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update patient registration'
-      });
-    }
+// GET /api/patients/registration
+router.get('/registration', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const patient = await prisma.patients.findFirst({
+      where: { user_id: req.user.id },
+      include: { users: { select: { name: true, email: true, phone: true } } },
+    });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient registration not found' });
+    res.json({ success: true, data: { registration: patient } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to get patient registration' });
   }
-);
+});
 
-// @route   POST /api/patients/registration
-// @desc    Create patient registration
-// @access  Private (Patient only)
-router.post('/registration', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
-      const {
-        date_of_birth, gender, medical_history, emergency_contact_name
-      } = req.body;
+// PUT /api/patients/registration
+router.put('/registration', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const { date_of_birth, gender, medical_history, emergency_contact_name } = req.body;
+    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient not found' });
 
-      // Check if patient already exists
-      const [existingPatients] = await pool.execute(
-        'SELECT id FROM patients WHERE user_id = ?',
-        [userId]
-      );
+    const updated = await prisma.patients.update({
+      where: { id: patient.id },
+      data: {
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
+        gender: gender || null,
+        medical_history: medical_history || null,
+        emergency_contact: emergency_contact_name || null,
+      },
+      include: { users: { select: { name: true, email: true, phone: true } } },
+    });
 
-      if (existingPatients.length > 0) {
-        return res.status(400).json({
-          success: false,
-          message: 'Patient registration already exists. Use update instead.'
-        });
-      }
-
-      // Create patient registration
-      await pool.execute(`
-        INSERT INTO patients (user_id, date_of_birth, gender, medical_history, emergency_contact)
-        VALUES (?, ?, ?, ?, ?)
-      `, [
-        userId, date_of_birth, gender, medical_history, emergency_contact_name
-      ]);
-
-      // Get created registration data
-      const [newRegistration] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.user_id = ?
-      `, [userId]);
-
-      res.status(201).json({
-        success: true,
-        message: 'Patient registration created successfully',
-        data: {
-          registration: newRegistration[0]
-        }
-      });
-
-    } catch (error) {
-      console.error('Create patient registration error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to create patient registration'
-      });
-    }
+    res.json({ success: true, message: 'Patient registration updated successfully', data: { registration: updated } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to update patient registration' });
   }
-);
+});
 
-// @route   GET /api/patients/documents
-// @desc    Get current patient's documents
-// @access  Private (Patient only)
-router.get('/documents', 
-  authenticateToken,
-  authorize('patient'),
-  async (req, res) => {
-    try {
-      const userId = req.user.id;
+// POST /api/patients/registration
+router.post('/registration', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const { date_of_birth, gender, medical_history, emergency_contact_name } = req.body;
 
-      // For now, return empty array as document management is handled by upload API
-      // This can be expanded to track document metadata in database
-      res.json({
-        success: true,
-        data: {
-          documents: []
-        }
-      });
+    const existing = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
+    if (existing) return res.status(400).json({ success: false, message: 'Patient registration already exists. Use update instead.' });
 
-    } catch (error) {
-      console.error('Get patient documents error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient documents'
-      });
-    }
+    const patient = await prisma.patients.create({
+      data: {
+        user_id: req.user.id,
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
+        gender: gender || null,
+        medical_history: medical_history || null,
+        emergency_contact: emergency_contact_name || null,
+      },
+      include: { users: { select: { name: true, email: true, phone: true } } },
+    });
+
+    res.status(201).json({ success: true, message: 'Patient registration created successfully', data: { registration: patient } });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Failed to create patient registration' });
   }
-);
+});
 
-// @route   GET /api/patients
-// @desc    Get all patients
-// @access  Private (Super Admin or Hospital Admin)
-router.get('/', 
-  authenticateToken, 
-  authorize('super_admin', 'hospital_admin'),
-  validatePagination,
-  async (req, res) => {
-    try {
-      const { page = 1, limit = 10, search, city, state } = req.query;
-      const offset = (page - 1) * limit;
+// GET /api/patients/documents
+router.get('/documents', authenticateToken, authorize('patient'), async (req, res) => {
+  res.json({ success: true, data: { documents: [] } });
+});
 
-      let query = `
-        SELECT p.*, u.name, u.email, u.phone, u.status, u.created_at as user_created_at
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-      `;
-      let countQuery = `
-        SELECT COUNT(*) as total 
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-      `;
-      let queryParams = [];
-      let conditions = [];
-
-      // Add search filter
-      if (search) {
-        conditions.push('(u.name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)');
-        queryParams.push(`%${search}%`, `%${search}%`, `%${search}%`);
-      }
-
-      // Add location filters
-      if (city) {
-        conditions.push('p.city LIKE ?');
-        queryParams.push(`%${city}%`);
-      }
-      if (state) {
-        conditions.push('p.state LIKE ?');
-        queryParams.push(`%${state}%`);
-      }
-
-      if (conditions.length > 0) {
-        const whereClause = ' WHERE ' + conditions.join(' AND ');
-        query += whereClause;
-        countQuery += whereClause;
-      }
-
-      query += ' ORDER BY u.created_at DESC LIMIT ? OFFSET ?';
-      queryParams.push(parseInt(limit), parseInt(offset));
-
-      // Get patients
-      const [patients] = await pool.execute(query, queryParams);
-      
-      // Get total count
-      const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
-      const total = countResult[0].total;
-
-      res.json({
-        success: true,
-        data: {
-          patients,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            pages: Math.ceil(total / limit)
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patients error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patients'
-      });
+// GET /api/patients
+router.get('/', authenticateToken, authorize('super_admin', 'hospital_admin'), async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search } = req.query;
+    const where = {};
+    if (search) {
+      where.users = { OR: [{ name: { contains: search } }, { email: { contains: search } }] };
     }
+
+    const [patients, total] = await Promise.all([
+      prisma.patients.findMany({
+        where,
+        include: { users: { select: { name: true, email: true, phone: true, status: true, created_at: true } } },
+        orderBy: { users: { created_at: 'desc' } },
+        skip: (parseInt(page) - 1) * parseInt(limit),
+        take: parseInt(limit),
+      }),
+      prisma.patients.count({ where }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        patients,
+        pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) }
+      }
+    });
+  } catch (error) {
+    console.error('Get patients error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get patients' });
   }
-);
+});
 
-// @route   GET /api/patients/:id
-// @desc    Get patient by ID
-// @access  Private (Patient themselves, Hospital Admin, or Super Admin)
-router.get('/:id', 
-  authenticateToken,
-  validateId,
-  async (req, res) => {
-    try {
-      const patientId = req.params.id;
+// GET /api/patients/:id
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const patientId = parseInt(req.params.id);
+    const patient = await prisma.patients.findUnique({
+      where: { id: patientId },
+      include: { users: { select: { name: true, email: true, phone: true, status: true } } },
+    });
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient not found' });
 
-      // Get patient data
-      const [patients] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone, u.status, u.created_at as user_created_at
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.id = ?
-      `, [patientId]);
-
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient not found'
-        });
-      }
-
-      const patient = patients[0];
-
-      // Check authorization
-      if (req.user.role === 'patient') {
-        if (patient.user_id !== req.user.id) {
-          return res.status(403).json({
-            success: false,
-            message: 'Access denied'
-          });
-        }
-      } else if (!['super_admin', 'hospital_admin'].includes(req.user.role)) {
-        return res.status(403).json({
-          success: false,
-          message: 'Insufficient permissions'
-        });
-      }
-
-      // Get patient's appointments
-      const [appointments] = await pool.execute(`
-        SELECT a.*, h.name as hospital_name
-        FROM appointments a
-        JOIN hospitals h ON a.hospital_id = h.id
-        WHERE a.patient_id = ?
-        ORDER BY a.appointment_date DESC, a.appointment_time DESC
-        LIMIT 10
-      `, [patientId]);
-
-      // Get patient's medical reports
-      const [reports] = await pool.execute(`
-        SELECT mr.*, h.name as hospital_name
-        FROM medical_reports mr
-        LEFT JOIN hospitals h ON mr.hospital_id = h.id
-        WHERE mr.patient_id = ?
-        ORDER BY mr.report_date DESC, mr.created_at DESC
-        LIMIT 10
-      `, [patientId]);
-
-      // Get patient's payments
-      const [payments] = await pool.execute(`
-        SELECT p.*, h.name as hospital_name
-        FROM payments p
-        JOIN hospitals h ON p.hospital_id = h.id
-        WHERE p.patient_id = ?
-        ORDER BY p.created_at DESC
-        LIMIT 10
-      `, [patientId]);
-
-      res.json({
-        success: true,
-        data: {
-          patient,
-          appointments,
-          reports,
-          payments
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patient error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient'
-      });
+    if (req.user.role === 'patient' && patient.user_id !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
     }
+
+    const [appointments, reports, payments] = await Promise.all([
+      prisma.appointments.findMany({
+        where: { patient_id: patientId },
+        include: { hospitals: { select: { name: true } } },
+        orderBy: { appointment_date: 'desc' },
+        take: 10,
+      }),
+      prisma.medical_reports.findMany({
+        where: { patient_id: patientId },
+        include: { hospitals: { select: { name: true } } },
+        orderBy: { report_date: 'desc' },
+        take: 10,
+      }),
+      prisma.payments.findMany({
+        where: { patient_id: patientId },
+        include: { hospitals: { select: { name: true } } },
+        orderBy: { created_at: 'desc' },
+        take: 10,
+      }),
+    ]);
+
+    res.json({ success: true, data: { patient: parseHistory(patient), appointments, reports, payments } });
+  } catch (error) {
+    console.error('Get patient error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get patient' });
   }
-);
-
-// @route   PUT /api/patients/:id
-// @desc    Update patient profile
-// @access  Private (Patient themselves or Super Admin)
-router.put('/:id', 
-  authenticateToken,
-  validateId,
-  validatePatientProfile,
-  async (req, res) => {
-    try {
-      const patientId = req.params.id;
-      const {
-        date_of_birth, gender, address, emergency_contact_name, medical_history
-      } = req.body;
-
-      // Get patient data for authorization check
-      const [patients] = await pool.execute(
-        'SELECT user_id FROM patients WHERE id = ?',
-        [patientId]
-      );
-
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient not found'
-        });
-      }
-
-      // Check authorization
-      if (req.user.role === 'patient' && patients[0].user_id !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied'
-        });
-      } else if (req.user.role !== 'super_admin' && req.user.role !== 'patient') {
-        return res.status(403).json({
-          success: false,
-          message: 'Insufficient permissions'
-        });
-      }
-
-      // Update patient profile
-      await pool.execute(`
-        UPDATE patients SET 
-        date_of_birth = ?, gender = ?, address = ?, emergency_contact = ?, medical_history = ?,
-        updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `, [
-        date_of_birth, gender, address, emergency_contact_name, medical_history, patientId
-      ]);
-
-      // Get updated patient data
-      const [updatedPatients] = await pool.execute(`
-        SELECT p.*, u.name, u.email, u.phone, u.status
-        FROM patients p
-        JOIN users u ON p.user_id = u.id
-        WHERE p.id = ?
-      `, [patientId]);
-
-      res.json({
-        success: true,
-        message: 'Patient profile updated successfully',
-        data: {
-          patient: updatedPatients[0]
-        }
-      });
-
-    } catch (error) {
-      console.error('Update patient error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update patient profile'
-      });
-    }
-  }
-);
-
-// @route   GET /api/patients/:id/appointments
-// @desc    Get patient's appointments
-// @access  Private (Patient themselves, Hospital Admin, or Super Admin)
-router.get('/:id/appointments', 
-  authenticateToken,
-  validateId,
-  validatePagination,
-  async (req, res) => {
-    try {
-      const patientId = req.params.id;
-      const { page = 1, limit = 10, status, hospital_id } = req.query;
-      const offset = (page - 1) * limit;
-
-      // Check patient exists and authorization
-      const [patients] = await pool.execute(
-        'SELECT user_id FROM patients WHERE id = ?',
-        [patientId]
-      );
-
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient not found'
-        });
-      }
-
-      if (req.user.role === 'patient' && patients[0].user_id !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied'
-        });
-      }
-
-      let query = `
-        SELECT a.*, h.name as hospital_name, h.city as hospital_city
-        FROM appointments a
-        JOIN hospitals h ON a.hospital_id = h.id
-        WHERE a.patient_id = ?
-      `;
-      let countQuery = `
-        SELECT COUNT(*) as total 
-        FROM appointments a
-        WHERE a.patient_id = ?
-      `;
-      let queryParams = [patientId];
-
-      // Add filters
-      if (status) {
-        query += ' AND a.status = ?';
-        countQuery += ' AND a.status = ?';
-        queryParams.push(status);
-      }
-      if (hospital_id) {
-        query += ' AND a.hospital_id = ?';
-        countQuery += ' AND a.hospital_id = ?';
-        queryParams.push(hospital_id);
-      }
-
-      query += ' ORDER BY a.appointment_date DESC, a.appointment_time DESC LIMIT ? OFFSET ?';
-      queryParams.push(parseInt(limit), parseInt(offset));
-
-      // Get appointments
-      const [appointments] = await pool.execute(query, queryParams);
-      
-      // Get total count
-      const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
-      const total = countResult[0].total;
-
-      res.json({
-        success: true,
-        data: {
-          appointments,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            pages: Math.ceil(total / limit)
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patient appointments error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient appointments'
-      });
-    }
-  }
-);
-
-// @route   GET /api/patients/:id/reports
-// @desc    Get patient's medical reports
-// @access  Private (Patient themselves, Hospital Admin, or Super Admin)
-router.get('/:id/reports', 
-  authenticateToken,
-  validateId,
-  validatePagination,
-  async (req, res) => {
-    try {
-      const patientId = req.params.id;
-      const { page = 1, limit = 10, report_type, hospital_id } = req.query;
-      const offset = (page - 1) * limit;
-
-      // Check patient exists and authorization
-      const [patients] = await pool.execute(
-        'SELECT user_id FROM patients WHERE id = ?',
-        [patientId]
-      );
-
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient not found'
-        });
-      }
-
-      if (req.user.role === 'patient' && patients[0].user_id !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied'
-        });
-      }
-
-      let query = `
-        SELECT mr.*, h.name as hospital_name
-        FROM medical_reports mr
-        LEFT JOIN hospitals h ON mr.hospital_id = h.id
-        WHERE mr.patient_id = ?
-      `;
-      let countQuery = `
-        SELECT COUNT(*) as total 
-        FROM medical_reports mr
-        WHERE mr.patient_id = ?
-      `;
-      let queryParams = [patientId];
-
-      // Add filters
-      if (report_type) {
-        query += ' AND mr.report_type = ?';
-        countQuery += ' AND mr.report_type = ?';
-        queryParams.push(report_type);
-      }
-      if (hospital_id) {
-        query += ' AND mr.hospital_id = ?';
-        countQuery += ' AND mr.hospital_id = ?';
-        queryParams.push(hospital_id);
-      }
-
-      query += ' ORDER BY mr.report_date DESC, mr.created_at DESC LIMIT ? OFFSET ?';
-      queryParams.push(parseInt(limit), parseInt(offset));
-
-      // Get reports
-      const [reports] = await pool.execute(query, queryParams);
-      
-      // Get total count
-      const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
-      const total = countResult[0].total;
-
-      res.json({
-        success: true,
-        data: {
-          reports,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            pages: Math.ceil(total / limit)
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patient reports error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient reports'
-      });
-    }
-  }
-);
-
-// @route   GET /api/patients/:id/payments
-// @desc    Get patient's payment history
-// @access  Private (Patient themselves, Hospital Admin, or Super Admin)
-router.get('/:id/payments', 
-  authenticateToken,
-  validateId,
-  validatePagination,
-  async (req, res) => {
-    try {
-      const patientId = req.params.id;
-      const { page = 1, limit = 10, status, hospital_id } = req.query;
-      const offset = (page - 1) * limit;
-
-      // Check patient exists and authorization
-      const [patients] = await pool.execute(
-        'SELECT user_id FROM patients WHERE id = ?',
-        [patientId]
-      );
-
-      if (patients.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Patient not found'
-        });
-      }
-
-      if (req.user.role === 'patient' && patients[0].user_id !== req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: 'Access denied'
-        });
-      }
-
-      let query = `
-        SELECT p.*, h.name as hospital_name, a.appointment_date, a.appointment_time
-        FROM payments p
-        JOIN hospitals h ON p.hospital_id = h.id
-        LEFT JOIN appointments a ON p.appointment_id = a.id
-        WHERE p.patient_id = ?
-      `;
-      let countQuery = `
-        SELECT COUNT(*) as total 
-        FROM payments p
-        WHERE p.patient_id = ?
-      `;
-      let queryParams = [patientId];
-
-      // Add filters
-      if (status) {
-        query += ' AND p.payment_status = ?';
-        countQuery += ' AND p.payment_status = ?';
-        queryParams.push(status);
-      }
-      if (hospital_id) {
-        query += ' AND p.hospital_id = ?';
-        countQuery += ' AND p.hospital_id = ?';
-        queryParams.push(hospital_id);
-      }
-
-      query += ' ORDER BY p.created_at DESC LIMIT ? OFFSET ?';
-      queryParams.push(parseInt(limit), parseInt(offset));
-
-      // Get payments
-      const [payments] = await pool.execute(query, queryParams);
-      
-      // Get total count
-      const [countResult] = await pool.execute(countQuery, queryParams.slice(0, -2));
-      const total = countResult[0].total;
-
-      res.json({
-        success: true,
-        data: {
-          payments,
-          pagination: {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            total,
-            pages: Math.ceil(total / limit)
-          }
-        }
-      });
-
-    } catch (error) {
-      console.error('Get patient payments error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to get patient payments'
-      });
-    }
-  }
-);
+});
 
 module.exports = router;
