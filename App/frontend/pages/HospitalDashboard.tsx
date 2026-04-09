@@ -3,7 +3,7 @@ import {
   Menu, X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
   TrendingUp, TrendingDown, MoreHorizontal, Plus, Settings, HelpCircle,
   BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
-  Building2, Stethoscope, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut
+  Building2, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut
 } from 'lucide-react';
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
@@ -245,34 +245,6 @@ const HospitalDashboard: React.FC = () => {
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-teal-800 transition-all duration-300 flex flex-col`}>
-        {/* Logo */}
-        <div className="p-6 border-b border-teal-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center overflow-hidden">
-              <img 
-                src={hospitalData.logo} 
-                alt={`${hospitalData.name} Logo`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback to stethoscope icon if image fails to load
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-              <Stethoscope className="w-5 h-5 text-teal-800 hidden" />
-            </div>
-            {sidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <div className="text-white font-bold text-lg truncate">{hospitalData.name}</div>
-                {hospitalData.location && (
-                  <div className="text-teal-200 text-xs truncate">{hospitalData.location}</div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Menu Items */}
         <nav className="flex-1 p-4">
           <div className="space-y-2">
