@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import {
   Home, Building2, Calendar, FileText, User,
   Settings, HelpCircle, Phone, Upload, ChevronRight,
-  CheckCircle, Clock, AlertCircle
+  CheckCircle, Clock, AlertCircle, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../App';
 import FindHospitals from './patient/FindHospitals';
@@ -12,17 +12,19 @@ import MedicalReports from './patient/MedicalReports';
 import AppointmentRequests from './patient/AppointmentRequests';
 import PatientSettings from './patient/PatientSettings';
 import PatientHelp from './patient/PatientHelp';
+import Billing from './patient/Billing';
 
-type Page = 'dashboard' | 'hospitals' | 'registration' | 'profile' | 'reports' | 'appointments' | 'settings' | 'help';
+type Page = 'dashboard' | 'hospitals' | 'registration' | 'profile' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help';
 
 const NAV = [
-  { page: 'dashboard' as Page,     icon: Home,       label: 'Home' },
-  { page: 'hospitals' as Page,     icon: Building2,  label: 'Find Hospitals' },
-  { page: 'appointments' as Page,  icon: Calendar,   label: 'Appointments' },
-  { page: 'reports' as Page,       icon: FileText,   label: 'My Reports' },
-  { page: 'profile' as Page,       icon: User,       label: 'My Profile' },
-  { page: 'settings' as Page,      icon: Settings,   label: 'Settings' },
-  { page: 'help' as Page,          icon: HelpCircle, label: 'Help' },
+  { page: 'dashboard' as Page,     icon: Home,        label: 'Home' },
+  { page: 'hospitals' as Page,     icon: Building2,   label: 'Find Hospitals' },
+  { page: 'appointments' as Page,  icon: Calendar,    label: 'Appointments' },
+  { page: 'billing' as Page,       icon: CreditCard,  label: 'Records & Billing' },
+  { page: 'reports' as Page,       icon: FileText,    label: 'My Reports' },
+  { page: 'profile' as Page,       icon: User,        label: 'My Profile' },
+  { page: 'settings' as Page,      icon: Settings,    label: 'Settings' },
+  { page: 'help' as Page,          icon: HelpCircle,  label: 'Help' },
 ];
 
 const QUICK_ACTIONS = [
@@ -196,6 +198,7 @@ const PatientDashboard: React.FC = () => {
           {activePage === 'profile'      && <PatientProfile />}
           {activePage === 'reports'      && <MedicalReports />}
           {activePage === 'appointments' && <AppointmentRequests />}
+          {activePage === 'billing'      && <Billing />}
           {activePage === 'settings'     && <PatientSettings />}
           {activePage === 'help'         && <PatientHelp />}
 

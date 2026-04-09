@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '../App';
@@ -9,6 +10,7 @@ const Home: React.FC = () => {
   const { lang } = useLang();
   const t = TRANSLATIONS[lang];
   const navigate = useNavigate();
+  const [searchMode, setSearchMode] = useState<'destination' | 'procedure'>('destination');
   const [destination, setDestination] = useState('');
   const [procedure, setProcedure] = useState('');
 
@@ -17,15 +19,16 @@ const Home: React.FC = () => {
   ];
 
   const medicalProcedures = [
-    'Cardiac Surgery', 'Orthopedic Surgery', 'Cancer Treatment', 'Neurosurgery',
-    'Kidney Transplant', 'Liver Transplant', 'Eye Surgery', 'Cosmetic Surgery',
-    'Dental Treatment', 'IVF Treatment', 'Spine Surgery', 'Joint Replacement'
+    'Cardiology', 'Neurology & Neurosurgery', 'Orthopedics', 'Obstetrics & Gynecology',
+    'Urology', 'Dermatology', 'Primary Care Physician'
   ];
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (destination || procedure) {
-      navigate(`/hospitals?destination=${destination}&procedure=${procedure}`);
+    if (searchMode === 'destination' && destination) {
+      navigate(`/hospitals?destination=${destination}`);
+    } else if (searchMode === 'procedure' && procedure) {
+      navigate(`/hospitals?procedure=${procedure}`);
     }
   };
 
@@ -44,52 +47,74 @@ const Home: React.FC = () => {
               {/* Search Filter */}
               <form onSubmit={handleSearch} className="space-y-4">
                 <div className="flex gap-6 border-b border-slate-200">
-                  <button type="button" className="pb-2 border-b-2 border-slate-900 font-semibold text-slate-900">Destination</button>
-                  <button type="button" className="pb-2 text-slate-600 hover:text-slate-900">Procedure</button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode('destination')}
+                    className={`pb-2 font-semibold transition-colors ${
+                      searchMode === 'destination'
+                        ? 'border-b-2 border-slate-900 text-slate-900'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    Destination
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSearchMode('procedure')}
+                    className={`pb-2 font-semibold transition-colors ${
+                      searchMode === 'procedure'
+                        ? 'border-b-2 border-slate-900 text-slate-900'
+                        : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  >
+                    Procedure
+                  </button>
                 </div>
                 
                 {/* Dropdowns */}
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      <MapPin className="w-4 h-4 inline mr-1" />
-                      Destination in India
-                    </label>
-                    <select 
-                      value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
-                      className="w-full p-4 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
-                    >
-                      <option value="">Select a city</option>
-                      {indianCities.map(city => (
-                        <option key={city} value={city}>{city}</option>
-                      ))}
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                      <Stethoscope className="w-4 h-4 inline mr-1" />
-                      Medical Procedure
-                    </label>
-                    <select 
-                      value={procedure}
-                      onChange={(e) => setProcedure(e.target.value)}
-                      className="w-full p-4 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
-                    >
-                      <option value="">Select a procedure</option>
-                      {medicalProcedures.map(proc => (
-                        <option key={proc} value={proc}>{proc}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {searchMode === 'destination' ? (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <MapPin className="w-4 h-4 inline mr-1" />
+                        Destination in India
+                      </label>
+                      <select 
+                        value={destination}
+                        onChange={(e) => setDestination(e.target.value)}
+                        className="w-full p-4 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                      >
+                        <option value="">Select a city</option>
+                        {indianCities.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-2">
+                        <Stethoscope className="w-4 h-4 inline mr-1" />
+                        Type of Procedure
+                      </label>
+                      <select 
+                        value={procedure}
+                        onChange={(e) => setProcedure(e.target.value)}
+                        className="w-full p-4 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 bg-white"
+                      >
+                        <option value="">Select a procedure</option>
+                        {medicalProcedures.map(proc => (
+                          <option key={proc} value={proc}>{proc}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   
                   <button 
                     type="submit"
                     className="w-full bg-slate-900 text-white font-semibold py-4 rounded hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
                   >
                     <Search className="w-5 h-5" />
-                    Search Hospitals
+                    Find Hospitals
                   </button>
                 </div>
               </form>

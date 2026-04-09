@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Plane, Car, HeartHandshake, Languages, FileText, ChevronRight } from 'lucide-react';
+import { Plane, Car, HeartHandshake, Languages, FileText, ChevronRight, Mail, X } from 'lucide-react';
 
 interface Extras {
   airportTransfer: boolean;
@@ -72,18 +72,56 @@ const QuoteExtras: React.FC = () => {
     visaCourier: false,
   });
 
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+
   const toggle = (key: keyof Extras) => setExtras(prev => ({ ...prev, [key]: !prev[key] }));
 
   const handleReset = () =>
     setExtras({ airportTransfer: false, localTransport: false, caretaker: false, translator: false, visaCourier: false });
 
-  const handleContinue = () =>
-    navigate('/quote/summary', { state: { ...prevState, extras } });
+  const handleContinue = () => setShowEmailModal(true);
+
+  const handleSendQuote = async () => {
+    if (!email || !/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    setEmailError('');
+
+    const selectedExtras = EXTRAS_CONFIG
+      .filter(e => extras[e.key])
+      .map(e => ({ title: e.title, cost: e.cost }));
+    if (extras.visaCourier) selectedExtras.push({ title: 'Visa Support (one-time)', cost: 25 });
+
+    try {
+      const res = await fetch('http://localhost:5000/api/email/send-quote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          city: prevState.city,
+          procedure: prevState.procedure,
+          extras: selectedExtras,
+          totalExtras,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.message);
+    } catch (err) {
+      setEmailError('Failed to send email. Please try again.');
+      return;
+    }
+
+    navigate('/quote/summary', { state: { ...prevState, extras, email } });
+  };
 
   const totalExtras = EXTRAS_CONFIG.reduce((sum, e) => sum + (extras[e.key] ? e.cost : 0), 0)
     + (extras.visaCourier ? 25 : 0);
 
   return (
+    <>
     <div className="min-h-screen bg-slate-50 flex items-start justify-center py-10 px-4">
       <div className="w-full max-w-lg bg-white rounded-3xl shadow-md p-8 space-y-6">
 
@@ -170,6 +208,53 @@ const QuoteExtras: React.FC = () => {
         </div>
       </div>
     </div>
+
+      {/* Email Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">Send Quote to Your Email</h3>
+              <button onClick={() => setShowEmailModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-500">Enter your email address and we'll send you a copy of your quote.</p>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Email Address *</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setEmailError(''); }}
+                  placeholder="you@example.com"
+                  className="w-full pl-9 pr-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-600 text-sm"
+                />
+              </div>
+              {emailError && <p className="text-xs text-red-500 mt-1">{emailError}</p>}
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setShowEmailModal(false)}
+                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendQuote}
+                className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold flex items-center justify-center gap-2"
+              >
+                <Mail className="w-4 h-4" /> Send & Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Phone, Filter, CheckCircle, XCircle, AlertCircle, Eye } from 'lucide-react';
+import { Calendar, Clock, User, Phone, CheckCircle, XCircle, AlertCircle, Eye, Send } from 'lucide-react';
+import { quoteStore } from '../../services/quoteStore';
 
 interface Appointment {
   id: number;
@@ -15,11 +16,67 @@ interface Appointment {
   notes?: string;
 }
 
+interface QuoteForm {
+  amount: string;
+  currency: string;
+  notes: string;
+  patientEmail: string;
+}
+
 const Appointments: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [quoteTarget, setQuoteTarget] = useState<Appointment | null>(null);
+  const [quoteForm, setQuoteForm] = useState<QuoteForm>({ amount: '', currency: 'INR', notes: '', patientEmail: '' });
+  const [quoteSent, setQuoteSent] = useState<number[]>([]);
+
+  useEffect(() => {
+    const sent = quoteStore.getQuotes().map(q => parseInt(q.appointmentId));
+    setQuoteSent(sent);
+  }, []);
+
+  const handleSendQuote = () => {
+    if (!quoteTarget || !quoteForm.amount || !quoteForm.patientEmail) return;
+
+    quoteStore.saveQuote({
+      appointmentId: quoteTarget.id.toString(),
+      hospitalName: 'Hospital',
+      hospitalCity: '',
+      patientName: quoteTarget.patient_name,
+      reason: quoteTarget.reason,
+      appointmentDate: quoteTarget.appointment_date,
+      appointmentTime: quoteTarget.appointment_time,
+      amount: parseFloat(quoteForm.amount),
+      currency: quoteForm.currency,
+      notes: quoteForm.notes,
+    });
+
+    const subject = encodeURIComponent(`Medical Quote – ${quoteTarget.reason}`);
+    const body = encodeURIComponent(
+`Dear ${quoteTarget.patient_name},
+
+Please find your quote details below:
+
+Reason: ${quoteTarget.reason}
+Date: ${new Date(quoteTarget.appointment_date).toLocaleDateString()}
+Time: ${quoteTarget.appointment_time}
+Amount: ${quoteForm.currency} ${parseFloat(quoteForm.amount).toLocaleString()}
+${quoteForm.notes ? `\nNotes: ${quoteForm.notes}` : ''}
+
+To accept or decline this quote, please log in to your IMAP patient dashboard and go to Appointments → Quotes.
+
+Best regards,
+IMAP Solution`
+    );
+
+    window.open(`mailto:${quoteForm.patientEmail}?subject=${subject}&body=${body}`);
+
+    setQuoteSent(prev => [...prev, quoteTarget.id]);
+    setQuoteTarget(null);
+    setQuoteForm({ amount: '', currency: 'INR', notes: '', patientEmail: '' });
+  };
 
   useEffect(() => {
     fetchAppointments();
@@ -310,12 +367,24 @@ const Appointments: React.FC = () => {
                         </>
                       )}
                       {appointment.status === 'confirmed' && (
-                        <button
-                          onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
-                          className="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 bg-blue-50 rounded"
-                        >
-                          Complete
-                        </button>
+                        <>
+                          <button
+                            onClick={() => updateAppointmentStatus(appointment.id, 'completed')}
+                            className="text-blue-600 hover:text-blue-900 text-xs px-2 py-1 bg-blue-50 rounded"
+                          >
+                            Complete
+                          </button>
+                          {!quoteSent.includes(appointment.id) ? (
+                            <button
+                              onClick={() => setQuoteTarget(appointment)}
+                              className="text-emerald-600 hover:text-emerald-900 text-xs px-2 py-1 bg-emerald-50 rounded flex items-center gap-1"
+                            >
+                              <Send className="w-3 h-3" /> Quote
+                            </button>
+                          ) : (
+                            <span className="text-xs text-gray-400 px-2 py-1">Quote sent</span>
+                          )}
+                        </>
                       )}
                       <button className="text-gray-600 hover:text-gray-900">
                         <Eye className="w-4 h-4" />
@@ -335,6 +404,77 @@ const Appointments: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Send Quote Modal */}
+      {quoteTarget && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 space-y-4">
+            <h3 className="text-lg font-bold text-gray-900">Send Quote to {quoteTarget.patient_name}</h3>
+            <p className="text-sm text-gray-500">Appointment: {quoteTarget.reason} — {new Date(quoteTarget.appointment_date).toLocaleDateString()}</p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Patient Email *</label>
+              <input
+                type="email"
+                value={quoteForm.patientEmail}
+                onChange={e => setQuoteForm({ ...quoteForm, patientEmail: e.target.value })}
+                placeholder={quoteTarget.patient_email || 'patient@email.com'}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">The quote will be sent to this email address.</p>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+                <input
+                  type="number"
+                  value={quoteForm.amount}
+                  onChange={e => setQuoteForm({ ...quoteForm, amount: e.target.value })}
+                  placeholder="e.g. 15000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <select
+                  value={quoteForm.currency}
+                  onChange={e => setQuoteForm({ ...quoteForm, currency: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                  <option>INR</option>
+                  <option>USD</option>
+                  <option>EUR</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+              <textarea
+                value={quoteForm.notes}
+                onChange={e => setQuoteForm({ ...quoteForm, notes: e.target.value })}
+                rows={3}
+                placeholder="Include what's covered, payment terms, etc."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button onClick={() => setQuoteTarget(null)} className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Cancel
+              </button>
+              <button
+                onClick={handleSendQuote}
+                disabled={!quoteForm.amount || !quoteForm.patientEmail}
+                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                <Send className="w-4 h-4" /> Send Quote
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

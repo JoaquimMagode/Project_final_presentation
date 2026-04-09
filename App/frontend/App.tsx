@@ -113,11 +113,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </Link>
               
               <div className="hidden lg:flex items-center gap-4">
-                <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Patients</button>
                 <Link to="/hospital" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Hospitals</Link>
                 <Link to="/patient" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Portal</Link>
                 <Link to="/superadmin" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Super Admin</Link>
-                <button className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Health Sciences University</button>
               </div>
             </div>
 

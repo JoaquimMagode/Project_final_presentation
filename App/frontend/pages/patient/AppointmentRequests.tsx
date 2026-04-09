@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Calendar, Clock, MapPin, Search, Filter, 
+  Calendar, Clock, MapPin, Search,
   Plus, CheckCircle, XCircle, AlertCircle, Eye, Edit2, 
-  Trash2, Building2, History, FileText
+  Trash2, Building2, History, FileText, Send, DollarSign
 } from 'lucide-react';
 import { patientsAPI, hospitalsAPI, appointmentsAPI } from '../../services/api';
+import { quoteStore, Quote } from '../../services/quoteStore';
 
 interface Appointment {
   id: string;
@@ -31,7 +32,7 @@ interface Hospital {
 }
 
 const AppointmentRequests: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'appointments' | 'history' | 'book'>('appointments');
+  const [activeTab, setActiveTab] = useState<'appointments' | 'history' | 'book' | 'quotes'>('appointments');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
@@ -42,6 +43,7 @@ const AppointmentRequests: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
 
   const [bookingForm, setBookingForm] = useState({
     hospitalId: '',
@@ -55,6 +57,7 @@ const AppointmentRequests: React.FC = () => {
   useEffect(() => {
     fetchAppointments();
     fetchHospitals();
+    setQuotes(quoteStore.getQuotes());
   }, []);
 
   const fetchAppointments = async () => {
@@ -187,6 +190,17 @@ const AppointmentRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAcceptQuote = (quoteId: string) => {
+    quoteStore.acceptQuote(quoteId);
+    setQuotes(quoteStore.getQuotes());
+    setSuccess('Quote accepted! A billing record has been created.');
+  };
+
+  const handleDeclineQuote = (quoteId: string) => {
+    quoteStore.declineQuote(quoteId);
+    setQuotes(quoteStore.getQuotes());
   };
 
   const AppointmentCard = ({ appointment, showActions = true }: { appointment: Appointment, showActions?: boolean }) => (
@@ -325,6 +339,22 @@ const AppointmentRequests: React.FC = () => {
               <History className="w-4 h-4 inline mr-1" />
               Appointment History
             </button>
+            <button
+              onClick={() => setActiveTab('quotes')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'quotes'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <DollarSign className="w-4 h-4 inline mr-1" />
+              Quotes
+              {quotes.filter(q => q.status === 'pending').length > 0 && (
+                <span className="ml-1 bg-amber-500 text-white text-xs rounded-full px-1.5 py-0.5">
+                  {quotes.filter(q => q.status === 'pending').length}
+                </span>
+              )}
+            </button>
           </nav>
         </div>
 
@@ -453,7 +483,57 @@ const AppointmentRequests: React.FC = () => {
         )}
       </div>
 
-      {/* Booking Modal */}
+        {/* Quotes Tab */}
+        {activeTab === 'quotes' && (
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Quotes from Hospitals</h3>
+            {quotes.length === 0 ? (
+              <div className="text-center py-12">
+                <Send className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">No quotes received yet.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {quotes.map(quote => (
+                  <div key={quote.id} className="bg-gray-50 border border-gray-200 rounded-xl p-5">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold text-gray-900">{quote.hospitalName}</h4>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            quote.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                            quote.status === 'accepted' ? 'bg-green-100 text-green-700' :
+                            'bg-red-100 text-red-700'
+                          }`}>{quote.status}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{quote.reason}</p>
+                        <p className="text-sm text-gray-500">{new Date(quote.appointmentDate).toLocaleDateString()} · {quote.appointmentTime}</p>
+                        {quote.notes && <p className="text-sm text-gray-500 italic">{quote.notes}</p>}
+                        <p className="text-xl font-bold text-emerald-600">{quote.currency} {quote.amount.toLocaleString()}</p>
+                      </div>
+                      {quote.status === 'pending' && (
+                        <div className="flex flex-col gap-2">
+                          <button
+                            onClick={() => handleAcceptQuote(quote.id)}
+                            className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1"
+                          >
+                            <CheckCircle className="w-4 h-4" /> Accept
+                          </button>
+                          <button
+                            onClick={() => handleDeclineQuote(quote.id)}
+                            className="px-4 py-2 border border-red-300 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50 flex items-center gap-1"
+                          >
+                            <XCircle className="w-4 h-4" /> Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       {showBookingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">

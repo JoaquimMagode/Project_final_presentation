@@ -19,6 +19,7 @@ const uploadRoutes = require('./routes/upload');
 const hospitalEmployeeRoutes = require('./routes/hospital-employees');
 const hospitalDashboardRoutes = require('./routes/hospital-dashboard');
 const contactAssistanceRoutes = require('./routes/contact-assistance');
+const emailRoutes = require('./routes/email');
 
 // Initialize Express app
 const app = express();
@@ -88,6 +89,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/hospital-employees', hospitalEmployeeRoutes);
 app.use('/api/hospital-dashboard', hospitalDashboardRoutes);
 app.use('/api/contact-assistance', contactAssistanceRoutes);
+app.use('/api/email', emailRoutes);
 
 // Additional routes would be added here:
 // app.use('/api/appointments', appointmentRoutes);

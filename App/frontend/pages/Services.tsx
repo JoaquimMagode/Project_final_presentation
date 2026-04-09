@@ -2,19 +2,24 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_HOSPITALS } from '../constants';
-import { MapPinned, CalendarDays, Clock, ChevronDown } from 'lucide-react';
+import { MapPinned, CalendarDays, Clock, ChevronDown, Stethoscope } from 'lucide-react';
 import ContactAssistanceModal from '../components/ContactAssistanceModal';
 
 const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'];
+const PROCEDURES = ['Cardiology', 'Neurology & Neurosurgery', 'Orthopedics', 'Obstetrics & Gynecology', 'Urology', 'Dermatology', 'Primary Care Physician'];
 
 
 const FindMyMatch: React.FC = () => {
   const navigate = useNavigate();
+  const [searchMode, setSearchMode] = useState<'city' | 'procedure'>('city');
   const [city, setCity] = useState('Mumbai');
+  const [procedure, setProcedure] = useState(PROCEDURES[0]);
   const [hospital, setHospital] = useState(MOCK_HOSPITALS[0].id);
   const [showResults, setShowResults] = useState(false);
 
-  const filteredHospitals = MOCK_HOSPITALS.filter(h => h.location === city);
+  const filteredHospitals = searchMode === 'city' 
+    ? MOCK_HOSPITALS.filter(h => h.location === city)
+    : MOCK_HOSPITALS.filter(h => h.specializations.includes(procedure));
   const selectedHospital = MOCK_HOSPITALS.find(h => h.id === hospital) ?? filteredHospitals[0];
 
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -30,18 +35,66 @@ const FindMyMatch: React.FC = () => {
     <div className="bg-white border border-slate-200 rounded-3xl shadow-md p-6 max-w-md mx-auto mb-12">
       <h2 className="text-xl font-bold text-slate-900 mb-6">Find My Match</h2>
 
+      {/* Search Mode Toggle */}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => { setSearchMode('city'); setHospital(MOCK_HOSPITALS.filter(h => h.location === city)[0]?.id); setShowResults(false); }}
+          className={`flex-1 py-2 px-4 rounded-xl font-semibold text-sm transition-all ${
+            searchMode === 'city'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <MapPinned className="w-4 h-4 inline mr-2" />
+          By City
+        </button>
+        <button
+          onClick={() => { setSearchMode('procedure'); setHospital(MOCK_HOSPITALS.filter(h => h.specializations.includes(procedure))[0]?.id); setShowResults(false); }}
+          className={`flex-1 py-2 px-4 rounded-xl font-semibold text-sm transition-all ${
+            searchMode === 'procedure'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          <Stethoscope className="w-4 h-4 inline mr-2" />
+          By Procedure
+        </button>
+      </div>
+
       <div className="space-y-4">
-        {/* Destination */}
-        <div>
-          <label className="block text-xs font-semibold text-slate-500 mb-1">Destination</label>
-          <div className="relative">
-            <MapPinned className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <select value={city} onChange={handleCityChange} className={`${fieldClass} pl-9 pr-9`}>
-              {CITIES.map(c => <option key={c}>{c}</option>)}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        {/* City or Procedure Selection */}
+        {searchMode === 'city' ? (
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Destination</label>
+            <div className="relative">
+              <MapPinned className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <select value={city} onChange={handleCityChange} className={`${fieldClass} pl-9 pr-9`}>
+                {CITIES.map(c => <option key={c}>{c}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Type of Procedure</label>
+            <div className="relative">
+              <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <select 
+                value={procedure} 
+                onChange={(e) => { 
+                  setProcedure(e.target.value); 
+                  const first = MOCK_HOSPITALS.find(h => h.specializations.includes(e.target.value));
+                  if (first) setHospital(first.id);
+                  setShowResults(false);
+                }} 
+                className={`${fieldClass} pl-9 pr-9`}
+              >
+                {PROCEDURES.map(p => <option key={p}>{p}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            </div>
+          </div>
+        )}
 
         {/* Hospital */}
         <div>
@@ -77,7 +130,7 @@ const FindMyMatch: React.FC = () => {
       </div>
 
       <button
-        onClick={() => navigate('/quote', { state: { hospitalId: hospital, city } })}
+        onClick={() => navigate('/quote', { state: { hospitalId: hospital, city: searchMode === 'city' ? city : selectedHospital?.location, procedure: searchMode === 'procedure' ? procedure : undefined } })}
         className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition-colors text-sm tracking-wide"
       >
         GET A QUOTE

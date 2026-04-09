@@ -231,7 +231,7 @@ const QuoteWizard: React.FC = () => {
               RESET YOUR QUOTE
             </button>
             <button
-              onClick={() => navigate('/services')}
+              onClick={() => navigate('/quote/extras', { state: quoteData })}
               className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-colors"
             >
               SKIP ACCOMMODATION
