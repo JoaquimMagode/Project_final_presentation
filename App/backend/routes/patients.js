@@ -29,7 +29,8 @@ router.get('/profile', authenticateToken, authorize('patient'), async (req, res)
 router.put('/profile', authenticateToken, authorize('patient'), async (req, res) => {
   try {
     const { date_of_birth, gender, blood_group, address, city, state, country,
-      emergency_contact_name, emergency_contact_phone, medical_history, allergies, current_medications } = req.body;
+      emergency_contact_name, emergency_contact_phone, medical_history, allergies,
+      current_medications, insurance_provider, insurance_policy_number } = req.body;
 
     const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
     if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
@@ -37,10 +38,20 @@ router.put('/profile', authenticateToken, authorize('patient'), async (req, res)
     const updated = await prisma.patients.update({
       where: { id: patient.id },
       data: {
-        date_of_birth: date_of_birth ? new Date(date_of_birth) : null,
-        gender: gender || null,
-        address: address || null,
-        medical_history: medical_history ? JSON.stringify(medical_history) : null,
+        date_of_birth: date_of_birth ? new Date(date_of_birth) : undefined,
+        gender: gender || undefined,
+        blood_group: blood_group || undefined,
+        address: address || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        country: country || undefined,
+        emergency_contact_name: emergency_contact_name || undefined,
+        emergency_contact_phone: emergency_contact_phone || undefined,
+        medical_history: medical_history ? JSON.stringify(medical_history) : undefined,
+        allergies: allergies || undefined,
+        current_medications: current_medications || undefined,
+        insurance_provider: insurance_provider || undefined,
+        insurance_policy_number: insurance_policy_number || undefined,
       },
       include: { users: { select: { name: true, email: true, phone: true, status: true } } },
     });

@@ -63,7 +63,7 @@ const PatientProfile: React.FC = () => {
           address: patient.address || '',
           city: patient.city || '',
           state: patient.state || '',
-          emergencyContact: patient.emergency_contact_name || '',
+          emergencyContact: patient.emergency_contact_name || patient.emergency_contact || '',
           emergencyPhone: patient.emergency_contact_phone || '',
           allergies: patient.allergies || '',
           medications: patient.medical_history || '',
