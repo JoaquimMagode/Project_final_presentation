@@ -14,6 +14,7 @@ import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import Dashboard from './pages/Dashboard';
 import HospitalDashboard from './pages/HospitalDashboard';
 import PatientDashboard from './pages/PatientDashboard';
+import PatientProfile from './pages/patient/PatientProfile';
 import Register from './pages/Register';
 import PatientRegistration from './pages/PatientRegistration';
 import Login from './pages/Login';
@@ -28,7 +29,7 @@ import Specialties from './pages/Specialties';
 import SpecialtyDetail from './pages/SpecialtyDetail';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
-import { Menu, X, User as UserIcon, LogOut, Settings, AlertTriangle, ChevronDown, Phone, Search } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, Settings, ChevronDown, Phone, Search } from 'lucide-react';
 
 // Auth & Language Context
 interface AuthContextType {
@@ -148,6 +149,18 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <div className="px-4 py-2 border-b border-gray-100">
+                        <p className="text-sm font-bold text-gray-900 truncate">{user.name}</p>
+                        <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                      </div>
+                      <Link 
+                        to={user.role === 'patient' ? '/patient/profile' : user.role === 'superadmin' ? '/superadmin' : '/hospital'}
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                      >
+                        <UserIcon className="w-4 h-4" />
+                        My Profile
+                      </Link>
                       <Link 
                         to={user.role === 'superadmin' ? '/superadmin' : user.role === 'hospital' ? '/hospital' : '/patient'}
                         onClick={() => setIsDropdownOpen(false)}
@@ -156,13 +169,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                         <Settings className="w-4 h-4" />
                         Dashboard
                       </Link>
-                      <button 
-                        onClick={() => setIsDropdownOpen(false)}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                      >
-                        <AlertTriangle className="w-4 h-4" />
-                        Support
-                      </button>
                       <hr className="my-1" />
                       <button 
                         onClick={() => {
@@ -415,6 +421,7 @@ const App: React.FC = () => {
               </Route>
               <Route element={<ProtectedRoute role="patient" />}>
                 <Route path="/patient" element={<PatientDashboard />} />
+                <Route path="/patient/profile" element={<PatientProfile />} />
               </Route>
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

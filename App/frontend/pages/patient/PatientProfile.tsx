@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { 
   User, Mail, Phone, MapPin, Calendar, Shield, Edit2, Save, 
-  Camera, Heart, Activity, FileText, Clock, Award, X, AlertCircle 
+  Camera, Heart, Activity, FileText, Clock, Award, X, AlertCircle, ArrowLeft
 } from 'lucide-react';
 import { patientsAPI, authAPI } from '../../services/api';
 import { useAuth } from '../../App';
+import { useNavigate } from 'react-router-dom';
 import UserAvatar from '../../components/UserAvatar';
 
 const PatientProfile: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [loading, setLoading] = useState(true);

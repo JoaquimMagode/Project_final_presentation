@@ -1,37 +1,32 @@
 import React, { useState } from 'react';
 import {
-  Home, Building2, Calendar, FileText, User,
+  Home, Calendar, FileText,
   Settings, HelpCircle, Phone, Upload, ChevronRight,
   CheckCircle, Clock, AlertCircle, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../App';
-import FindHospitals from './patient/FindHospitals';
 import PatientRegistration from './patient/PatientRegistration';
-import PatientProfile from './patient/PatientProfile';
 import MedicalReports from './patient/MedicalReports';
 import AppointmentRequests from './patient/AppointmentRequests';
 import PatientSettings from './patient/PatientSettings';
 import PatientHelp from './patient/PatientHelp';
 import Billing from './patient/Billing';
 
-type Page = 'dashboard' | 'hospitals' | 'registration' | 'profile' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help';
+type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help';
 
 const NAV = [
   { page: 'dashboard' as Page,     icon: Home,        label: 'Home' },
-  { page: 'hospitals' as Page,     icon: Building2,   label: 'Find Hospitals' },
   { page: 'appointments' as Page,  icon: Calendar,    label: 'Appointments' },
   { page: 'billing' as Page,       icon: CreditCard,  label: 'Records & Billing' },
   { page: 'reports' as Page,       icon: FileText,    label: 'My Reports' },
-  { page: 'profile' as Page,       icon: User,        label: 'My Profile' },
   { page: 'settings' as Page,      icon: Settings,    label: 'Settings' },
   { page: 'help' as Page,          icon: HelpCircle,  label: 'Help' },
 ];
 
 const QUICK_ACTIONS = [
-  { page: 'hospitals' as Page,    icon: Building2, label: 'Find a Hospital',    desc: 'Search by city or treatment', color: 'bg-emerald-50 text-emerald-600' },
   { page: 'appointments' as Page, icon: Calendar,  label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
   { page: 'reports' as Page,      icon: FileText,  label: 'Medical Reports',    desc: 'View your test results',      color: 'bg-violet-50 text-violet-600' },
-  { page: 'profile' as Page,      icon: Upload,    label: 'Upload Documents',   desc: 'Share medical files',         color: 'bg-orange-50 text-orange-600' },
+  { page: 'billing' as Page,      icon: Upload,    label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
 ];
 
 const upcomingAppointments = [
@@ -193,9 +188,7 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {activePage === 'hospitals'    && <FindHospitals />}
           {activePage === 'registration' && <PatientRegistration />}
-          {activePage === 'profile'      && <PatientProfile />}
           {activePage === 'reports'      && <MedicalReports />}
           {activePage === 'appointments' && <AppointmentRequests />}
           {activePage === 'billing'      && <Billing />}
