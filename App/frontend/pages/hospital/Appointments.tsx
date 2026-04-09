@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Phone, CheckCircle, XCircle, AlertCircle, Eye, Send } from 'lucide-react';
+import { Calendar, Clock, User, Phone, Mail, CheckCircle, XCircle, AlertCircle, Eye, Send, X, FileText, DollarSign } from 'lucide-react';
 import { quoteStore } from '../../services/quoteStore';
 
 interface Appointment {
@@ -31,6 +31,7 @@ const Appointments: React.FC = () => {
   const [quoteTarget, setQuoteTarget] = useState<Appointment | null>(null);
   const [quoteForm, setQuoteForm] = useState<QuoteForm>({ amount: '', currency: 'INR', notes: '', patientEmail: '' });
   const [quoteSent, setQuoteSent] = useState<number[]>([]);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
     const sent = quoteStore.getQuotes().map(q => parseInt(q.appointmentId));
@@ -160,11 +161,11 @@ IMAP Solution`
   };
 
   const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    });
+    if (!timeString) return 'N/A';
+    // Handle full ISO string (e.g. 1970-01-01T09:30:00.000Z) or plain HH:MM:SS
+    const date = timeString.includes('T') ? new Date(timeString) : new Date(`1970-01-01T${timeString}`);
+    if (isNaN(date.getTime())) return timeString;
+    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
   const formatCurrency = (amount: number) => {
@@ -386,7 +387,9 @@ IMAP Solution`
                           )}
                         </>
                       )}
-                      <button className="text-gray-600 hover:text-gray-900">
+                      <button
+                        onClick={() => setSelectedAppointment(appointment)}
+                        className="text-gray-600 hover:text-teal-600">
                         <Eye className="w-4 h-4" />
                       </button>
                     </div>
@@ -471,6 +474,108 @@ IMAP Solution`
               >
                 <Send className="w-4 h-4" /> Send Quote
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Appointment Detail Modal */}
+      {selectedAppointment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
+                  <User className="w-5 h-5 text-teal-600" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-gray-900">{selectedAppointment.patient_name}</h2>
+                  <p className="text-xs text-gray-500">Appointment #{selectedAppointment.id}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedAppointment(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-5">
+              {/* Status */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-500">Status</span>
+                {getStatusBadge(selectedAppointment.status)}
+              </div>
+
+              {/* Date & Time */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><Calendar className="w-3 h-3" /> Date</div>
+                  <p className="font-semibold text-gray-900 text-sm">{formatDate(selectedAppointment.appointment_date)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><Clock className="w-3 h-3" /> Time</div>
+                  <p className="font-semibold text-gray-900 text-sm">{formatTime(selectedAppointment.appointment_time)}</p>
+                </div>
+              </div>
+
+              {/* Type & Reason */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><FileText className="w-3 h-3" /> Type & Reason</div>
+                <p className="font-semibold text-gray-900 text-sm capitalize">{selectedAppointment.type}</p>
+                <p className="text-gray-600 text-sm mt-1">{selectedAppointment.reason}</p>
+              </div>
+
+              {/* Patient Contact */}
+              <div>
+                <p className="text-xs text-gray-500 mb-2">Patient Contact</p>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Mail className="w-4 h-4 text-gray-400" />{selectedAppointment.patient_email || '—'}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Phone className="w-4 h-4 text-gray-400" />{selectedAppointment.patient_phone || '—'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Fee */}
+              <div className="flex items-center justify-between bg-teal-50 rounded-xl p-4">
+                <div className="flex items-center gap-2 text-teal-700 text-sm"><DollarSign className="w-4 h-4" /> Consultation Fee</div>
+                <span className="font-bold text-teal-800">{formatCurrency(selectedAppointment.consultation_fee)}</span>
+              </div>
+
+              {/* Notes */}
+              {selectedAppointment.notes && (
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Notes</p>
+                  <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">{selectedAppointment.notes}</p>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                {selectedAppointment.status === 'pending' && (
+                  <>
+                    <button
+                      onClick={() => { updateAppointmentStatus(selectedAppointment.id, 'confirmed'); setSelectedAppointment(null); }}
+                      className="flex-1 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                    >Confirm</button>
+                    <button
+                      onClick={() => { updateAppointmentStatus(selectedAppointment.id, 'cancelled'); setSelectedAppointment(null); }}
+                      className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100"
+                    >Cancel</button>
+                  </>
+                )}
+                {selectedAppointment.status === 'confirmed' && (
+                  <button
+                    onClick={() => { updateAppointmentStatus(selectedAppointment.id, 'completed'); setSelectedAppointment(null); }}
+                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                  >Mark as Completed</button>
+                )}
+                <button
+                  onClick={() => setSelectedAppointment(null)}
+                  className="flex-1 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+                >Close</button>
+              </div>
             </div>
           </div>
         </div>
