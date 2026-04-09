@@ -155,7 +155,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                       </div>
                       <Link 
                         to={user.role === 'patient' ? '/patient/profile' : user.role === 'superadmin' ? '/superadmin' : '/hospital'}
-                        onClick={() => setIsDropdownOpen(false)}
+                        onClick={() => {
+                          setIsDropdownOpen(false);
+                          if (user.role === 'hospital') {
+                            window.dispatchEvent(new CustomEvent('navigateHospitalPage', { detail: 'profile' }));
+                          }
+                        }}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
                       >
                         <UserIcon className="w-4 h-4" />
@@ -210,7 +215,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Find a Hospitals</Link>
                   <Link to="/locations" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</Link>
                   <Link to="/specialties" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</Link>
-                  <Link to="/payment" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Records & Billing</Link>
                 </div>
               )}
             </div>

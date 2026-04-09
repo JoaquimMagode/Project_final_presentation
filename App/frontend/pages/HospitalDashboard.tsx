@@ -19,6 +19,7 @@ import Statistic from './hospital/Statistic';
 import HelpCenter from './hospital/HelpCenter';
 import Setting from './hospital/Setting';
 import Report from './hospital/Report';
+import HospitalProfile from './hospital/HospitalProfile';
 
 const HospitalDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -51,13 +52,20 @@ const HospitalDashboard: React.FC = () => {
     const handleToggleSidebar = () => {
       setSidebarOpen(prev => !prev);
     };
+
+    const handleNavigatePage = (e: Event) => {
+      const page = (e as CustomEvent).detail;
+      if (page) setActivePage(page);
+    };
     
     document.addEventListener('mousedown', handleClickOutside);
     window.addEventListener('toggleSidebar', handleToggleSidebar);
+    window.addEventListener('navigateHospitalPage', handleNavigatePage);
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
+      window.removeEventListener('navigateHospitalPage', handleNavigatePage);
     };
   }, []);
 
@@ -99,7 +107,8 @@ const HospitalDashboard: React.FC = () => {
     { icon: BarChart3, label: 'Statistic', active: activePage === 'statistic', page: 'statistic' },
     { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
     { icon: Settings, label: 'Setting', active: activePage === 'setting', page: 'setting' },
-    { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' }
+    { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
+    { icon: User, label: 'Profile', active: activePage === 'profile', page: 'profile' }
   ];
 
   const appointments = [
@@ -546,6 +555,7 @@ const HospitalDashboard: React.FC = () => {
           {activePage === 'help' && <HelpCenter />}
           {activePage === 'setting' && <Setting />}
           {activePage === 'report' && <Report />}
+          {activePage === 'profile' && <HospitalProfile />}
         </main>
       </div>
     </div>
