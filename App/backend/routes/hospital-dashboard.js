@@ -70,20 +70,104 @@ router.get('/patients', authenticateToken, authorizeHospitalAdmin, async (req, r
     const [patients, total] = await Promise.all([
       prisma.patients.findMany({
         where,
-        include: { users: { select: { name: true, email: true, phone: true } } },
+        include: {
+          users: { select: { name: true, email: true, phone: true } },
+          appointments: {
+            where: { hospital_id: hospitalId },
+            select: { appointment_date: true, status: true, consultation_fee: true },
+            orderBy: { appointment_date: 'desc' },
+          },
+          payments: {
+            where: { hospital_id: hospitalId, payment_status: 'completed' },
+            select: { amount: true },
+          },
+        },
         skip: (parseInt(page) - 1) * parseInt(limit),
         take: parseInt(limit),
       }),
       prisma.patients.count({ where }),
     ]);
 
+    const result = patients.map(p => ({
+      id: p.id,
+      name: p.users?.name,
+      email: p.users?.email,
+      phone: p.users?.phone,
+      gender: p.gender,
+      date_of_birth: p.date_of_birth,
+      address: p.address,
+      blood_group: p.blood_group,
+      allergies: p.allergies,
+      medical_history: p.medical_history,
+      emergency_contact_name: p.emergency_contact_name,
+      emergency_contact_phone: p.emergency_contact_phone,
+      total_appointments: p.appointments.length,
+      last_visit: p.appointments[0]?.appointment_date || null,
+      total_paid: p.payments.reduce((sum, pay) => sum + Number(pay.amount), 0),
+    }));
+
     res.json({
       success: true,
-      data: { patients, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) } }
+      data: { patients: result, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / parseInt(limit)) } }
     });
   } catch (error) {
     console.error('Get hospital patients error:', error);
     res.status(500).json({ success: false, message: 'Failed to get patients' });
+  }
+});
+
+// GET /api/hospital-dashboard/patients/:id
+router.get('/patients/:id', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
+  try {
+    const hospitalId = req.user.hospital_id;
+    const patientId = parseInt(req.params.id);
+
+    const patient = await prisma.patients.findUnique({
+      where: { id: patientId },
+      include: {
+        users: { select: { name: true, email: true, phone: true } },
+        appointments: {
+          where: { hospital_id: hospitalId },
+          orderBy: { appointment_date: 'desc' },
+        },
+        payments: {
+          where: { hospital_id: hospitalId },
+          orderBy: { created_at: 'desc' },
+        },
+      },
+    });
+
+    if (!patient) return res.status(404).json({ success: false, message: 'Patient not found' });
+
+    res.json({
+      success: true,
+      data: {
+        patient: {
+          id: patient.id,
+          name: patient.users?.name,
+          email: patient.users?.email,
+          phone: patient.users?.phone,
+          gender: patient.gender,
+          date_of_birth: patient.date_of_birth,
+          address: patient.address,
+          blood_group: patient.blood_group,
+          allergies: patient.allergies,
+          medical_history: patient.medical_history,
+          emergency_contact_name: patient.emergency_contact_name,
+          emergency_contact_phone: patient.emergency_contact_phone,
+          total_appointments: patient.appointments.length,
+          last_visit: patient.appointments[0]?.appointment_date || null,
+          total_paid: patient.payments
+            .filter(p => p.payment_status === 'completed')
+            .reduce((sum, p) => sum + Number(p.amount), 0),
+          appointments: patient.appointments,
+          payments: patient.payments,
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get hospital patient detail error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get patient details' });
   }
 });
 
