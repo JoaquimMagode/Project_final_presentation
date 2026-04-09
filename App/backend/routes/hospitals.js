@@ -37,8 +37,8 @@ router.get('/search', validatePagination, async (req, res) => {
       queryParams.push(`%${state}%`);
     }
     if (specialization) {
-      conditions.push('JSON_CONTAINS(h.specialties, ?)');
-      queryParams.push(`"${specialization}"`);
+      conditions.push('h.specialties LIKE ?');
+      queryParams.push(`%${specialization}%`);
     }
 
     const whereClause = ' WHERE ' + conditions.join(' AND ');

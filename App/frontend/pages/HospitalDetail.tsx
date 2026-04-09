@@ -152,6 +152,29 @@ const HospitalDetail: React.FC = () => {
     );
   }
 
+  if (!isLoggedIn) {
+    return (
+      <div className="max-w-6xl mx-auto p-6">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-8">
+          <ArrowLeft className="w-4 h-4" /> Back to Hospitals
+        </button>
+        <div className="flex flex-col items-center justify-center py-24 text-center space-y-6">
+          <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
+            <Lock className="w-10 h-10 text-slate-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Login to View Hospital Details</h2>
+            <p className="text-slate-500">Create a free account or sign in to access full hospital information and book appointments.</p>
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => navigate('/login', { state: { from: `/hospital/${id}` } })} className="px-6 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors">Sign In</button>
+            <button onClick={() => navigate('/register')} className="px-6 py-3 border border-slate-300 text-slate-700 font-bold rounded-xl hover:bg-slate-100 transition-colors">Register</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (error || !hospital) {
     return (
       <div className="max-w-6xl mx-auto p-6">

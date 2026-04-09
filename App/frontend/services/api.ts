@@ -120,7 +120,7 @@ export const hospitalsAPI = {
     specialization?: string;
     name?: string;
   }) => {
-    const queryParams = new URLSearchParams();
+    const queryParams = new URLSearchParams({ limit: '100' });
     Object.entries(params).forEach(([key, value]) => {
       if (value) queryParams.append(key, value);
     });

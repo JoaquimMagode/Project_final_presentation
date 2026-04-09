@@ -1,32 +1,49 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_HOSPITALS } from '../constants';
+import { hospitalsAPI } from '../services/api';
 import { MapPinned, CalendarDays, Clock, ChevronDown, Stethoscope } from 'lucide-react';
 import ContactAssistanceModal from '../components/ContactAssistanceModal';
-
-const CITIES = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'];
-const PROCEDURES = ['Cardiology', 'Neurology & Neurosurgery', 'Orthopedics', 'Obstetrics & Gynecology', 'Urology', 'Dermatology', 'Primary Care Physician'];
-
 
 const FindMyMatch: React.FC = () => {
   const navigate = useNavigate();
   const [searchMode, setSearchMode] = useState<'city' | 'procedure'>('city');
-  const [city, setCity] = useState('Mumbai');
-  const [procedure, setProcedure] = useState(PROCEDURES[0]);
-  const [hospital, setHospital] = useState(MOCK_HOSPITALS[0].id);
-  const [showResults, setShowResults] = useState(false);
+  const [allHospitals, setAllHospitals] = useState<any[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [procedures, setProcedures] = useState<string[]>([]);
+  const [city, setCity] = useState('');
+  const [procedure, setProcedure] = useState('');
+  const [hospital, setHospital] = useState<any>(null);
 
-  const filteredHospitals = searchMode === 'city' 
-    ? MOCK_HOSPITALS.filter(h => h.location === city)
-    : MOCK_HOSPITALS.filter(h => h.specializations.includes(procedure));
-  const selectedHospital = MOCK_HOSPITALS.find(h => h.id === hospital) ?? filteredHospitals[0];
+  useEffect(() => {
+    hospitalsAPI.getHospitals({ limit: 100 }).then((res: any) => {
+      const hospitals = res?.data?.hospitals || [];
+      setAllHospitals(hospitals);
+      const uniqueCities = [...new Set<string>(hospitals.map((h: any) => h.city).filter(Boolean))];
+      const uniqueProcs = [...new Set<string>(hospitals.flatMap((h: any) => h.specialties || []).filter(Boolean))];
+      setCities(uniqueCities);
+      setProcedures(uniqueProcs);
+      if (uniqueCities.length) setCity(uniqueCities[0]);
+      if (uniqueProcs.length) setProcedure(uniqueProcs[0]);
+      const first = hospitals.find((h: any) => h.city === uniqueCities[0]);
+      if (first) setHospital(first);
+    }).catch(() => {});
+  }, []);
+
+  const filteredHospitals = searchMode === 'city'
+    ? allHospitals.filter(h => h.city === city)
+    : allHospitals.filter(h => (h.specialties || []).some((s: string) => s.toLowerCase().includes(procedure.toLowerCase())));
 
   const handleCityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCity(e.target.value);
-    const first = MOCK_HOSPITALS.find(h => h.location === e.target.value);
-    if (first) setHospital(first.id);
-    setShowResults(false);
+    const first = allHospitals.find(h => h.city === e.target.value);
+    setHospital(first || null);
+  };
+
+  const handleProcedureChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setProcedure(e.target.value);
+    const first = allHospitals.find(h => (h.specialties || []).some((s: string) => s.toLowerCase().includes(e.target.value.toLowerCase())));
+    setHospital(first || null);
   };
 
   const fieldClass = "w-full bg-white border border-slate-200 rounded-2xl px-4 py-3 shadow-sm appearance-none focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-slate-800 text-sm font-medium";
@@ -38,22 +55,18 @@ const FindMyMatch: React.FC = () => {
       {/* Search Mode Toggle */}
       <div className="flex gap-2 mb-6">
         <button
-          onClick={() => { setSearchMode('city'); setHospital(MOCK_HOSPITALS.filter(h => h.location === city)[0]?.id); setShowResults(false); }}
+          onClick={() => { setSearchMode('city'); const first = allHospitals.find(h => h.city === city); setHospital(first || null); }}
           className={`flex-1 py-2 px-4 rounded-xl font-semibold text-sm transition-all ${
-            searchMode === 'city'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            searchMode === 'city' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           <MapPinned className="w-4 h-4 inline mr-2" />
           By City
         </button>
         <button
-          onClick={() => { setSearchMode('procedure'); setHospital(MOCK_HOSPITALS.filter(h => h.specializations.includes(procedure))[0]?.id); setShowResults(false); }}
+          onClick={() => { setSearchMode('procedure'); const first = allHospitals.find(h => (h.specialties || []).some((s: string) => s.toLowerCase().includes(procedure.toLowerCase()))); setHospital(first || null); }}
           className={`flex-1 py-2 px-4 rounded-xl font-semibold text-sm transition-all ${
-            searchMode === 'procedure'
-              ? 'bg-emerald-600 text-white shadow-md'
-              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            searchMode === 'procedure' ? 'bg-emerald-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
           }`}
         >
           <Stethoscope className="w-4 h-4 inline mr-2" />
@@ -62,14 +75,13 @@ const FindMyMatch: React.FC = () => {
       </div>
 
       <div className="space-y-4">
-        {/* City or Procedure Selection */}
         {searchMode === 'city' ? (
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Destination</label>
             <div className="relative">
               <MapPinned className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <select value={city} onChange={handleCityChange} className={`${fieldClass} pl-9 pr-9`}>
-                {CITIES.map(c => <option key={c}>{c}</option>)}
+                {cities.map(c => <option key={c}>{c}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -79,17 +91,8 @@ const FindMyMatch: React.FC = () => {
             <label className="block text-xs font-semibold text-slate-500 mb-1">Type of Procedure</label>
             <div className="relative">
               <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <select 
-                value={procedure} 
-                onChange={(e) => { 
-                  setProcedure(e.target.value); 
-                  const first = MOCK_HOSPITALS.find(h => h.specializations.includes(e.target.value));
-                  if (first) setHospital(first.id);
-                  setShowResults(false);
-                }} 
-                className={`${fieldClass} pl-9 pr-9`}
-              >
-                {PROCEDURES.map(p => <option key={p}>{p}</option>)}
+              <select value={procedure} onChange={handleProcedureChange} className={`${fieldClass} pl-9 pr-9`}>
+                {procedures.map(p => <option key={p}>{p}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             </div>
@@ -100,7 +103,11 @@ const FindMyMatch: React.FC = () => {
         <div>
           <label className="block text-xs font-semibold text-slate-500 mb-1">Hospital</label>
           <div className="relative">
-            <select value={hospital} onChange={e => { setHospital(e.target.value); setShowResults(false); }} className={`${fieldClass} pr-9`}>
+            <select
+              value={hospital?.id ?? ''}
+              onChange={e => setHospital(filteredHospitals.find(h => String(h.id) === e.target.value) || null)}
+              className={`${fieldClass} pr-9`}
+            >
               {filteredHospitals.map(h => <option key={h.id} value={h.id}>{h.name}</option>)}
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
@@ -130,36 +137,11 @@ const FindMyMatch: React.FC = () => {
       </div>
 
       <button
-        onClick={() => navigate('/quote', { state: { hospitalId: hospital, city: searchMode === 'city' ? city : selectedHospital?.location, procedure: searchMode === 'procedure' ? procedure : undefined } })}
+        onClick={() => navigate('/quote', { state: { hospitalId: hospital?.id, city: searchMode === 'city' ? city : hospital?.city, procedure: searchMode === 'procedure' ? procedure : undefined } })}
         className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl transition-colors text-sm tracking-wide"
       >
         GET A QUOTE
       </button>
-
-      {showResults && (
-        <div className="mt-6 space-y-4">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Recommended Stays near {selectedHospital?.name}</p>
-          {MOCK_STAYS.map(stay => (
-            <div key={stay.id} className="flex justify-between items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">
-              <div>
-                <p className="font-bold text-slate-800 text-sm">{stay.name}</p>
-                <p className="text-xs text-slate-400">{stay.distance}</p>
-              </div>
-              <span className="text-emerald-600 font-black text-sm">{stay.price}</span>
-            </div>
-          ))}
-
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mt-4">Add-ons</p>
-          {ADDONS.map(addon => (
-            <div key={addon.label} className="flex justify-between items-center bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">
-              <div className="flex items-center gap-2 text-slate-700 text-sm font-medium">
-                {addon.icon} {addon.label}
-              </div>
-              <span className="text-slate-500 text-xs font-bold">{addon.price}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 };

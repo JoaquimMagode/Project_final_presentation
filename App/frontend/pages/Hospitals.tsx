@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { MOCK_HOSPITALS } from '../constants';
-import { Search, MapPin, ArrowRight, Clock, ShieldCheck, Lock } from 'lucide-react';
+import { hospitalsAPI } from '../services/api';
+import { Search, MapPin, ShieldCheck, Lock } from 'lucide-react';
 
 const GUEST_LIMIT = 3;
 
@@ -11,76 +11,52 @@ const Hospitals: React.FC = () => {
   const isLoggedIn = !!localStorage.getItem('user');
   const [condition, setCondition] = useState('');
   const [location, setLocation] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filteredHospitals, setFilteredHospitals] = useState<typeof MOCK_HOSPITALS>([]);
+  const [filteredHospitals, setFilteredHospitals] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const popularSearches = ['Primary Care Physician', 'Obstetrics & Gynecology', 'Neurology & Neurosurgery', 'Cardiology', 'Urology', 'Dermatology', 'Orthopaedics'];
-  
-  const moreSpecialties = [
-    'Orthopaedics', 'Neurology & Neurosurgery', 'Spine',
-    'Cancer', 'Heart', 'Obstetrics & Gynecology',
-    'Urology', 'Digestive & Liver Diseases', 'Ear, Nose & Throat',
-    'Lung', 'Surgery', 'Transplant'
-  ];
+  const popularSearches = ['Cardiology', 'Orthopedics', 'Neurology & Neurosurgery', 'Obstetrics & Gynecology', 'Urology', 'Dermatology'];
+
+  const fetchHospitals = async (city: string, specialization: string) => {
+    setLoading(true);
+    try {
+      const res: any = await hospitalsAPI.searchHospitals({
+        location: city || undefined,
+        specialization: specialization || undefined,
+        name: (!specialization && !city) ? undefined : undefined,
+      });
+      setFilteredHospitals(res?.data?.hospitals || []);
+    } catch {
+      setFilteredHospitals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load search parameters from URL on component mount
   useEffect(() => {
     const destination = searchParams.get('destination') || '';
     const procedure = searchParams.get('procedure') || '';
-    
-    if (destination || procedure) {
-      setCondition(procedure || destination);
-      setLocation(destination);
-      setHasSearched(true);
-    } else {
-      // Show all hospitals by default
-      setHasSearched(true);
-    }
+    setLocation(destination);
+    setCondition(procedure);
+    setHasSearched(true);
+    fetchHospitals(destination, procedure);
   }, [searchParams]);
 
-  // Filter hospitals whenever condition, location, or searchTerm changes
-  useEffect(() => {
-    let filtered = MOCK_HOSPITALS;
-    
-    if (condition) {
-      filtered = filtered.filter(h => 
-        h.specializations.some(s => s.toLowerCase().includes(condition.toLowerCase()))
-      );
-    }
-    
-    if (location) {
-      filtered = filtered.filter(h => 
-        h.location.toLowerCase().includes(location.toLowerCase())
-      );
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(h => 
-        h.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
-    setFilteredHospitals(filtered);
-  }, [condition, location, searchTerm]);
-
-  const handleHospitalClick = (hospitalId: string) => {
+  const handleHospitalClick = (hospitalId: number) => {
     navigate(`/hospital/${hospitalId}`);
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setHasSearched(true);
-  };
-
-  const handleSpecialtyClick = (specialty: string) => {
-    setCondition(specialty);
-    setHasSearched(true);
+    fetchHospitals(location, condition);
   };
 
   const handlePopularSearchClick = (search: string) => {
     setCondition(search);
     setHasSearched(true);
+    fetchHospitals(location, search);
   };
 
   return (
@@ -149,6 +125,10 @@ const Hospitals: React.FC = () => {
       {hasSearched && (
         <section className="w-full bg-white py-4">
           <div className="max-w-7xl mx-auto px-4">
+            {loading ? (
+              <p className="text-sm text-slate-500 py-8">Loading hospitals...</p>
+            ) : (
+            <>
             {/* Results Count */}
             <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
               Found {filteredHospitals.length} Hospital{filteredHospitals.length !== 1 ? 's' : ''}
@@ -169,47 +149,39 @@ const Hospitals: React.FC = () => {
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-start gap-4 flex-1">
-                          <img 
-                            src={hospital.logo} 
-                            alt={hospital.name}
-                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                          />
+                          {hospital.logo_url ? (
+                            <img src={hospital.logo_url} alt={hospital.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-16 h-16 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-2xl">🏥</div>
+                          )}
                           <div className="flex-1">
                             <h3 className="text-lg font-bold text-slate-900 mb-1">{hospital.name}</h3>
-                            <div className="flex items-center gap-2">
-                              <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                              <span className="text-xs font-semibold text-emerald-600">{hospital.accreditation}</span>
-                            </div>
+                            {hospital.accreditations?.length > 0 && (
+                              <div className="flex items-center gap-2">
+                                <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                                <span className="text-xs font-semibold text-emerald-600">{hospital.accreditations[0]}</span>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <div className="text-2xl font-bold text-slate-900">{hospital.rating}</div>
-                          <div className="text-xs text-slate-500">Rating</div>
                         </div>
                       </div>
 
                       {/* Location */}
                       <div className="flex items-center gap-2 text-slate-600 mb-4">
                         <MapPin className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm">{hospital.location}</span>
+                        <span className="text-sm">{hospital.city}{hospital.state ? `, ${hospital.state}` : ''}</span>
                       </div>
 
                       {/* Specializations */}
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {hospital.specializations.slice(0, 3).map((spec, i) => (
+                        {(hospital.specialties || []).slice(0, 3).map((spec: string, i: number) => (
                           <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-semibold rounded-full">
                             {spec}
                           </span>
                         ))}
-                        {hospital.specializations.length > 3 && (
-                          <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">+{hospital.specializations.length - 3}</span>
+                        {(hospital.specialties || []).length > 3 && (
+                          <span className="px-3 py-1 bg-slate-100 text-slate-600 text-xs font-semibold rounded-full">+{hospital.specialties.length - 3}</span>
                         )}
-                      </div>
-
-                      {/* Response Time */}
-                      <div className="flex items-center gap-2 text-slate-600 mb-6 pb-6 border-b border-slate-200">
-                        <Clock className="w-4 h-4 flex-shrink-0" />
-                        <span className="text-sm font-semibold">Response: {hospital.responseTime}</span>
                       </div>
 
                       {/* Action Button */}
@@ -249,15 +221,17 @@ const Hospitals: React.FC = () => {
                   <h3 className="font-bold text-slate-900 text-lg">No hospitals found</h3>
                   <p className="text-slate-500 text-sm mt-2">
                     {condition && location 
-                      ? `No hospitals found for "${condition}" in "${location}". Try adjusting your search criteria.`
+                      ? `No hospitals found for "${condition}" in "${location}".`
                       : condition
-                      ? `No hospitals found for "${condition}". Try adjusting your search criteria.`
+                      ? `No hospitals found for "${condition}".`
                       : location
-                      ? `No hospitals found in "${location}". Try adjusting your search criteria.`
+                      ? `No hospitals found in "${location}".`
                       : 'Try adjusting your search criteria.'}
                   </p>
                 </div>
               </div>
+            )}
+            </>
             )}
           </div>
         </section>

@@ -1,9 +1,10 @@
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLang } from '../App';
 import { TRANSLATIONS, APP_ICONS } from '../constants';
+import { hospitalsAPI } from '../services/api';
 import { ArrowRight, CheckCircle2, Globe2, Search, MapPin, Stethoscope } from 'lucide-react';
 
 const Home: React.FC = () => {
@@ -13,15 +14,18 @@ const Home: React.FC = () => {
   const [searchMode, setSearchMode] = useState<'destination' | 'procedure'>('destination');
   const [destination, setDestination] = useState('');
   const [procedure, setProcedure] = useState('');
+  const [indianCities, setIndianCities] = useState<string[]>([]);
+  const [medicalProcedures, setMedicalProcedures] = useState<string[]>([]);
 
-  const indianCities = [
-    'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata', 'Ahmedabad'
-  ];
-
-  const medicalProcedures = [
-    'Cardiology', 'Neurology & Neurosurgery', 'Orthopedics', 'Obstetrics & Gynecology',
-    'Urology', 'Dermatology', 'Primary Care Physician'
-  ];
+  useEffect(() => {
+    hospitalsAPI.getHospitals({ limit: 100 }).then((res: any) => {
+      const hospitals = res?.data?.hospitals || [];
+      const cities = [...new Set<string>(hospitals.map((h: any) => h.city).filter(Boolean))];
+      const specialties = [...new Set<string>(hospitals.flatMap((h: any) => h.specialties || []).filter(Boolean))];
+      setIndianCities(cities);
+      setMedicalProcedures(specialties);
+    }).catch(() => {});
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
