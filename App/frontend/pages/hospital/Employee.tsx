@@ -174,124 +174,149 @@ const Employee: React.FC = () => {
   // ── FORM PAGE (Add / Edit) ──────────────────────────────────────────────────
   if (view === 'add' || view === 'edit') {
     const role = getRoleConfig(form.position);
+    const RoleIcon = role.icon;
+    const inputCls = 'w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm bg-gray-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all placeholder-gray-400';
     return (
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <button onClick={() => setView('list')} className="p-2 hover:bg-gray-100 rounded-lg">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+      <div className="pb-10">
+        {/* Page Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <button onClick={() => setView('list')} className="p-2 hover:bg-gray-100 rounded-xl transition-colors">
+            <ArrowLeft className="w-5 h-5 text-gray-500" />
           </button>
           <div>
             <h1 className="text-xl font-bold text-gray-900">{view === 'add' ? 'Add New Employee' : 'Edit Employee'}</h1>
-            <p className="text-sm text-gray-500">{view === 'add' ? 'Fill in the details to add a new staff member' : `Editing ${selected?.name}`}</p>
+            <p className="text-sm text-gray-400 mt-0.5">{view === 'add' ? 'Create a new staff account and assign a role' : `Editing profile for ${selected?.name}`}</p>
           </div>
         </div>
 
-        {error && <p className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-3">{error}</p>}
-
-        {/* Role Selection */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-sm font-semibold text-gray-700 mb-4">Select Role *</p>
-          <div className="grid grid-cols-2 gap-3">
-            {ROLES.map(({ value, label, icon: Icon, color, border, description }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleRoleChange(value)}
-                className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
-                  form.position === value ? `border-teal-500 bg-teal-50` : `border-gray-200 hover:border-gray-300`
-                }`}
-              >
-                <span className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${color}`}>
-                  <Icon className="w-4 h-4" />
-                </span>
-                <div>
-                  <p className="text-sm font-semibold text-gray-800">{label}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 leading-tight">{description}</p>
-                </div>
-              </button>
-            ))}
+        {error && (
+          <div className="flex items-center gap-2.5 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-5">
+            <X className="w-4 h-4 flex-shrink-0" />{error}
           </div>
-        </div>
+        )}
 
-        {/* Permissions Preview */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-sm font-semibold text-gray-700 mb-3">
-            Permissions for <span className={`px-2 py-0.5 rounded-full text-xs ${role.color}`}>{role.label}</span>
-          </p>
-          <ul className="space-y-2">
-            {role.permissions.map(p => (
-              <li key={p} className="flex items-center gap-2 text-sm text-gray-600">
-                <CheckCircle className="w-4 h-4 text-teal-500 flex-shrink-0" />{p}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          {/* Left column */}
+          <div className="lg:col-span-3 space-y-5">
 
-        {/* Employee Details */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4">
-          <p className="text-sm font-semibold text-gray-700">Employee Details</p>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-            <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="e.g. Priya Sharma" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="email@hospital.com" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-              <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="+91 98765 43210" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Employee ID</label>
-              <input value={form.employee_id} onChange={e => setForm(f => ({ ...f, employee_id: e.target.value }))}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="EMP-001" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hire Date</label>
-              <input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Salary (₹)</label>
-              <input type="number" value={form.salary} onChange={e => setForm(f => ({ ...f, salary: e.target.value }))}
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="e.g. 35000" />
-            </div>
-            {view === 'edit' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
+            {/* Role Selection */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+                <p className="text-sm font-semibold text-gray-700">Select Role <span className="text-red-400">*</span></p>
+                <p className="text-xs text-gray-400 mt-0.5">Choose the staff member's access level</p>
+              </div>
+              <div className="p-5">
+                <select
+                  value={form.position}
+                  onChange={e => handleRoleChange(e.target.value)}
+                  className={inputCls}
+                >
+                  {ROLES.map(({ value, label }) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
+              </div>
+            </div>
+
+            {/* Employee Details */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+                <p className="text-sm font-semibold text-gray-700">Employee Details</p>
+                <p className="text-xs text-gray-400 mt-0.5">Personal and contact information</p>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Full Name <span className="text-red-400">*</span></label>
+                  <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    className={inputCls} placeholder="e.g. Priya Sharma" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Email <span className="text-red-400">*</span></label>
+                    <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                      className={inputCls} placeholder="staff@hospital.com" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Phone</label>
+                    <input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                      className={inputCls} placeholder="+91 98765 43210" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Employee ID</label>
+                    <input value={form.employee_id} onChange={e => setForm(f => ({ ...f, employee_id: e.target.value }))}
+                      className={inputCls} placeholder="EMP-001" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Hire Date</label>
+                    <input type="date" value={form.hire_date} onChange={e => setForm(f => ({ ...f, hire_date: e.target.value }))}
+                      className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Monthly Salary (₹)</label>
+                    <input type="number" value={form.salary} onChange={e => setForm(f => ({ ...f, salary: e.target.value }))}
+                      className={inputCls} placeholder="e.g. 35000" />
+                  </div>
+                  {view === 'edit' && (
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+                      <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+                        className={inputCls}>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3">
+              <button onClick={() => setView('list')}
+                className="flex-1 py-3 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-sm">
+                {saving ? 'Saving...' : view === 'add' ? '+ Add Employee' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+
+          {/* Right column — Role summary */}
+          <div className="lg:col-span-2 space-y-5">
+            {/* Selected role card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className={`px-5 py-5 ${role.color.replace('text-', 'bg-').split(' ')[0].replace('bg-', 'bg-').replace('100', '50')} border-b border-gray-100`}>
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-3 ${role.color}`}>
+                  <RoleIcon className="w-5 h-5" />
+                </div>
+                <p className="font-bold text-gray-900 text-sm">{role.label}</p>
+                <p className="text-xs text-gray-500 mt-1 leading-snug">{role.description}</p>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Permissions</p>
+                <ul className="space-y-2.5">
+                  {role.permissions.map(p => (
+                    <li key={p} className="flex items-start gap-2 text-xs text-gray-600">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <span>{p}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Tip */}
+            {view === 'add' && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl px-4 py-4">
+                <p className="text-xs font-semibold text-blue-700 mb-1">💡 Login credentials</p>
+                <p className="text-xs text-blue-600 leading-relaxed">
+                  A default password will be generated and shown after the employee is created. Share it with the staff member.
+                </p>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 pb-8">
-          <button onClick={() => setView('list')}
-            className="flex-1 py-3 border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-50">
-            Cancel
-          </button>
-          <button onClick={handleSave} disabled={saving}
-            className="flex-1 py-3 bg-teal-600 text-white rounded-xl text-sm font-semibold hover:bg-teal-700 disabled:opacity-50">
-            {saving ? 'Saving...' : view === 'add' ? 'Add Employee' : 'Save Changes'}
-          </button>
         </div>
       </div>
     );
