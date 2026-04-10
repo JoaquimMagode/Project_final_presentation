@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home, Calendar, FileText,
   Settings, HelpCircle, Phone, Upload, ChevronRight,
@@ -45,6 +45,22 @@ const statusLabel = (s: string) =>
 const PatientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activePage, setActivePage] = useState<Page>('dashboard');
+  const [appointmentCount, setAppointmentCount] = useState(0);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:5000/api/appointments', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        const active = (data?.data?.appointments || []).filter(
+          (a: any) => a.status === 'pending'
+        ).length;
+        setAppointmentCount(active);
+      })
+      .catch(() => {});
+  }, []);
 
   const firstName = user?.name?.split(' ')[0] ?? 'Patient';
 
@@ -63,7 +79,12 @@ const PatientDashboard: React.FC = () => {
                 : 'text-gray-600 hover:bg-gray-100'}`}
           >
             <Icon className="w-5 h-5 flex-shrink-0" />
-            {label}
+            <span className="flex-1">{label}</span>
+            {page === 'appointments' && appointmentCount > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {appointmentCount}
+              </span>
+            )}
           </button>
         ))}
       </aside>
@@ -77,10 +98,17 @@ const PatientDashboard: React.FC = () => {
             <button
               key={page}
               onClick={() => setActivePage(page)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs relative
                 ${activePage === page ? 'text-emerald-600' : 'text-gray-500'}`}
             >
-              <Icon className="w-5 h-5" />
+              <div className="relative">
+                <Icon className="w-5 h-5" />
+                {page === 'appointments' && appointmentCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
+                    {appointmentCount}
+                  </span>
+                )}
+              </div>
               <span>{label}</span>
             </button>
           ))}

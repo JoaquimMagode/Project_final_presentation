@@ -30,6 +30,7 @@ const HospitalDashboard: React.FC = () => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pendingCount, setPendingCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Mock hospital data - in real app, this would come from user context or API
@@ -67,6 +68,16 @@ const HospitalDashboard: React.FC = () => {
       window.removeEventListener('toggleSidebar', handleToggleSidebar);
       window.removeEventListener('navigateHospitalPage', handleNavigatePage);
     };
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    fetch('http://localhost:5000/api/hospital-dashboard/appointments?status=pending', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => setPendingCount(data?.data?.appointments?.length || 0))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -258,8 +269,13 @@ const HospitalDashboard: React.FC = () => {
                     : 'text-teal-100 hover:bg-teal-700 hover:text-white'
                 }`}
               >
-                <item.icon className="w-5 h-5" />
-                {sidebarOpen && <span className="font-medium">{item.label}</span>}
+                <item.icon className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && <span className="font-medium flex-1">{item.label}</span>}
+                {item.page === 'appointments' && pendingCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                    {pendingCount}
+                  </span>
+                )}
               </button>
             ))}
           </div>
