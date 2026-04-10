@@ -102,8 +102,8 @@ const seedDatabase = async () => {
       // Create patient profile if role is patient
       if (user.role === 'patient') {
         await pool.execute(
-          'INSERT INTO patients (user_id, date_of_birth, gender, address, emergency_contact_name, emergency_contact_phone) VALUES (?, ?, ?, ?, ?, ?)',
-          [result.insertId, '1990-05-15', 'male', 'Lagos, Nigeria', 'Emergency Contact', '+234-123-456-7891']
+          'INSERT INTO patients (user_id, date_of_birth, gender, address) VALUES (?, ?, ?, ?)',
+          [result.insertId, '1990-05-15', 'male', 'Lagos, Nigeria']
         );
         console.log(`✅ Created patient profile for user ID: ${result.insertId}`);
       }
