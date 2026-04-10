@@ -27,9 +27,11 @@ import Locations from './pages/Locations';
 import LocationDetail from './pages/LocationDetail';
 import Specialties from './pages/Specialties';
 import SpecialtyDetail from './pages/SpecialtyDetail';
+import AboutUs from './pages/AboutUs';
+import Contact from './pages/Contact';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
-import { Menu, X, User as UserIcon, LogOut, Settings, ChevronDown, Phone, Search } from 'lucide-react';
+import { Menu, X, User as UserIcon, LogOut, Settings, ChevronDown, Phone, Search, Headphones } from 'lucide-react';
 
 // Auth & Language Context
 interface AuthContextType {
@@ -211,18 +213,22 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               )}
               {!isDashboardPage && (
                 <div className="hidden md:flex items-center gap-6">
-                  <Link to="/services" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Get Care</Link>
-                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Find a Hospitals</Link>
-                  <Link to="/locations" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Locations</Link>
-                  <Link to="/specialties" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Specialties</Link>
+                  <Link to="/" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Home</Link>
+                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Hospitals</Link>
+                  <Link to="/specialties" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Treatments</Link>
+                  <Link to="/visa" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Travel &amp; Stay</Link>
+                  <Link to="/services" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Support</Link>
+                  <Link to="/about" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">About Us</Link>
+                  <Link to="/contact" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Contact</Link>
                 </div>
               )}
             </div>
 
             <div className="flex items-center gap-4 ml-auto">
               {!isDashboardPage && (
-                <button className="hidden md:block px-5 py-2 bg-black text-white rounded text-sm font-bold hover:bg-slate-800 transition-colors">
-                  Make an Appointment
+                <button className="hidden md:flex items-center gap-2 px-5 py-2 bg-black text-white rounded text-sm font-bold hover:bg-slate-800 transition-colors">
+                  <Headphones className="w-4 h-4" />
+                  Call Support
                 </button>
               )}
               
@@ -415,6 +421,8 @@ const App: React.FC = () => {
               <Route path="/quote/extras" element={<QuoteExtras />} />
               <Route path="/locations" element={<Locations />} />
               <Route path="/locations/:city" element={<LocationDetail />} />
+              <Route path="/about" element={<AboutUs />} />
+              <Route path="/contact" element={<Contact />} />
               <Route path="/specialties" element={<Specialties />} />
               <Route path="/specialties/:type" element={<SpecialtyDetail />} />
               <Route element={<ProtectedRoute role="superadmin" />}>
