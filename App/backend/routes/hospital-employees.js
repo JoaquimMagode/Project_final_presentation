@@ -37,13 +37,31 @@ router.get('/', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
 // POST /api/hospital-employees
 router.post('/', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
   try {
-    const { name, email, phone, position, department, employee_id, hire_date, salary, employment_type, shift, qualifications, status = 'active' } = req.body;
+    const { name, email, phone, position, department, employee_id, hire_date, salary, status = 'active' } = req.body;
     const hospitalId = req.user.hospital_id;
+
+    if (!email) return res.status(400).json({ success: false, message: 'Email is required' });
 
     if (employee_id) {
       const existing = await prisma.hospital_employees.findFirst({ where: { hospital_id: hospitalId, employee_id } });
       if (existing) return res.status(400).json({ success: false, message: 'Employee ID already exists' });
     }
+
+    // Check if a user account already exists for this email
+    const existingUser = await prisma.users.findUnique({ where: { email } });
+    if (existingUser) return res.status(400).json({ success: false, message: 'A user with this email already exists' });
+
+    // Build password: role slug lowercase, no spaces + @1234
+    // e.g. "Ward Manager" -> "wardmanager@1234", "Receptionist" -> "receptionist@1234"
+    const bcrypt = require('bcryptjs');
+    const roleSlug = (position || 'employee').toLowerCase().replace(/\s+/g, '');
+    const defaultPassword = `${roleSlug}@1234`;
+    const hashedPassword = await bcrypt.hash(defaultPassword, 12);
+
+    // Create user account with hospital_admin role so they can log in
+    const user = await prisma.users.create({
+      data: { email, password: hashedPassword, name, phone: phone || null, role: 'hospital_admin' }
+    });
 
     const employee = await prisma.hospital_employees.create({
       data: {
@@ -55,7 +73,11 @@ router.post('/', authenticateToken, authorizeHospitalAdmin, async (req, res) => 
       }
     });
 
-    res.status(201).json({ success: true, message: 'Employee created successfully', data: { employee } });
+    res.status(201).json({
+      success: true,
+      message: 'Employee created successfully',
+      data: { employee, defaultPassword }
+    });
   } catch (error) {
     console.error('Create employee error:', error);
     res.status(500).json({ success: false, message: 'Failed to create employee' });

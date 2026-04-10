@@ -47,6 +47,17 @@ const Login: React.FC = () => {
           ...(role === 'hospital' && user.hospital_id ? { hospital_id: user.hospital_id } : {})
         }));
 
+        // Store employee role if returned directly from login
+        if (role === 'hospital') {
+          if (user.employee_position) {
+            localStorage.setItem('employee_role', user.employee_position);
+          } else {
+            localStorage.removeItem('employee_role');
+          }
+        } else {
+          localStorage.removeItem('employee_role');
+        }
+
         login(user.name, role as any);
 
         if (from) {

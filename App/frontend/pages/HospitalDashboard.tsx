@@ -20,9 +20,18 @@ import HelpCenter from './hospital/HelpCenter';
 import Setting from './hospital/Setting';
 import Report from './hospital/Report';
 import HospitalProfile from './hospital/HospitalProfile';
+import ReceptionistDashboard from './hospital/ReceptionistDashboard';
+import AccountantDashboard from './hospital/AccountantDashboard';
+import WardManagerDashboard from './hospital/WardManagerDashboard';
 
 const HospitalDashboard: React.FC = () => {
   const { user, logout } = useAuth();
+
+  // Check if logged-in user is an employee with a specific role
+  const employeeRole = localStorage.getItem('employee_role');
+  if (employeeRole === 'Receptionist') return <ReceptionistDashboard />;
+  if (employeeRole === 'Accountant')   return <AccountantDashboard />;
+  if (employeeRole === 'Ward Manager') return <WardManagerDashboard />;
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('Week');

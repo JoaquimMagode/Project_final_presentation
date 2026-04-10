@@ -76,7 +76,17 @@ router.post('/login', validateUserLogin, async (req, res) => {
         additionalData.patient = patient || null;
 
       } else if (user.role === 'hospital_admin') {
-        const hospital = await prisma.hospitals.findFirst({ where: { admin_id: user.id } });
+        let hospital = await prisma.hospitals.findFirst({ where: { admin_id: user.id } });
+        // Fallback: employee lookup scoped to own hospital
+        if (!hospital) {
+          const emp = await prisma.hospital_employees.findFirst({
+            where: { email: user.email, status: { not: 'terminated' } }
+          });
+          if (emp) {
+            hospital = await prisma.hospitals.findFirst({ where: { id: emp.hospital_id } });
+            safeUser.employee_position = emp.position;
+          }
+        }
         additionalData.hospital = hospital || null;
         if (hospital) safeUser.hospital_id = hospital.id;
       }
@@ -113,7 +123,17 @@ router.get('/me', authenticateToken, async (req, res) => {
       additionalData.patient = patient || null;
 
     } else if (user.role === 'hospital_admin') {
-      const hospital = await prisma.hospitals.findFirst({ where: { admin_id: user.id } });
+      let hospital = await prisma.hospitals.findFirst({ where: { admin_id: user.id } });
+      // Fallback: employee lookup scoped to own hospital
+      if (!hospital) {
+        const emp = await prisma.hospital_employees.findFirst({
+          where: { email: user.email, status: { not: 'terminated' } }
+        });
+        if (emp) {
+          hospital = await prisma.hospitals.findFirst({ where: { id: emp.hospital_id } });
+          user.employee_position = emp.position;
+        }
+      }
       additionalData.hospital = hospital || null;
       if (hospital) user.hospital_id = hospital.id;
     }

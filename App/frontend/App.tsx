@@ -361,6 +361,13 @@ const App: React.FC = () => {
             };
             const frontendRole = roleMap[response.data.user.role] ?? 'patient';
             
+            // Persist employee role for role-based dashboard routing
+            if (frontendRole === 'hospital' && response.data.user.employee_position) {
+              localStorage.setItem('employee_role', response.data.user.employee_position);
+            } else if (frontendRole !== 'hospital') {
+              localStorage.removeItem('employee_role');
+            }
+
             setUser({
               name: response.data.user.name,
               role: frontendRole as UserRole
@@ -387,6 +394,7 @@ const App: React.FC = () => {
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      localStorage.removeItem('employee_role');
       setUser(null);
     }
   };

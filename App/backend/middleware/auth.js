@@ -40,10 +40,20 @@ const authenticateToken = async (req, res, next) => {
       req.user = { ...user };
 
       if (user.role === 'hospital_admin') {
-        const hospital = await prisma.hospitals.findFirst({
+        let hospital = await prisma.hospitals.findFirst({
           where: { admin_id: user.id },
           select: { id: true }
         });
+        // Fallback: employee lookup by email scoped to active records
+        if (!hospital) {
+          const emp = await prisma.hospital_employees.findFirst({
+            where: { email: user.email, status: { not: 'terminated' } }
+          });
+          if (emp) {
+            hospital = { id: emp.hospital_id };
+            req.user.employee_position = emp.position;
+          }
+        }
         req.user.hospital_id = hospital ? hospital.id : null;
       }
     }
