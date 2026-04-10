@@ -60,7 +60,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const searchRef = useRef<HTMLInputElement>(null);
   
   const isDashboardPage = ['/superadmin', '/hospital', '/patient'].includes(location.pathname);
-  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/patient-registration';
+  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/patient-registration' || isDashboardPage;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -341,35 +341,39 @@ const App: React.FC = () => {
   const [user, setUser] = useState<{ name: string; role: UserRole } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing token on app load
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const response = await authAPI.getProfile();
-          if (response.success) {
-            const roleMap: Record<string, string> = {
-              super_admin: 'superadmin',
-              hospital_admin: 'hospital',
-              patient: 'patient',
-            };
-            const frontendRole = roleMap[response.data.user.role] ?? 'patient';
-            
-            setUser({
-              name: response.data.user.name,
-              role: frontendRole as UserRole
-            });
-          }
-        } catch (error) {
-          // Token is invalid, remove it
-          localStorage.removeItem('token');
-        }
-      }
-      setLoading(false);
-    };
+  // === ORIGINAL AUTH CHECK (commented out for dev access) ===
+  // useEffect(() => {
+  //   const checkAuthStatus = async () => {
+  //     const token = localStorage.getItem('token');
+  //     if (token) {
+  //       try {
+  //         const response = await authAPI.getProfile();
+  //         if (response.success) {
+  //           const roleMap: Record<string, string> = {
+  //             super_admin: 'superadmin',
+  //             hospital_admin: 'hospital',
+  //             patient: 'patient',
+  //           };
+  //           const frontendRole = roleMap[response.data.user.role] ?? 'patient';
+  //           
+  //           setUser({
+  //             name: response.data.user.name,
+  //             role: frontendRole as UserRole
+  //           });
+  //         }
+  //       } catch (error) {
+  //         localStorage.removeItem('token');
+  //       }
+  //     }
+  //     setLoading(false);
+  //   };
+  //   checkAuthStatus();
+  // }, []);
+  // === END ORIGINAL AUTH CHECK ===
 
-    checkAuthStatus();
+  // DEV BYPASS: skip auth check, just mark loading as done
+  useEffect(() => {
+    setLoading(false);
   }, []);
 
   const login = (name: string, role: UserRole) => setUser({ name, role });

@@ -1,289 +1,120 @@
 import React, { useState } from 'react';
-import { HelpCircle, Search, Book, MessageCircle, Phone, Mail, FileText, Video, Users, Settings } from 'lucide-react';
+import {
+  HiOutlineQuestionMarkCircle, HiOutlineMagnifyingGlass, HiOutlineBookOpen,
+  HiOutlineChatBubbleLeftRight, HiOutlinePhone, HiOutlineEnvelope,
+  HiOutlineDocumentText, HiOutlineVideoCamera, HiOutlineUsers, HiOutlineCog6Tooth,
+} from 'react-icons/hi2';
 
 const HelpCenter: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [search, setSearch] = useState('');
+  const [cat, setCat] = useState('all');
 
   const categories = [
-    { id: 'all', name: 'All Topics', icon: Book },
-    { id: 'appointments', name: 'Appointments', icon: FileText },
-    { id: 'patients', name: 'Patient Management', icon: Users },
-    { id: 'payments', name: 'Payments & Billing', icon: FileText },
-    { id: 'settings', name: 'Settings', icon: Settings },
-    { id: 'technical', name: 'Technical Support', icon: HelpCircle }
+    { id: 'all', name: 'All Topics', icon: HiOutlineBookOpen },
+    { id: 'appointments', name: 'Appointments', icon: HiOutlineDocumentText },
+    { id: 'patients', name: 'Patient Mgmt', icon: HiOutlineUsers },
+    { id: 'payments', name: 'Payments', icon: HiOutlineDocumentText },
+    { id: 'settings', name: 'Settings', icon: HiOutlineCog6Tooth },
+    { id: 'technical', name: 'Technical', icon: HiOutlineQuestionMarkCircle },
   ];
 
   const faqs = [
-    {
-      id: 1,
-      category: 'appointments',
-      question: 'How do I confirm a patient appointment?',
-      answer: 'Go to the Appointments page, find the pending appointment, and click the "Confirm" button. The patient will be notified automatically.'
-    },
-    {
-      id: 2,
-      category: 'appointments',
-      question: 'Can I reschedule appointments?',
-      answer: 'Yes, you can reschedule appointments by clicking on the appointment and selecting a new date and time. Make sure to notify the patient about the change.'
-    },
-    {
-      id: 3,
-      category: 'patients',
-      question: 'How do I view patient medical history?',
-      answer: 'Click on any patient name in the Patients section to view their complete medical history, previous appointments, and treatment records.'
-    },
-    {
-      id: 4,
-      category: 'payments',
-      question: 'How are payments processed?',
-      answer: 'Payments are processed automatically through our secure payment gateway. You can view all payment transactions in the Payments section.'
-    },
-    {
-      id: 5,
-      category: 'settings',
-      question: 'How do I update hospital information?',
-      answer: 'Go to Settings > Hospital Profile to update your hospital information, contact details, and specialties.'
-    },
-    {
-      id: 6,
-      category: 'technical',
-      question: 'What browsers are supported?',
-      answer: 'Our platform supports all modern browsers including Chrome, Firefox, Safari, and Edge. We recommend using the latest version for the best experience.'
-    }
+    { id: 1, category: 'appointments', q: 'How do I confirm a patient appointment?', a: 'Go to Appointments, find the pending one, and click "Confirm". The patient is notified automatically.' },
+    { id: 2, category: 'appointments', q: 'Can I reschedule appointments?', a: 'Yes — click the appointment, select a new date/time, and notify the patient.' },
+    { id: 3, category: 'patients', q: 'How do I view patient medical history?', a: 'Click any patient name in the Patients section to see their full history.' },
+    { id: 4, category: 'payments', q: 'How are payments processed?', a: 'Payments go through our secure gateway automatically. View transactions in Payments.' },
+    { id: 5, category: 'settings', q: 'How do I update hospital information?', a: 'Go to Settings → Hospital Profile to update details and specialties.' },
+    { id: 6, category: 'technical', q: 'What browsers are supported?', a: 'Chrome, Firefox, Safari, and Edge — latest versions recommended.' },
   ];
 
-  const quickActions = [
-    {
-      title: 'Contact Support',
-      description: 'Get help from our support team',
-      icon: MessageCircle,
-      action: 'chat'
-    },
-    {
-      title: 'Video Tutorials',
-      description: 'Watch step-by-step guides',
-      icon: Video,
-      action: 'videos'
-    },
-    {
-      title: 'User Manual',
-      description: 'Download complete documentation',
-      icon: Book,
-      action: 'manual'
-    },
-    {
-      title: 'System Status',
-      description: 'Check platform status',
-      icon: Settings,
-      action: 'status'
-    }
+  const contacts = [
+    { type: 'Phone', value: '+91 1800-123-4567', desc: '24/7 Hotline', icon: HiOutlinePhone },
+    { type: 'Email', value: 'support@imapsolution.com', desc: 'Technical Support', icon: HiOutlineEnvelope },
+    { type: 'Chat', value: 'Live Chat', desc: '9 AM – 6 PM IST', icon: HiOutlineChatBubbleLeftRight },
   ];
 
-  const contactOptions = [
-    {
-      type: 'Phone',
-      value: '+91 1800-123-4567',
-      description: '24/7 Support Hotline',
-      icon: Phone
-    },
-    {
-      type: 'Email',
-      value: 'support@imapsolution.com',
-      description: 'Technical Support',
-      icon: Mail
-    },
-    {
-      type: 'Chat',
-      value: 'Live Chat',
-      description: 'Available 9 AM - 6 PM IST',
-      icon: MessageCircle
-    }
-  ];
-
-  const filteredFaqs = faqs.filter(faq => {
-    const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;
-    const matchesSearch = searchQuery === '' || 
-      faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filtered = faqs.filter(f => (cat === 'all' || f.category === cat) && (search === '' || f.q.toLowerCase().includes(search.toLowerCase()) || f.a.toLowerCase().includes(search.toLowerCase())));
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="p-6 max-w-[1400px] mx-auto space-y-5">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Help & Support Center</h1>
-        <p className="text-gray-600">Find answers to common questions and get support</p>
+        <h1 className="text-lg font-bold text-gray-900">Help & Support</h1>
+        <p className="text-xs text-gray-500">Find answers and get support</p>
       </div>
 
-      {/* Search */}
-      <div className="max-w-2xl mx-auto">
-        <div className="relative">
-          <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search for help articles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
-          />
-        </div>
+      <div className="max-w-xl mx-auto relative">
+        <HiOutlineMagnifyingGlass className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <input type="text" placeholder="Search help articles..." value={search} onChange={e => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500" />
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {quickActions.map((action) => {
-          const Icon = action.icon;
-          return (
-            <button
-              key={action.action}
-              className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left"
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-teal-100 rounded-lg">
-                  <Icon className="w-5 h-5 text-teal-600" />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        {[
+          { title: 'Contact Support', desc: 'Get help from our team', icon: HiOutlineChatBubbleLeftRight },
+          { title: 'Video Tutorials', desc: 'Step-by-step guides', icon: HiOutlineVideoCamera },
+          { title: 'User Manual', desc: 'Full documentation', icon: HiOutlineBookOpen },
+          { title: 'System Status', desc: 'Platform status', icon: HiOutlineCog6Tooth },
+        ].map(a => (
+          <button key={a.title} className="p-4 bg-white rounded-lg border border-gray-200 hover:border-gray-300 text-left transition-colors">
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="w-8 h-8 bg-emerald-50 rounded-md flex items-center justify-center"><a.icon className="w-4 h-4 text-emerald-600" /></div>
+              <h3 className="text-xs font-semibold text-gray-900">{a.title}</h3>
+            </div>
+            <p className="text-[11px] text-gray-500">{a.desc}</p>
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-1 space-y-4">
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <h3 className="text-xs font-semibold text-gray-900 mb-3">Categories</h3>
+            <div className="space-y-0.5">
+              {categories.map(c => (
+                <button key={c.id} onClick={() => setCat(c.id)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-left text-xs transition-colors ${cat === c.id ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-gray-600 hover:bg-gray-50'}`}>
+                  <c.icon className="w-3.5 h-3.5" />{c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-lg p-4 border border-gray-200">
+            <h3 className="text-xs font-semibold text-gray-900 mb-3">Contact</h3>
+            <div className="space-y-3">
+              {contacts.map(c => (
+                <div key={c.type} className="flex items-start gap-2.5">
+                  <div className="w-7 h-7 bg-gray-50 rounded-md flex items-center justify-center shrink-0"><c.icon className="w-3.5 h-3.5 text-gray-500" /></div>
+                  <div><p className="text-xs font-medium text-gray-900">{c.value}</p><p className="text-[10px] text-gray-400">{c.desc}</p></div>
                 </div>
-                <h3 className="font-semibold text-gray-900">{action.title}</h3>
-              </div>
-              <p className="text-sm text-gray-600">{action.description}</p>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Categories Sidebar */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
-            <div className="space-y-2">
-              {categories.map((category) => {
-                const Icon = category.icon;
-                return (
-                  <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                      selectedCategory === category.id
-                        ? 'bg-teal-100 text-teal-700'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span className="text-sm">{category.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Contact Information */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-6">
-            <h3 className="font-semibold text-gray-900 mb-4">Contact Support</h3>
-            <div className="space-y-4">
-              {contactOptions.map((contact) => {
-                const Icon = contact.icon;
-                return (
-                  <div key={contact.type} className="flex items-start gap-3">
-                    <div className="p-2 bg-gray-100 rounded-lg">
-                      <Icon className="w-4 h-4 text-gray-600" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">{contact.value}</div>
-                      <div className="text-xs text-gray-500">{contact.description}</div>
-                    </div>
-                  </div>
-                );
-              })}
+              ))}
             </div>
           </div>
         </div>
 
-        {/* FAQ Content */}
         <div className="lg:col-span-3">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Frequently Asked Questions
-                {selectedCategory !== 'all' && (
-                  <span className="text-sm font-normal text-gray-500 ml-2">
-                    - {categories.find(c => c.id === selectedCategory)?.name}
-                  </span>
-                )}
-              </h3>
+          <div className="bg-white rounded-lg border border-gray-200">
+            <div className="px-5 py-3.5 border-b border-gray-200">
+              <h3 className="text-sm font-semibold text-gray-900">FAQ</h3>
             </div>
-            
-            <div className="p-6">
-              {filteredFaqs.length > 0 ? (
-                <div className="space-y-6">
-                  {filteredFaqs.map((faq) => (
-                    <div key={faq.id} className="border-b border-gray-100 pb-6 last:border-b-0">
-                      <h4 className="font-medium text-gray-900 mb-2 flex items-start gap-2">
-                        <HelpCircle className="w-5 h-5 text-teal-600 mt-0.5 flex-shrink-0" />
-                        {faq.question}
+            <div className="p-5">
+              {filtered.length > 0 ? (
+                <div className="space-y-4">
+                  {filtered.map(f => (
+                    <div key={f.id} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                      <h4 className="text-xs font-medium text-gray-900 mb-1 flex items-start gap-2">
+                        <HiOutlineQuestionMarkCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />{f.q}
                       </h4>
-                      <p className="text-gray-600 ml-7">{faq.answer}</p>
+                      <p className="text-[11px] text-gray-600 ml-6">{f.a}</p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12">
-                  <HelpCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500">No articles found matching your search</p>
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSelectedCategory('all');
-                    }}
-                    className="mt-2 text-teal-600 hover:text-teal-700 font-medium"
-                  >
-                    Clear filters
-                  </button>
+                <div className="text-center py-10">
+                  <HiOutlineQuestionMarkCircle className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">No articles found</p>
+                  <button onClick={() => { setSearch(''); setCat('all'); }} className="mt-1 text-xs text-emerald-600 font-medium">Clear filters</button>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Additional Resources */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-4">Getting Started</h3>
-              <div className="space-y-3">
-                <a href="#" className="block text-sm text-teal-600 hover:text-teal-700">
-                  → Hospital Dashboard Overview
-                </a>
-                <a href="#" className="block text-sm text-teal-600 hover:text-teal-700">
-                  → Managing Patient Appointments
-                </a>
-                <a href="#" className="block text-sm text-teal-600 hover:text-teal-700">
-                  → Payment Processing Guide
-                </a>
-                <a href="#" className="block text-sm text-teal-600 hover:text-teal-700">
-                  → Staff Management Tutorial
-                </a>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-4">System Updates</h3>
-              <div className="space-y-3">
-                <div className="text-sm">
-                  <div className="font-medium text-gray-900">Version 2.1.0 Released</div>
-                  <div className="text-gray-500">New appointment management features</div>
-                  <div className="text-xs text-gray-400">2 days ago</div>
-                </div>
-                <div className="text-sm">
-                  <div className="font-medium text-gray-900">Payment Gateway Update</div>
-                  <div className="text-gray-500">Enhanced security and new payment methods</div>
-                  <div className="text-xs text-gray-400">1 week ago</div>
-                </div>
-                <div className="text-sm">
-                  <div className="font-medium text-gray-900">Mobile App Launch</div>
-                  <div className="text-gray-500">Hospital management on the go</div>
-                  <div className="text-xs text-gray-400">2 weeks ago</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

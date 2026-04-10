@@ -1,412 +1,214 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Building2, Plus, Users, DollarSign, FileText, Settings, 
-  Bell, User, Search, CheckCircle, XCircle, Edit, Ban, Eye,
-  Save, X, MapPin, Stethoscope, Shield, Clock, HeartPulse, Upload, Tag
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  HiOutlineBuildingOffice2, HiOutlinePlus, HiOutlineUsers, HiOutlineCurrencyDollar,
+  HiOutlineDocumentText, HiOutlineCog6Tooth, HiOutlineUser, HiOutlineMagnifyingGlass,
+  HiOutlineCheckCircle, HiOutlineXCircle, HiOutlinePencilSquare, HiOutlineNoSymbol,
+  HiOutlineEye, HiOutlineXMark, HiOutlineClock, HiOutlineChevronDown,
+  HiOutlineArrowRightOnRectangle, HiOutlineBell, HiOutlineCloudArrowUp,
+  HiOutlineShieldCheck, HiOutlineHome, HiOutlineTag,
+} from 'react-icons/hi2';
+import { HeartPulse } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../App';
+import { useNavigate } from 'react-router-dom';
+
+// Data
+const indianStates = ['Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat','Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal','Delhi','Jammu and Kashmir','Ladakh'];
+const citiesByState: Record<string, string[]> = { Maharashtra:['Mumbai','Pune','Nagpur','Nashik'], Delhi:['New Delhi','Central Delhi','South Delhi'], Karnataka:['Bangalore','Mysore','Mangalore'], 'Tamil Nadu':['Chennai','Coimbatore','Madurai'], Telangana:['Hyderabad','Warangal'], 'West Bengal':['Kolkata','Howrah','Siliguri'], Gujarat:['Ahmedabad','Surat','Vadodara'], Rajasthan:['Jaipur','Jodhpur','Udaipur'], Punjab:['Chandigarh','Ludhiana','Amritsar'], Haryana:['Gurgaon','Faridabad'], 'Uttar Pradesh':['Lucknow','Kanpur','Agra','Varanasi'], 'Madhya Pradesh':['Bhopal','Indore'], Kerala:['Thiruvananthapuram','Kochi'], Bihar:['Patna','Gaya'] };
+const medicalSpecialties = ['Cardiology','Neurology','Orthopedics','Oncology','Gastroenterology','Pulmonology','Nephrology','Endocrinology','Dermatology','Ophthalmology','ENT','Urology','Gynecology','Pediatrics','Psychiatry','General Surgery','Cardiac Surgery','Neurosurgery','Transplant Surgery','Critical Care'];
+const accreditationOptions = ['JCI Accredited','NABH Verified','ISO 9001:2015','NABL Certified','HIPAA Compliant','CGHS Empanelled','Ayushman Bharat'];
+
+const sidebarGroups = [
+  { label: 'Overview', items: [
+    { id: 'DASHBOARD', label: 'Dashboard', icon: HiOutlineHome },
+  ]},
+  { label: 'Hospitals', items: [
+    { id: 'HOSPITAL_MANAGEMENT', label: 'Management', icon: HiOutlineBuildingOffice2 },
+    { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: HiOutlinePlus },
+    { id: 'MANAGE_HOSPITALS', label: 'All Hospitals', icon: HiOutlineBuildingOffice2 },
+  ]},
+  { label: 'Platform', items: [
+    { id: 'PATIENTS', label: 'Patients', icon: HiOutlineUsers },
+    { id: 'REVENUE', label: 'Revenue', icon: HiOutlineCurrencyDollar },
+    { id: 'REPORTS', label: 'Reports', icon: HiOutlineDocumentText },
+    { id: 'SETTINGS', label: 'Settings', icon: HiOutlineCog6Tooth },
+  ]},
+];
+
+const statusCfg: Record<string, string> = { Active: 'bg-green-50 text-green-700', 'Pending Approval': 'bg-yellow-50 text-yellow-700', Suspended: 'bg-red-50 text-red-700' };
 
 const SuperAdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('HOSPITAL_MANAGEMENT');
-  const [showAddHospital, setShowAddHospital] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [tab, setTab] = useState('DASHBOARD');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [newHospital, setNewHospital] = useState({
-    name: '',
-    state: '',
-    city: '',
-    country: 'India',
-    specialties: [] as string[],
-    commissionRate: 8,
-    contactEmail: '',
-    contactPhone: '',
-    address: '',
-    accreditations: [] as string[],
-    description: '',
-    logo: null as File | null,
-    logoPreview: ''
-  });
-  const [currentSpecialty, setCurrentSpecialty] = useState('');
-  const [currentAccreditation, setCurrentAccreditation] = useState('');
+  const [profileOpen, setProfileOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [curSpecialty, setCurSpecialty] = useState('');
+  const [curAccred, setCurAccred] = useState('');
+  const [form, setForm] = useState({ name: '', state: '', city: '', country: 'India', specialties: [] as string[], commissionRate: 8, contactEmail: '', contactPhone: '', address: '', accreditations: [] as string[], description: '', logo: null as File | null, logoPreview: '' });
 
-  // Add sidebar toggle event listener
-  useEffect(() => {
-    const handleToggleSidebar = () => {
-      setSidebarOpen(prev => !prev);
-    };
-    
-    window.addEventListener('toggleSidebar', handleToggleSidebar);
-    
-    return () => {
-      window.removeEventListener('toggleSidebar', handleToggleSidebar);
-    };
-  }, []);
-
-  // Indian States and Cities data
-  const indianStates = [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
-    'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
-    'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
-    'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
-    'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu and Kashmir', 'Ladakh'
-  ];
-
-  const citiesByState: { [key: string]: string[] } = {
-    'Maharashtra': ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad', 'Solapur', 'Kolhapur'],
-    'Delhi': ['New Delhi', 'Central Delhi', 'North Delhi', 'South Delhi', 'East Delhi', 'West Delhi'],
-    'Karnataka': ['Bangalore', 'Mysore', 'Hubli', 'Mangalore', 'Belgaum', 'Gulbarga'],
-    'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Tiruchirappalli', 'Salem', 'Tirunelveli'],
-    'Telangana': ['Hyderabad', 'Warangal', 'Nizamabad', 'Karimnagar', 'Khammam'],
-    'West Bengal': ['Kolkata', 'Howrah', 'Durgapur', 'Asansol', 'Siliguri'],
-    'Gujarat': ['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Bhavnagar', 'Jamnagar'],
-    'Rajasthan': ['Jaipur', 'Jodhpur', 'Kota', 'Bikaner', 'Ajmer', 'Udaipur'],
-    'Punjab': ['Chandigarh', 'Ludhiana', 'Amritsar', 'Jalandhar', 'Patiala'],
-    'Haryana': ['Gurgaon', 'Faridabad', 'Panipat', 'Ambala', 'Yamunanagar'],
-    'Uttar Pradesh': ['Lucknow', 'Kanpur', 'Ghaziabad', 'Agra', 'Meerut', 'Varanasi', 'Allahabad'],
-    'Madhya Pradesh': ['Bhopal', 'Indore', 'Gwalior', 'Jabalpur', 'Ujjain'],
-    'Bihar': ['Patna', 'Gaya', 'Bhagalpur', 'Muzaffarpur', 'Purnia'],
-    'Odisha': ['Bhubaneswar', 'Cuttack', 'Rourkela', 'Berhampur'],
-    'Kerala': ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
-    'Assam': ['Guwahati', 'Silchar', 'Dibrugarh', 'Jorhat'],
-    'Jharkhand': ['Ranchi', 'Jamshedpur', 'Dhanbad', 'Bokaro'],
-    'Chhattisgarh': ['Raipur', 'Bhilai', 'Korba', 'Bilaspur'],
-    'Uttarakhand': ['Dehradun', 'Haridwar', 'Roorkee', 'Haldwani'],
-    'Himachal Pradesh': ['Shimla', 'Dharamshala', 'Solan', 'Mandi'],
-    'Jammu and Kashmir': ['Srinagar', 'Jammu', 'Anantnag'],
-    'Goa': ['Panaji', 'Margao', 'Vasco da Gama'],
-    'Tripura': ['Agartala'],
-    'Manipur': ['Imphal'],
-    'Nagaland': ['Kohima', 'Dimapur'],
-    'Mizoram': ['Aizawl'],
-    'Arunachal Pradesh': ['Itanagar'],
-    'Meghalaya': ['Shillong'],
-    'Sikkim': ['Gangtok']
-  };
-
-  const medicalSpecialties = [
-    'Cardiology', 'Neurology', 'Orthopedics', 'Oncology', 'Gastroenterology',
-    'Pulmonology', 'Nephrology', 'Endocrinology', 'Dermatology', 'Ophthalmology',
-    'ENT', 'Urology', 'Gynecology', 'Pediatrics', 'Psychiatry', 'Radiology',
-    'Anesthesiology', 'Emergency Medicine', 'General Surgery', 'Plastic Surgery',
-    'Cardiac Surgery', 'Neurosurgery', 'Transplant Surgery', 'Dental Surgery',
-    'Physiotherapy', 'Critical Care', 'Infectious Diseases', 'Rheumatology'
-  ];
-
-  const accreditationOptions = [
-    'JCI Accredited', 'NABH Verified', 'ISO 9001:2015 Certified', 'NABL Certified',
-    'AAHRPP Accredited', 'CAP Accredited', 'AABB Accredited', 'Green OT Certified',
-    'HIPAA Compliant', 'CGHS Empanelled', 'ESIC Approved', 'Ayushman Bharat Empanelled'
-  ];
-
-  // Mock data for existing hospitals
   const [hospitals, setHospitals] = useState([
-    { id: 1, name: 'Apollo Hospitals Mumbai', state: 'Maharashtra', city: 'Mumbai', country: 'India', specialties: ['Cardiology', 'Oncology'], commissionRate: 8, status: 'Active', patients: 245 },
-    { id: 2, name: 'Fortis Memorial Research Institute', state: 'Delhi', city: 'New Delhi', country: 'India', specialties: ['Transplant Surgery', 'Neurology'], commissionRate: 10, status: 'Active', patients: 189 },
-    { id: 3, name: 'Max Healthcare Delhi', state: 'Delhi', city: 'New Delhi', country: 'India', specialties: ['Orthopedics', 'Gastroenterology'], commissionRate: 7, status: 'Pending Approval', patients: 0 },
-    { id: 4, name: 'Medanta Gurgaon', state: 'Haryana', city: 'Gurgaon', country: 'India', specialties: ['Cardiac Surgery'], commissionRate: 9, status: 'Active', patients: 156 }
+    { id: 1, name: 'Apollo Hospitals Mumbai', state: 'Maharashtra', city: 'Mumbai', specialties: ['Cardiology','Oncology'], commissionRate: 8, status: 'Active', patients: 245 },
+    { id: 2, name: 'Fortis Memorial Research', state: 'Delhi', city: 'New Delhi', specialties: ['Transplant Surgery','Neurology'], commissionRate: 10, status: 'Active', patients: 189 },
+    { id: 3, name: 'Max Healthcare Delhi', state: 'Delhi', city: 'New Delhi', specialties: ['Orthopedics','Gastroenterology'], commissionRate: 7, status: 'Pending Approval', patients: 0 },
+    { id: 4, name: 'Medanta Gurgaon', state: 'Haryana', city: 'Gurgaon', specialties: ['Cardiac Surgery'], commissionRate: 9, status: 'Active', patients: 156 },
   ]);
 
-  const summaryData = {
-    totalHospitals: hospitals.length,
-    activeHospitals: hospitals.filter(h => h.status === 'Active').length,
-    totalPatients: hospitals.reduce((sum, h) => sum + h.patients, 0),
-    totalRevenue: 125400,
-    pendingApprovals: hospitals.filter(h => h.status === 'Pending Approval').length
-  };
+  const summary = { total: hospitals.length, active: hospitals.filter(h => h.status === 'Active').length, patients: hospitals.reduce((s, h) => s + h.patients, 0), revenue: 125400, pending: hospitals.filter(h => h.status === 'Pending Approval').length };
+  const adminName = user?.name || 'Super Admin';
 
-  const sidebarItems = [
-    { id: 'DASHBOARD', label: 'Dashboard', icon: Building2 },
-    { id: 'HOSPITAL_MANAGEMENT', label: 'Hospital Management', icon: Stethoscope },
-    { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: Plus },
-    { id: 'MANAGE_HOSPITALS', label: 'Manage Hospitals', icon: Building2 },
-    { id: 'PATIENTS', label: 'Patient Overview', icon: Users },
-    { id: 'REVENUE', label: 'Revenue & Commissions', icon: DollarSign },
-    { id: 'REPORTS', label: 'System Reports', icon: FileText },
-    { id: 'SETTINGS', label: 'Platform Settings', icon: Settings }
-  ];
+  useEffect(() => {
+    const outside = (e: MouseEvent) => { if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setProfileOpen(false); };
+    const toggle = () => setSidebarOpen(p => !p);
+    document.addEventListener('mousedown', outside);
+    window.addEventListener('toggleSidebar', toggle);
+    return () => { document.removeEventListener('mousedown', outside); window.removeEventListener('toggleSidebar', toggle); };
+  }, []);
 
   const handleAddHospital = (e: React.FormEvent) => {
     e.preventDefault();
-    const hospital = {
-      id: hospitals.length + 1,
-      name: newHospital.name,
-      state: newHospital.state,
-      city: newHospital.city,
-      country: newHospital.country,
-      specialties: newHospital.specialties,
-      commissionRate: newHospital.commissionRate,
-      status: 'Pending Approval',
-      patients: 0
-    };
-    setHospitals([...hospitals, hospital]);
-    setNewHospital({
-      name: '', state: '', city: '', country: 'India', specialties: [], commissionRate: 8,
-      contactEmail: '', contactPhone: '', address: '', accreditations: [], description: '',
-      logo: null, logoPreview: ''
-    });
-    setShowAddHospital(false);
-    setActiveTab('MANAGE_HOSPITALS');
+    setHospitals([...hospitals, { id: hospitals.length + 1, name: form.name, state: form.state, city: form.city, specialties: form.specialties, commissionRate: form.commissionRate, status: 'Pending Approval', patients: 0 }]);
+    setForm({ name: '', state: '', city: '', country: 'India', specialties: [], commissionRate: 8, contactEmail: '', contactPhone: '', address: '', accreditations: [], description: '', logo: null, logoPreview: '' });
+    setTab('MANAGE_HOSPITALS');
   };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNewHospital({...newHospital, logo: file});
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setNewHospital(prev => ({...prev, logoPreview: e.target?.result as string}));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const addSpecialty = () => {
-    if (currentSpecialty && !newHospital.specialties.includes(currentSpecialty)) {
-      setNewHospital({
-        ...newHospital,
-        specialties: [...newHospital.specialties, currentSpecialty]
-      });
-      setCurrentSpecialty('');
-    }
-  };
-
-  const removeSpecialty = (specialty: string) => {
-    setNewHospital({
-      ...newHospital,
-      specialties: newHospital.specialties.filter(s => s !== specialty)
-    });
-  };
-
-  const addAccreditation = () => {
-    if (currentAccreditation && !newHospital.accreditations.includes(currentAccreditation)) {
-      setNewHospital({
-        ...newHospital,
-        accreditations: [...newHospital.accreditations, currentAccreditation]
-      });
-      setCurrentAccreditation('');
-    }
-  };
-
-  const removeAccreditation = (accreditation: string) => {
-    setNewHospital({
-      ...newHospital,
-      accreditations: newHospital.accreditations.filter(a => a !== accreditation)
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      case 'Pending Approval': return 'bg-yellow-100 text-yellow-800';
-      case 'Suspended': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const handleLogo = (e: React.ChangeEvent<HTMLInputElement>) => { const f = e.target.files?.[0]; if (f) { const r = new FileReader(); r.onload = ev => setForm(p => ({ ...p, logo: f, logoPreview: ev.target?.result as string })); r.readAsDataURL(f); } };
+  const addSpec = () => { if (curSpecialty && !form.specialties.includes(curSpecialty)) { setForm(p => ({ ...p, specialties: [...p.specialties, curSpecialty] })); setCurSpecialty(''); } };
+  const addAccred = () => { if (curAccred && !form.accreditations.includes(curAccred)) { setForm(p => ({ ...p, accreditations: [...p.accreditations, curAccred] })); setCurAccred(''); } };
+  const inputCls = "w-full px-3 py-2 text-sm border border-gray-200 focus:outline-none focus:border-gray-400";
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="flex h-screen bg-gray-50/80">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg border-r border-slate-200 transition-all duration-300`}>
-        <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-600 p-2 rounded-lg text-white">
-              <HeartPulse className="w-6 h-6" />
+      <motion.aside animate={{ width: sidebarOpen ? 248 : 68 }} transition={{ duration: 0.2, ease: 'easeInOut' }}
+        className="bg-slate-900 flex flex-col overflow-hidden shrink-0 border-r border-slate-800">
+        <div className="h-14 flex items-center gap-3 px-4 border-b border-slate-800/60">
+          <div className="w-8 h-8 rounded-md bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shrink-0 shadow-sm shadow-emerald-500/20">
+            <HeartPulse className="w-4 h-4" />
+          </div>
+          <AnimatePresence>{sidebarOpen && (
+            <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -4 }} className="min-w-0">
+              <p className="text-white font-semibold text-sm leading-tight truncate">IMAP Solution</p>
+              <p className="text-slate-500 text-[10px] leading-tight">Super Admin</p>
+            </motion.div>
+          )}</AnimatePresence>
+        </div>
+
+        <nav className="flex-1 py-3 px-3 overflow-y-auto space-y-5">
+          {sidebarGroups.map(g => (
+            <div key={g.label}>
+              <AnimatePresence>{sidebarOpen && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                  className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 px-3 mb-2">{g.label}</motion.p>
+              )}</AnimatePresence>
+              <div className="space-y-0.5">
+                {g.items.map(item => {
+                  const active = tab === item.id;
+                  return (
+                    <button key={item.id} onClick={() => setTab(item.id)}
+                      className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-md text-[13px] transition-all ${active ? 'bg-slate-800 text-white font-medium' : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-300'}`}>
+                      {active && <motion.div layoutId="saActiveIndicator" className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-emerald-400 rounded-r-full" transition={{ type: 'spring', stiffness: 350, damping: 30 }} />}
+                      <item.icon className={`w-[18px] h-[18px] shrink-0 ${active ? 'text-emerald-400' : ''}`} />
+                      <AnimatePresence>{sidebarOpen && <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="truncate">{item.label}</motion.span>}</AnimatePresence>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">IMAP Solution</h1>
-              {sidebarOpen && <p className="text-sm text-slate-600">Super Admin Panel</p>}
-            </div>
+          ))}
+        </nav>
+
+        <div className="border-t border-slate-800/60 p-3">
+          <div className={`flex items-center ${sidebarOpen ? 'gap-3' : 'justify-center'}`}>
+            <div className="w-8 h-8 rounded-md bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-[11px] text-slate-200 font-semibold shrink-0">{adminName.charAt(0)}</div>
+            <AnimatePresence>{sidebarOpen && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-slate-200 truncate">{adminName}</p>
+                <p className="text-[10px] text-slate-500 truncate">Super Admin</p>
+              </motion.div>
+            )}</AnimatePresence>
+            <AnimatePresence>{sidebarOpen && (
+              <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                onClick={() => { logout(); navigate('/login'); }}
+                className="p-1.5 rounded-md hover:bg-slate-800 text-slate-500 hover:text-red-400 transition-colors shrink-0" title="Logout">
+                <HiOutlineArrowRightOnRectangle className="w-4 h-4" />
+              </motion.button>
+            )}</AnimatePresence>
           </div>
         </div>
-        
-        <nav className="mt-6">
-          {sidebarItems.map(item => {
-            const IconComponent = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-6 py-3 text-left hover:bg-emerald-50 transition-colors ${
-                  activeTab === item.id ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-slate-600'
-                }`}
-              >
-                <IconComponent className="w-5 h-5" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      </motion.aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          {activeTab === 'HOSPITAL_MANAGEMENT' && (
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-                <h1 className="text-2xl font-bold text-slate-900 mb-2">IMAP Solution Admin</h1>
-                <p className="text-lg text-slate-600">Hospital Management Dashboard</p>
-              </div>
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">Total Doctors</p>
-                      <p className="text-3xl font-bold text-slate-900">42</p>
-                    </div>
-                    <Stethoscope className="w-10 h-10 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">Requests</p>
-                      <p className="text-3xl font-bold text-slate-900">12</p>
-                    </div>
-                    <Clock className="w-10 h-10 text-yellow-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500 mb-1">Confirmed</p>
-                      <p className="text-3xl font-bold text-slate-900">128</p>
-                    </div>
-                    <CheckCircle className="w-10 h-10 text-green-600" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Tabs */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="border-b border-slate-200">
-                  <nav className="flex space-x-8 px-6">
-                    <button className="py-4 px-1 border-b-2 border-emerald-500 text-emerald-600 font-medium text-sm">
-                      DOCTORS
-                    </button>
-                    <button className="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">
-                      REQUESTS
-                    </button>
-                    <button className="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 font-medium text-sm">
-                      AVAILABILITY
-                    </button>
-                  </nav>
-                </div>
-                
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-semibold text-slate-900">Medical Staff</h3>
-                    <button className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      Add Doctor
-                    </button>
-                  </div>
-                  
-                  <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Building2 className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <p className="text-slate-500 text-lg">No hospitals found</p>
-                  </div>
-                </div>
-              </div>
+      {/* Main */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="h-14 bg-white border-b border-gray-200/80 flex items-center justify-between px-5 shrink-0">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setSidebarOpen(p => !p)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+            </button>
+            <div className="hidden sm:flex items-center gap-2 bg-gray-50 rounded-md px-3 py-2 w-64 border border-gray-200">
+              <HiOutlineMagnifyingGlass className="w-4 h-4 text-gray-400" />
+              <input type="text" placeholder="Search…" className="bg-transparent text-sm outline-none w-full text-gray-600 placeholder-gray-400" />
             </div>
-          )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-500">
+              <HiOutlineBell className="w-5 h-5" /><span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            <div className="relative" ref={dropdownRef}>
+              <button onClick={() => setProfileOpen(!profileOpen)} className="flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-md hover:bg-gray-50 transition-colors">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-xs font-semibold">{adminName.charAt(0)}</div>
+                <div className="hidden md:block text-left"><p className="text-xs font-medium text-gray-800 leading-tight">{adminName}</p><p className="text-[10px] text-gray-400">Super Admin</p></div>
+                <HiOutlineChevronDown className="w-3.5 h-3.5 text-gray-400" />
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1.5 z-50">
+                  <button onClick={() => { setTab('SETTINGS'); setProfileOpen(false); }} className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2"><HiOutlineCog6Tooth className="w-4 h-4" /> Settings</button>
+                  <hr className="my-1 border-gray-100" />
+                  <button onClick={() => { logout(); navigate('/login'); }} className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-red-50 flex items-center gap-2"><HiOutlineArrowRightOnRectangle className="w-4 h-4" /> Logout</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
 
-          {activeTab === 'DASHBOARD' && (
-            <div className="space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-5 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Total Hospitals</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.totalHospitals}</p>
-                    </div>
-                    <Building2 className="w-8 h-8 text-emerald-600" />
+        <main className="flex-1 overflow-auto">
+
+          {/* Dashboard */}
+          {tab === 'DASHBOARD' && (
+            <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+              <div><h1 className="text-lg font-bold text-gray-900">Dashboard</h1><p className="text-xs text-gray-500">Platform overview</p></div>
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                {([
+                  { l: 'Total Hospitals', v: summary.total, icon: HiOutlineBuildingOffice2, a: 'bg-blue-500' },
+                  { l: 'Active', v: summary.active, icon: HiOutlineCheckCircle, a: 'bg-emerald-500' },
+                  { l: 'Patients', v: summary.patients, icon: HiOutlineUsers, a: 'bg-violet-500' },
+                  { l: 'Revenue', v: `$${summary.revenue.toLocaleString()}`, icon: HiOutlineCurrencyDollar, a: 'bg-amber-500' },
+                  { l: 'Pending', v: summary.pending, icon: HiOutlineClock, a: 'bg-red-500' },
+                ] as const).map(s => (
+                  <div key={s.l} className="bg-white rounded-lg px-4 py-3.5 border border-gray-200 flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 ${s.a}`}><s.icon className="w-[18px] h-[18px] text-white" /></div>
+                    <div><p className="text-[11px] text-gray-500 leading-none">{s.l}</p><p className="text-lg font-bold text-gray-900 leading-tight mt-0.5">{s.v}</p></div>
                   </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Active Hospitals</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.activeHospitals}</p>
-                    </div>
-                    <CheckCircle className="w-8 h-8 text-green-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Total Patients</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.totalPatients}</p>
-                    </div>
-                    <Users className="w-8 h-8 text-blue-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Total Revenue</p>
-                      <p className="text-2xl font-bold text-slate-900">${summaryData.totalRevenue.toLocaleString()}</p>
-                    </div>
-                    <DollarSign className="w-8 h-8 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Pending Approvals</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.pendingApprovals}</p>
-                    </div>
-                    <Clock className="w-8 h-8 text-yellow-600" />
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Recent Hospitals Table */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-                <div className="p-6 border-b border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-900">Recent Hospital Additions</h3>
-                </div>
+              {/* Recent Hospitals */}
+              <div className="bg-white rounded-lg border border-gray-200">
+                <div className="px-5 py-3.5 border-b border-gray-200"><h3 className="text-sm font-semibold text-gray-900">Recent Hospitals</h3></div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Hospital Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Location</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Specialties</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Patients</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {hospitals.slice(0, 4).map(hospital => (
-                        <tr key={hospital.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">{hospital.name}</td>
-                          <td className="px-6 py-4 text-sm text-slate-900">{hospital.city}, {hospital.state}</td>
-                          <td className="px-6 py-4 text-sm text-slate-900">
-                            <div className="flex flex-wrap gap-1">
-                              {hospital.specialties.slice(0, 2).map((specialty, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full">
-                                  {specialty}
-                                </span>
-                              ))}
-                              {hospital.specialties.length > 2 && (
-                                <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                                  +{hospital.specialties.length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(hospital.status)}`}>
-                              {hospital.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-900">{hospital.patients}</td>
+                    <thead><tr className="border-b border-gray-100 bg-gray-50/60">
+                      {['Hospital', 'Location', 'Specialties', 'Status', 'Patients'].map(h => <th key={h} className="px-5 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{h}</th>)}
+                    </tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {hospitals.slice(0, 4).map(h => (
+                        <tr key={h.id} className="hover:bg-gray-50/60 transition-colors">
+                          <td className="px-5 py-3 text-sm font-medium text-gray-900">{h.name}</td>
+                          <td className="px-5 py-3 text-xs text-gray-600">{h.city}, {h.state}</td>
+                          <td className="px-5 py-3"><div className="flex flex-wrap gap-1">{h.specialties.slice(0, 2).map((s, i) => <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] rounded-md font-medium">{s}</span>)}{h.specialties.length > 2 && <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded-md">+{h.specialties.length - 2}</span>}</div></td>
+                          <td className="px-5 py-3"><span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${statusCfg[h.status] || 'bg-gray-100 text-gray-600'}`}>{h.status}</span></td>
+                          <td className="px-5 py-3 text-xs text-gray-700">{h.patients}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -416,384 +218,164 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'ADD_HOSPITAL' && (
-            <div className="max-w-4xl">
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900">Add New Hospital to IMAP Solution Network</h3>
+          {/* Hospital Management */}
+          {tab === 'HOSPITAL_MANAGEMENT' && (
+            <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+              <div><h1 className="text-lg font-bold text-gray-900">Hospital Management</h1><p className="text-xs text-gray-500">Overview of medical staff and operations</p></div>
+              <div className="grid grid-cols-3 gap-4">
+                {([{ l: 'Total Doctors', v: '42', a: 'bg-emerald-500' }, { l: 'Requests', v: '12', a: 'bg-yellow-500' }, { l: 'Confirmed', v: '128', a: 'bg-blue-500' }] as const).map(s => (
+                  <div key={s.l} className="bg-white rounded-lg px-4 py-3.5 border border-gray-200 flex items-center gap-3">
+                    <div className={`w-2 h-8 rounded-full ${s.a}`}></div>
+                    <div><p className="text-[11px] text-gray-500">{s.l}</p><p className="text-lg font-bold text-gray-900 leading-tight">{s.v}</p></div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200">
+                <div className="px-5 py-3.5 border-b border-gray-200 flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-900">Medical Staff</h3>
+                  <button className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white text-xs font-medium rounded-md hover:bg-emerald-700"><HiOutlinePlus className="w-3.5 h-3.5" /> Add Doctor</button>
                 </div>
-                
-                <form onSubmit={handleAddHospital} className="space-y-6">
-                  {/* Hospital Logo Upload */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Hospital Logo</label>
-                    <div className="flex items-center gap-4">
-                      <div className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden">
-                        {newHospital.logoPreview ? (
-                          <img src={newHospital.logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="text-center">
-                            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-                            <span className="text-xs text-slate-500">Upload Logo</span>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                          className="hidden"
-                          id="logo-upload"
-                        />
-                        <label
-                          htmlFor="logo-upload"
-                          className="px-4 py-2 bg-slate-100 text-slate-700 rounded-md hover:bg-slate-200 cursor-pointer transition-colors"
-                        >
-                          Choose Logo
-                        </label>
-                        <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 2MB</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Hospital Name *</label>
-                      <input
-                        type="text"
-                        required
-                        value={newHospital.name}
-                        onChange={(e) => setNewHospital({...newHospital, name: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="e.g., Apollo Hospitals Mumbai"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Country</label>
-                      <select
-                        value={newHospital.country}
-                        onChange={(e) => setNewHospital({...newHospital, country: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      >
-                        <option value="India">India</option>
-                        <option value="Thailand">Thailand</option>
-                        <option value="Singapore">Singapore</option>
-                        <option value="Malaysia">Malaysia</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">State *</label>
-                      <select
-                        required
-                        value={newHospital.state}
-                        onChange={(e) => {
-                          setNewHospital({...newHospital, state: e.target.value, city: ''});
-                        }}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      >
-                        <option value="">Select State</option>
-                        {indianStates.map(state => (
-                          <option key={state} value={state}>{state}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">City *</label>
-                      <select
-                        required
-                        value={newHospital.city}
-                        onChange={(e) => setNewHospital({...newHospital, city: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        disabled={!newHospital.state}
-                      >
-                        <option value="">Select City</option>
-                        {newHospital.state && citiesByState[newHospital.state]?.map(city => (
-                          <option key={city} value={city}>{city}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Commission Rate (%)</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="20"
-                      value={newHospital.commissionRate}
-                      onChange={(e) => setNewHospital({...newHospital, commissionRate: parseInt(e.target.value)})}
-                      className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    />
-                  </div>
-
-                  {/* Medical Specialties */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Medical Specialties *</label>
-                    <div className="flex gap-2 mb-3">
-                      <select
-                        value={currentSpecialty}
-                        onChange={(e) => setCurrentSpecialty(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      >
-                        <option value="">Select a specialty</option>
-                        {medicalSpecialties.map(specialty => (
-                          <option key={specialty} value={specialty}>{specialty}</option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={addSpecialty}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {newHospital.specialties.map((specialty, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm flex items-center gap-2"
-                        >
-                          <Tag className="w-3 h-3" />
-                          {specialty}
-                          <button
-                            type="button"
-                            onClick={() => removeSpecialty(specialty)}
-                            className="text-emerald-600 hover:text-emerald-800"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    {newHospital.specialties.length === 0 && (
-                      <p className="text-sm text-slate-500 mt-2">Please add at least one medical specialty</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Contact Email</label>
-                      <input
-                        type="email"
-                        value={newHospital.contactEmail}
-                        onChange={(e) => setNewHospital({...newHospital, contactEmail: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="admin@hospital.com"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Contact Phone</label>
-                      <input
-                        type="tel"
-                        value={newHospital.contactPhone}
-                        onChange={(e) => setNewHospital({...newHospital, contactPhone: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                        placeholder="+91 98765 43210"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Full Address</label>
-                    <textarea
-                      value={newHospital.address}
-                      onChange={(e) => setNewHospital({...newHospital, address: e.target.value})}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Complete hospital address"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Hospital Description</label>
-                    <textarea
-                      value={newHospital.description}
-                      onChange={(e) => setNewHospital({...newHospital, description: e.target.value})}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Brief description of hospital facilities and services"
-                    />
-                  </div>
-
-                  {/* Accreditations */}
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Accreditations</label>
-                    <div className="flex gap-2 mb-3">
-                      <select
-                        value={currentAccreditation}
-                        onChange={(e) => setCurrentAccreditation(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      >
-                        <option value="">Select an accreditation</option>
-                        {accreditationOptions.map(accreditation => (
-                          <option key={accreditation} value={accreditation}>{accreditation}</option>
-                        ))}
-                      </select>
-                      <button
-                        type="button"
-                        onClick={addAccreditation}
-                        className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Add
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {newHospital.accreditations.map((accreditation, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center gap-2"
-                        >
-                          <Shield className="w-3 h-3" />
-                          {accreditation}
-                          <button
-                            type="button"
-                            onClick={() => removeAccreditation(accreditation)}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 pt-4">
-                    <button
-                      type="submit"
-                      className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      Add Hospital to Network
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setNewHospital({
-                        name: '', state: '', city: '', country: 'India', specialties: [], commissionRate: 8,
-                        contactEmail: '', contactPhone: '', address: '', accreditations: [], description: '',
-                        logo: null, logoPreview: ''
-                      })}
-                      className="px-6 py-2 border border-slate-300 text-slate-700 rounded-md hover:bg-slate-50 transition-colors"
-                    >
-                      Clear Form
-                    </button>
-                  </div>
-                </form>
+                <div className="text-center py-12"><HiOutlineBuildingOffice2 className="w-10 h-10 text-gray-300 mx-auto mb-2" /><p className="text-sm text-gray-400">No hospitals found</p></div>
               </div>
             </div>
           )}
 
-          {activeTab === 'MANAGE_HOSPITALS' && (
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200">
-              <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900">Hospital Network Management</h3>
-                <button
-                  onClick={() => setActiveTab('ADD_HOSPITAL')}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add New Hospital
-                </button>
+          {/* Add Hospital */}
+          {tab === 'ADD_HOSPITAL' && (
+            <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+              <div><h1 className="text-lg font-bold text-gray-900">Add Hospital</h1><p className="text-xs text-gray-500">Register a new hospital to the network</p></div>
+              <form onSubmit={handleAddHospital} className="bg-white border border-gray-200 divide-y divide-gray-100">
+                {/* Logo */}
+                <div className="p-5">
+                  <label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">Logo</label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-16 h-16 border border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
+                      {form.logoPreview ? <img src={form.logoPreview} alt="" className="w-full h-full object-cover" /> : <HiOutlineCloudArrowUp className="w-5 h-5 text-gray-400" />}
+                    </div>
+                    <div><input type="file" accept="image/*" onChange={handleLogo} className="hidden" id="logo-upload" />
+                      <label htmlFor="logo-upload" className="px-3 py-1.5 bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 cursor-pointer transition-colors">Choose File</label>
+                      <p className="text-[10px] text-gray-400 mt-1">PNG, JPG up to 2MB</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Basic Info */}
+                <div className="p-5 space-y-4">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Basic Information</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Hospital Name</label><input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} placeholder="e.g. Apollo Hospitals" /></div>
+                    <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Country</label><select value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} className={inputCls}><option>India</option><option>Thailand</option><option>Singapore</option></select></div>
+                    <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">State</label><select required value={form.state} onChange={e => setForm({ ...form, state: e.target.value, city: '' })} className={inputCls}><option value="">Select</option>{indianStates.map(s => <option key={s}>{s}</option>)}</select></div>
+                    <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">City</label><select required value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className={inputCls} disabled={!form.state}><option value="">Select</option>{form.state && citiesByState[form.state]?.map(c => <option key={c}>{c}</option>)}</select></div>
+                  </div>
+                  <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Commission Rate (%)</label><input type="number" min={1} max={20} value={form.commissionRate} onChange={e => setForm({ ...form, commissionRate: +e.target.value })} className={inputCls + ' w-24'} /></div>
+                </div>
+
+                {/* Specialties */}
+                <div className="p-5 space-y-3">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Specialties</p>
+                  <div className="flex gap-2">
+                    <select value={curSpecialty} onChange={e => setCurSpecialty(e.target.value)} className={inputCls + ' flex-1'}><option value="">Select specialty</option>{medicalSpecialties.map(s => <option key={s}>{s}</option>)}</select>
+                    <button type="button" onClick={addSpec} className="px-3 py-2 bg-gray-900 text-white text-xs font-medium hover:bg-gray-800">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">{form.specialties.map(s => (
+                    <span key={s} className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-medium flex items-center gap-1"><HiOutlineTag className="w-3 h-3" />{s}<button type="button" onClick={() => setForm(p => ({ ...p, specialties: p.specialties.filter(x => x !== s) }))}><HiOutlineXMark className="w-3 h-3" /></button></span>
+                  ))}</div>
+                </div>
+
+                {/* Contact */}
+                <div className="p-5 space-y-4">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Contact & Details</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Email</label><input type="email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} className={inputCls} placeholder="admin@hospital.com" /></div>
+                    <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Phone</label><input type="tel" value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} className={inputCls} placeholder="+91 98765 43210" /></div>
+                  </div>
+                  <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Address</label><textarea value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} rows={2} className={inputCls + ' resize-none'} placeholder="Full address" /></div>
+                  <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Description</label><textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} rows={3} className={inputCls + ' resize-none'} placeholder="Brief description" /></div>
+                </div>
+
+                {/* Accreditations */}
+                <div className="p-5 space-y-3">
+                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">Accreditations</p>
+                  <div className="flex gap-2">
+                    <select value={curAccred} onChange={e => setCurAccred(e.target.value)} className={inputCls + ' flex-1'}><option value="">Select</option>{accreditationOptions.map(a => <option key={a}>{a}</option>)}</select>
+                    <button type="button" onClick={addAccred} className="px-3 py-2 bg-gray-900 text-white text-xs font-medium hover:bg-gray-800">Add</button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">{form.accreditations.map(a => (
+                    <span key={a} className="px-2 py-1 bg-blue-50 text-blue-700 text-[11px] font-medium flex items-center gap-1"><HiOutlineShieldCheck className="w-3 h-3" />{a}<button type="button" onClick={() => setForm(p => ({ ...p, accreditations: p.accreditations.filter(x => x !== a) }))}><HiOutlineXMark className="w-3 h-3" /></button></span>
+                  ))}</div>
+                </div>
+
+                {/* Actions */}
+                <div className="p-5 flex gap-2">
+                  <button type="submit" className="px-4 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Add Hospital</button>
+                  <button type="button" onClick={() => setForm({ name: '', state: '', city: '', country: 'India', specialties: [], commissionRate: 8, contactEmail: '', contactPhone: '', address: '', accreditations: [], description: '', logo: null, logoPreview: '' })}
+                    className="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50">Clear</button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Manage Hospitals */}
+          {tab === 'MANAGE_HOSPITALS' && (
+            <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+              <div className="flex items-center justify-between">
+                <div><h1 className="text-lg font-bold text-gray-900">All Hospitals</h1><p className="text-xs text-gray-500">Network management</p></div>
+                <button onClick={() => setTab('ADD_HOSPITAL')} className="flex items-center gap-1.5 px-3 py-2 bg-emerald-600 text-white text-xs font-medium rounded-md hover:bg-emerald-700"><HiOutlinePlus className="w-3.5 h-3.5" /> Add Hospital</button>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Hospital Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Location</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Specialties</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Commission Rate</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Patients</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {hospitals.map(hospital => (
-                      <tr key={hospital.id} className="hover:bg-slate-50">
-                        <td className="px-6 py-4 text-sm font-medium text-slate-900">{hospital.name}</td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{hospital.city}, {hospital.state}</td>
-                        <td className="px-6 py-4 text-sm text-slate-900">
-                          <div className="flex flex-wrap gap-1">
-                            {hospital.specialties.slice(0, 3).map((specialty, idx) => (
-                              <span key={idx} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full">
-                                {specialty}
-                              </span>
-                            ))}
-                            {hospital.specialties.length > 3 && (
-                              <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                                +{hospital.specialties.length - 3} more
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{hospital.commissionRate}%</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(hospital.status)}`}>
-                            {hospital.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-slate-900">{hospital.patients}</td>
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-2">
-                            <button className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button className="p-1 text-slate-600 hover:bg-slate-50 rounded">
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button className="p-1 text-red-600 hover:bg-red-50 rounded">
-                              <Ban className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="bg-white rounded-lg border border-gray-200">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead><tr className="border-b border-gray-100 bg-gray-50/60">
+                      {['Hospital', 'Location', 'Specialties', 'Commission', 'Status', 'Patients', ''].map(h => <th key={h} className="px-5 py-2.5 text-left text-[11px] font-medium text-gray-500 uppercase tracking-wider">{h}</th>)}
+                    </tr></thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {hospitals.map(h => (
+                        <tr key={h.id} className="hover:bg-gray-50/60 transition-colors">
+                          <td className="px-5 py-3 text-sm font-medium text-gray-900">{h.name}</td>
+                          <td className="px-5 py-3 text-xs text-gray-600">{h.city}, {h.state}</td>
+                          <td className="px-5 py-3"><div className="flex flex-wrap gap-1">{h.specialties.slice(0, 2).map((s, i) => <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] rounded-md font-medium">{s}</span>)}{h.specialties.length > 2 && <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[10px] rounded-md">+{h.specialties.length - 2}</span>}</div></td>
+                          <td className="px-5 py-3 text-xs text-gray-700">{h.commissionRate}%</td>
+                          <td className="px-5 py-3"><span className={`text-[10px] font-medium px-2 py-0.5 rounded-md ${statusCfg[h.status] || 'bg-gray-100 text-gray-600'}`}>{h.status}</span></td>
+                          <td className="px-5 py-3 text-xs text-gray-700">{h.patients}</td>
+                          <td className="px-5 py-3">
+                            <div className="flex items-center gap-1">
+                              <button className="p-1 text-gray-400 hover:text-emerald-600"><HiOutlinePencilSquare className="w-3.5 h-3.5" /></button>
+                              <button className="p-1 text-gray-400 hover:text-blue-600"><HiOutlineEye className="w-3.5 h-3.5" /></button>
+                              <button className="p-1 text-gray-400 hover:text-red-500"><HiOutlineNoSymbol className="w-3.5 h-3.5" /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'SETTINGS' && (
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-6">IMAP Solution Platform Settings</h3>
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Platform Name</label>
-                    <input 
-                      type="text" 
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
-                      defaultValue="IMAP Solution - Medical Tourism Platform" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Default Commission Rate (%)</label>
-                    <input 
-                      type="number" 
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
-                      defaultValue="8" 
-                    />
-                  </div>
+          {/* Settings */}
+          {tab === 'SETTINGS' && (
+            <div className="p-6 max-w-[1400px] mx-auto space-y-5">
+              <div><h1 className="text-lg font-bold text-gray-900">Platform Settings</h1><p className="text-xs text-gray-500">Configure IMAP Solution</p></div>
+              <div className="bg-white border border-gray-200 p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Platform Name</label><input className={inputCls} defaultValue="IMAP Solution" /></div>
+                  <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Default Commission (%)</label><input type="number" className={inputCls} defaultValue="8" /></div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Support Email</label>
-                  <input 
-                    type="email" 
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
-                    defaultValue="support@imapsolution.com" 
-                  />
-                </div>
-                <button className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors">
-                  Save Settings
-                </button>
+                <div><label className="block text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-1">Support Email</label><input type="email" className={inputCls} defaultValue="support@imapsolution.com" /></div>
+                <button className="px-4 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-gray-800">Save Settings</button>
+              </div>
+            </div>
+          )}
+
+          {/* Placeholder tabs */}
+          {['PATIENTS', 'REVENUE', 'REPORTS'].includes(tab) && (
+            <div className="p-6 max-w-[1400px] mx-auto">
+              <div><h1 className="text-lg font-bold text-gray-900">{tab === 'PATIENTS' ? 'Patient Overview' : tab === 'REVENUE' ? 'Revenue & Commissions' : 'System Reports'}</h1><p className="text-xs text-gray-500">Coming soon</p></div>
+              <div className="mt-8 text-center py-16 bg-white border border-gray-200 rounded-lg">
+                <HiOutlineDocumentText className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-400">This section is under development</p>
               </div>
             </div>
           )}
