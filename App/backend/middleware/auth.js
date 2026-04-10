@@ -44,7 +44,7 @@ const authenticateToken = async (req, res, next) => {
           where: { admin_id: user.id },
           select: { id: true }
         });
-        // Fallback: employee lookup by email scoped to active records
+        // Fallback: employee lookup by email
         if (!hospital) {
           const emp = await prisma.hospital_employees.findFirst({
             where: { email: user.email, status: { not: 'terminated' } }
@@ -52,6 +52,16 @@ const authenticateToken = async (req, res, next) => {
           if (emp) {
             hospital = { id: emp.hospital_id };
             req.user.employee_position = emp.position;
+          }
+        }
+        // Fallback: match hospital by admin email slug (admin.<slug>@imapsolution.com)
+        if (!hospital && user.email.startsWith('admin.') && user.email.includes('@imapsolution.com')) {
+          const hospitals = await prisma.hospitals.findMany({ select: { id: true, name: true } });
+          const slug = user.email.replace('admin.', '').replace('@imapsolution.com', '').toLowerCase();
+          const matched = hospitals.find(h => h.name.toLowerCase().replace(/[^a-z0-9]/g, '') === slug);
+          if (matched) {
+            hospital = { id: matched.id };
+            await prisma.hospitals.update({ where: { id: matched.id }, data: { admin_id: user.id } });
           }
         }
         req.user.hospital_id = hospital ? hospital.id : null;

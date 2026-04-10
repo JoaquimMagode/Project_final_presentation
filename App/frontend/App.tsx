@@ -121,11 +121,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 <span className="font-bold text-sm tracking-tight text-black">IMAP Solution</span>
               </Link>
               
-              <div className="hidden lg:flex items-center gap-4">
-                <Link to="/hospital" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">For Hospitals</Link>
-                <Link to="/patient" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Portal</Link>
-                <Link to="/superadmin" className="text-black hover:text-slate-700 font-normal text-xs pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Super Admin</Link>
-              </div>
+
             </div>
 
             

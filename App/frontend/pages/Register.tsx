@@ -43,6 +43,44 @@ const INDIA_STATES: Record<string, string[]> = {
   'Lakshadweep': ['Kavaratti', 'Agatti', 'Amini'],
 };
 
+const COUNTRY_CODES = [
+  { flag: '🇳🇬', name: 'Nigeria', code: '+234' },
+  { flag: '🇲🇿', name: 'Mozambique', code: '+258' },
+  { flag: '🇰🇪', name: 'Kenya', code: '+254' },
+  { flag: '🇬🇭', name: 'Ghana', code: '+233' },
+  { flag: '🇿🇦', name: 'South Africa', code: '+27' },
+  { flag: '🇹🇿', name: 'Tanzania', code: '+255' },
+  { flag: '🇺🇬', name: 'Uganda', code: '+256' },
+  { flag: '🇪🇹', name: 'Ethiopia', code: '+251' },
+  { flag: '🇮🇳', name: 'India', code: '+91' },
+  { flag: '🇺🇸', name: 'United States', code: '+1' },
+  { flag: '🇬🇧', name: 'United Kingdom', code: '+44' },
+  { flag: '🇦🇪', name: 'UAE', code: '+971' },
+  { flag: '🇸🇦', name: 'Saudi Arabia', code: '+966' },
+  { flag: '🇶🇦', name: 'Qatar', code: '+974' },
+  { flag: '🇰🇼', name: 'Kuwait', code: '+965' },
+  { flag: '🇧🇭', name: 'Bahrain', code: '+973' },
+  { flag: '🇴🇲', name: 'Oman', code: '+968' },
+  { flag: '🇨🇦', name: 'Canada', code: '+1' },
+  { flag: '🇦🇺', name: 'Australia', code: '+61' },
+  { flag: '🇸🇬', name: 'Singapore', code: '+65' },
+  { flag: '🇲🇾', name: 'Malaysia', code: '+60' },
+  { flag: '🇧🇩', name: 'Bangladesh', code: '+880' },
+  { flag: '🇵🇰', name: 'Pakistan', code: '+92' },
+  { flag: '🇳🇵', name: 'Nepal', code: '+977' },
+  { flag: '🇱🇰', name: 'Sri Lanka', code: '+94' },
+  { flag: '🇿🇲', name: 'Zambia', code: '+260' },
+  { flag: '🇿🇼', name: 'Zimbabwe', code: '+263' },
+  { flag: '🇷🇼', name: 'Rwanda', code: '+250' },
+  { flag: '🇸🇳', name: 'Senegal', code: '+221' },
+  { flag: '🇨🇮', name: "Côte d'Ivoire", code: '+225' },
+  { flag: '🇨🇲', name: 'Cameroon', code: '+237' },
+  { flag: '🇩🇿', name: 'Algeria', code: '+213' },
+  { flag: '🇲🇦', name: 'Morocco', code: '+212' },
+  { flag: '🇪🇬', name: 'Egypt', code: '+20' },
+  { flag: '🌍', name: 'Other', code: '+0' },
+];
+
 const STATES = Object.keys(INDIA_STATES).sort();
 
 const Register: React.FC = () => {
@@ -54,10 +92,16 @@ const Register: React.FC = () => {
   const [error, setError] = useState('');
 
   const [patientData, setPatientData] = useState({ firstName: '', lastName: '', email: '', password: '', phone: '', country: '' });
+  const [phonePrefix, setPhonePrefix] = useState('+234');
   const [hospitalData, setHospitalData] = useState({ hospitalName: '', email: '', password: '', phone: '', city: '', state: '', address: '' });
 
   const handlePatientChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setPatientData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    setPatientData(prev => ({ ...prev, [name]: value }));
+    if (name === 'country') {
+      const found = COUNTRY_CODES.find(c => c.name === value);
+      if (found) setPhonePrefix(found.code);
+    }
     if (error) setError('');
   };
 
@@ -78,7 +122,7 @@ const Register: React.FC = () => {
     setLoading(true);
     try {
       const userData = role === 'patient'
-        ? { email: patientData.email, password: patientData.password, name: `${patientData.firstName} ${patientData.lastName}`, phone: patientData.phone, role: 'patient', country: patientData.country }
+        ? { email: patientData.email, password: patientData.password, name: `${patientData.firstName} ${patientData.lastName}`, phone: `${phonePrefix}${patientData.phone}`, role: 'patient', country: patientData.country }
         : { email: hospitalData.email, password: hospitalData.password, name: hospitalData.hospitalName, phone: hospitalData.phone, role: 'hospital_admin' };
 
       const response = await authAPI.register(userData);
@@ -217,14 +261,30 @@ const Register: React.FC = () => {
                     <label className={labelCls}>Country of Residence</label>
                     <select required name="country" value={patientData.country} onChange={handlePatientChange} className={inputCls}>
                       <option value="">Select country</option>
-                      {['Nigeria', 'Mozambique', 'Kenya', 'Ghana', 'South Africa', 'Tanzania', 'Uganda', 'Ethiopia', 'Other'].map(c => (
-                        <option key={c}>{c}</option>
+                      {COUNTRY_CODES.map(c => (
+                        <option key={c.name} value={c.name}>{c.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
                     <label className={labelCls}>WhatsApp Number</label>
-                    <input required type="tel" name="phone" value={patientData.phone} onChange={handlePatientChange} className={inputCls} placeholder="+234 ..." />
+                    <div className="flex gap-2">
+                      <select
+                        value={phonePrefix}
+                        onChange={e => setPhonePrefix(e.target.value)}
+                        className="bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:border-transparent transition-all w-28 flex-shrink-0"
+                      >
+                        {COUNTRY_CODES.map(c => (
+                          <option key={c.name} value={c.code}>{c.code}</option>
+                        ))}
+                      </select>
+                      <input
+                        required type="tel" name="phone" value={patientData.phone}
+                        onChange={handlePatientChange}
+                        className={inputCls}
+                        placeholder="800 000 0000"
+                      />
+                    </div>
                   </div>
                 </>
               ) : (
@@ -252,12 +312,18 @@ const Register: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className={labelCls}>City</label>
-                      <input required type="text" name="city" value={hospitalData.city} onChange={handleHospitalChange} className={inputCls} placeholder="Mumbai" />
+                      <label className={labelCls}>State</label>
+                      <select required name="state" value={hospitalData.state} onChange={handleHospitalChange} className={inputCls}>
+                        <option value="">Select state</option>
+                        {STATES.map(s => <option key={s}>{s}</option>)}
+                      </select>
                     </div>
                     <div>
-                      <label className={labelCls}>State</label>
-                      <input required type="text" name="state" value={hospitalData.state} onChange={handleHospitalChange} className={inputCls} placeholder="Maharashtra" />
+                      <label className={labelCls}>City</label>
+                      <select required name="city" value={hospitalData.city} onChange={handleHospitalChange} className={inputCls} disabled={!hospitalData.state}>
+                        <option value="">{hospitalData.state ? 'Select city' : 'Select state first'}</option>
+                        {availableCities.map(c => <option key={c}>{c}</option>)}
+                      </select>
                     </div>
                   </div>
                   <div>

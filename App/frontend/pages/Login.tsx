@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight, ShieldCheck, Home } from 'lucide-react';
+import { authAPI } from '../services/api';
 
 const Login: React.FC = () => {
   const { login } = useAuth();
