@@ -7,6 +7,7 @@ import {
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('DASHBOARD');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Mock data
   const summaryData = {
@@ -81,8 +82,13 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Mobile overlay */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setMobileSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-lg">
+      <div className={`fixed md:relative z-40 md:z-auto h-full w-64 bg-white shadow-lg transition-transform duration-300 ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
         <div className="p-6 border-b">
           <h1 className="text-xl font-bold text-blue-600">IMAP Admin</h1>
           <p className="text-sm text-gray-500">International Medical Assistance Platform</p>
@@ -94,7 +100,7 @@ const AdminDashboard: React.FC = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => { setActiveTab(item.id); setMobileSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-6 py-3 text-left hover:bg-blue-50 transition-colors ${
                   activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600' : 'text-gray-600'
                 }`}
@@ -108,25 +114,28 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b px-6 py-4">
+        <header className="bg-white shadow-sm border-b px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold text-gray-900">
+            <div className="flex items-center gap-3">
+              <button className="md:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setMobileSidebarOpen(true)}>
+                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              </button>
+              <h2 className="text-lg md:text-2xl font-bold text-gray-900">
                 {sidebarItems.find(item => item.id === activeTab)?.label}
               </h2>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <button className="relative p-2 text-gray-400 hover:text-gray-600">
                 <Bell className="w-5 h-5" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </button>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-white" />
                 </div>
-                <div>
+                <div className="hidden sm:block">
                   <p className="text-sm font-medium text-gray-900">Admin User</p>
                   <p className="text-xs text-gray-500">Platform Administrator</p>
                 </div>
@@ -136,11 +145,11 @@ const AdminDashboard: React.FC = () => {
         </header>
 
         {/* Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto pb-20 md:pb-6">
           {activeTab === 'DASHBOARD' && (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <div className="flex items-center justify-between">
                     <div>
@@ -496,7 +505,7 @@ const AdminDashboard: React.FC = () => {
 
           {activeTab === 'REPORTS' && (
             <div className="space-y-6">
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Monthly Patient Growth</h3>
                   <div className="h-32 bg-gray-100 rounded flex items-center justify-center">
@@ -525,11 +534,11 @@ const AdminDashboard: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Default Commission Rate (%)</label>
-                  <input type="number" className="w-32 px-3 py-2 border border-gray-300 rounded-md" defaultValue="8" />
+                  <input type="number" className="w-full sm:w-32 px-3 py-2 border border-gray-300 rounded-md" defaultValue="8" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Platform Name</label>
-                  <input type="text" className="w-64 px-3 py-2 border border-gray-300 rounded-md" defaultValue="IMAP - International Medical Assistance Platform" />
+                  <input type="text" className="w-full sm:w-64 px-3 py-2 border border-gray-300 rounded-md" defaultValue="IMAP - International Medical Assistance Platform" />
                 </div>
                 <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                   Save Settings
@@ -539,6 +548,22 @@ const AdminDashboard: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex justify-around py-2">
+        {sidebarItems.slice(0, 5).map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs ${
+              activeTab === item.id ? 'text-blue-600' : 'text-gray-500'
+            }`}
+          >
+            <item.icon className="w-5 h-5" />
+            <span className="truncate max-w-[56px]">{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

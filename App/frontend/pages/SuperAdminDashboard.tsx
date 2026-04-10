@@ -9,6 +9,7 @@ const SuperAdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('HOSPITAL_MANAGEMENT');
   const [showAddHospital, setShowAddHospital] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [newHospital, setNewHospital] = useState({
     name: '',
     state: '',
@@ -203,17 +204,28 @@ const SuperAdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
+      {/* Mobile overlay */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setMobileSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg border-r border-slate-200 transition-all duration-300`}>
-        <div className="p-6 border-b border-slate-200">
+      <div className={`
+        fixed md:relative z-40 md:z-auto h-full
+        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg border-r border-slate-200 transition-all duration-300
+      `}>
+        <div className="p-4 md:p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-600 p-2 rounded-lg text-white">
+            <div className="bg-emerald-600 p-2 rounded-lg text-white flex-shrink-0">
               <HeartPulse className="w-6 h-6" />
             </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900">IMAP Solution</h1>
-              {sidebarOpen && <p className="text-sm text-slate-600">Super Admin Panel</p>}
-            </div>
+            {sidebarOpen && (
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">IMAP Solution</h1>
+                <p className="text-sm text-slate-600">Super Admin Panel</p>
+              </div>
+            )}
           </div>
         </div>
         
@@ -223,12 +235,12 @@ const SuperAdminDashboard: React.FC = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center gap-3 px-6 py-3 text-left hover:bg-emerald-50 transition-colors ${
+                onClick={() => { setActiveTab(item.id); setMobileSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 md:px-6 py-3 text-left hover:bg-emerald-50 transition-colors ${
                   activeTab === item.id ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-slate-600'
                 }`}
               >
-                <IconComponent className="w-5 h-5" />
+                <IconComponent className="w-5 h-5 flex-shrink-0" />
                 {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
               </button>
             );
@@ -237,9 +249,16 @@ const SuperAdminDashboard: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200">
+          <button onClick={() => setMobileSidebarOpen(true)} className="p-2 rounded-lg hover:bg-slate-100">
+            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <span className="font-semibold text-slate-900 text-sm">IMAP Super Admin</span>
+        </div>
         {/* Content Area */}
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto pb-20 md:pb-6">
           {activeTab === 'HOSPITAL_MANAGEMENT' && (
             <div className="space-y-6">
               {/* Header */}
@@ -249,7 +268,7 @@ const SuperAdminDashboard: React.FC = () => {
               </div>
 
               {/* Stats Cards */}
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -318,7 +337,7 @@ const SuperAdminDashboard: React.FC = () => {
           {activeTab === 'DASHBOARD' && (
             <div className="space-y-6">
               {/* Summary Cards */}
-              <div className="grid grid-cols-5 gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
                   <div className="flex items-center justify-between">
                     <div>
@@ -765,7 +784,7 @@ const SuperAdminDashboard: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-6">IMAP Solution Platform Settings</h3>
               <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">Platform Name</label>
                     <input 
@@ -799,6 +818,22 @@ const SuperAdminDashboard: React.FC = () => {
           )}
         </main>
       </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 flex justify-around py-2">
+        {sidebarItems.slice(0, 5).map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id)}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs ${
+              activeTab === item.id ? 'text-emerald-600' : 'text-slate-500'
+            }`}
+          >
+            <item.icon className="w-5 h-5" />
+            <span className="truncate max-w-[56px]">{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

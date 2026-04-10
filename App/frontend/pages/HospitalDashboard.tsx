@@ -260,10 +260,21 @@ const HospitalDashboard: React.FC = () => {
     );
   };
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Mobile overlay */}
+      {mobileSidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setMobileSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex flex-col relative flex-shrink-0 py-6 px-3 gap-1`}>
+      <aside className={`
+        fixed md:relative z-40 md:z-auto h-full
+        ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
+        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0 py-6 px-3 gap-1
+      `}>
         {/* Toggle button */}
         <button
           onClick={() => setSidebarOpen(o => !o)}
@@ -311,19 +322,26 @@ const HospitalDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
+          <button onClick={() => setMobileSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <span className="font-semibold text-gray-900 text-sm">Hospital Dashboard</span>
+        </div>
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           {/* Render different pages based on activePage */}
           {activePage === 'dashboard' && (
             <>
               {/* Welcome Section */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between">
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-1">Welcome back, {hospitalData.adminName} 👋</h1>
-                    <p className="text-gray-600">Here's the latest update for {hospitalData.name} - last 7 days overview</p>
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Welcome back, {hospitalData.adminName} 👋</h1>
+                    <p className="text-gray-600 text-sm">Here's the latest update for {hospitalData.name}</p>
                   </div>
-                  <div className="bg-white rounded-lg px-4 py-2 border border-gray-200 flex items-center gap-2">
+                  <div className="bg-white rounded-lg px-3 py-2 border border-gray-200 flex items-center gap-2 self-start sm:self-auto">
                     <Calendar className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium">Monday, 4th September</span>
                   </div>
@@ -331,7 +349,7 @@ const HospitalDashboard: React.FC = () => {
               </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
             <StatCard
               icon={Calendar}
               title="Appointments"
@@ -366,7 +384,7 @@ const HospitalDashboard: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Patient Statistics Chart */}
             <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-6">
@@ -451,7 +469,7 @@ const HospitalDashboard: React.FC = () => {
           </div>
 
           {/* Bottom Row */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-4 md:mt-6">
             {/* Balance */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
@@ -566,6 +584,28 @@ const HospitalDashboard: React.FC = () => {
           {activePage === 'profile' && <HospitalProfile />}
         </main>
       </div>
+
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex justify-around py-2">
+        {sidebarItems.slice(0, 5).map((item) => (
+          <button
+            key={item.page}
+            onClick={() => setActivePage(item.page)}
+            className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs relative
+              ${activePage === item.page ? 'text-emerald-600' : 'text-gray-500'}`}
+          >
+            <div className="relative">
+              <item.icon className="w-5 h-5" />
+              {item.page === 'appointments' && pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
+                  {pendingCount}
+                </span>
+              )}
+            </div>
+            <span>{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

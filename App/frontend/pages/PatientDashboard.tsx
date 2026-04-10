@@ -165,7 +165,7 @@ const PatientDashboard: React.FC = () => {
               {/* Quick Actions */}
               <section>
                 <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h2>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc, color }) => (
                     <button
                       key={page}
