@@ -18,7 +18,7 @@ const Home: React.FC = () => {
   const [medicalProcedures, setMedicalProcedures] = useState<string[]>([]);
 
   useEffect(() => {
-    hospitalsAPI.getHospitals({ limit: 100 }).then((res: any) => {
+    hospitalsAPI.getHospitals({ limit: 1000 }).then((res: any) => {
       const hospitals = res?.data?.hospitals || [];
       const cities = [...new Set<string>(hospitals.map((h: any) => h.city).filter(Boolean))];
       const specialties = [...new Set<string>(hospitals.flatMap((h: any) => h.specialties || []).filter(Boolean))];

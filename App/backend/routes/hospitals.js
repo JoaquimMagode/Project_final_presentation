@@ -67,7 +67,7 @@ router.get('/search', async (req, res) => {
 // GET /api/hospitals
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, city, state, country, specialty, status = 'active' } = req.query;
+    const { page = 1, limit = 1000, city, state, country, specialty, status = 'active' } = req.query;
 
     const where = { status };
     if (city) where.city = { contains: city };

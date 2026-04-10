@@ -22,7 +22,7 @@ const Locations: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    hospitalsAPI.getHospitals({ limit: 200 }).then((res: any) => {
+    hospitalsAPI.getHospitals({ limit: 1000 }).then((res: any) => {
       const hospitals = res?.data?.hospitals || [];
       const counts: Record<string, number> = {};
       hospitals.forEach((h: any) => {
