@@ -214,7 +214,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               {!isDashboardPage && (
                 <div className="hidden md:flex items-center gap-6">
                   <Link to="/" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Home</Link>
-                  <Link to="/hospitals" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Hospitals</Link>
                   <Link to="/specialties" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Treatments</Link>
                   <Link to="/visa" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Travel &amp; Stay</Link>
                   <Link to="/services" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Patient Support</Link>
