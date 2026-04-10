@@ -178,7 +178,7 @@ const AppointmentRequests: React.FC = () => {
     if (!confirm('Are you sure you want to cancel this appointment?')) return;
     try {
       setLoading(true);
-      await appointmentsAPI.updateAppointment(parseInt(id), 'cancelled');
+      await appointmentsAPI.deleteAppointment(parseInt(id));
       setSuccess('Appointment cancelled successfully');
       fetchAppointments();
     } catch (err: any) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Home, Calendar, FileText,
-  Settings, HelpCircle, Phone, Upload, ChevronRight,
+  HelpCircle, Phone, Upload, ChevronRight,
   CheckCircle, Clock, AlertCircle, CreditCard
 } from 'lucide-react';
 import { useAuth } from '../App';
@@ -19,7 +19,6 @@ const NAV = [
   { page: 'appointments' as Page,  icon: Calendar,    label: 'Appointments' },
   { page: 'billing' as Page,       icon: CreditCard,  label: 'Records & Billing' },
   { page: 'reports' as Page,       icon: FileText,    label: 'My Reports' },
-  { page: 'settings' as Page,      icon: Settings,    label: 'Settings' },
   { page: 'help' as Page,          icon: HelpCircle,  label: 'Help' },
 ];
 

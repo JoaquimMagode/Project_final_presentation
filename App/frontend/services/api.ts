@@ -89,6 +89,12 @@ export const appointmentsAPI = {
       body: JSON.stringify({ status }),
     });
   },
+
+  deleteAppointment: async (id: number) => {
+    return apiRequest(`/appointments/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Hospitals API
