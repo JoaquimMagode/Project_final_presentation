@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   Calendar, Clock, MapPin, Search,
   Plus, CheckCircle, XCircle, AlertCircle, Eye, Edit2, 
-  Trash2, Building2, History, FileText, Send, DollarSign
+  Trash2, Building2, History, FileText, Send, DollarSign, Download
 } from 'lucide-react';
 import { patientsAPI, hospitalsAPI, appointmentsAPI } from '../../services/api';
 import { quoteStore, Quote } from '../../services/quoteStore';
+import QuotePDF from '../../components/QuotePDF';
 
 interface Appointment {
   id: string;
@@ -44,6 +45,7 @@ const AppointmentRequests: React.FC = () => {
   const [allAppointments, setAllAppointments] = useState<Appointment[]>([]);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
 
   const [bookingForm, setBookingForm] = useState({
     hospitalId: '',
@@ -511,22 +513,30 @@ const AppointmentRequests: React.FC = () => {
                         {quote.notes && <p className="text-sm text-gray-500 italic">{quote.notes}</p>}
                         <p className="text-xl font-bold text-emerald-600">{quote.currency} {quote.amount.toLocaleString()}</p>
                       </div>
-                      {quote.status === 'pending' && (
-                        <div className="flex flex-col gap-2">
+                      <div className="flex flex-col gap-2">
                           <button
-                            onClick={() => handleAcceptQuote(quote.id)}
-                            className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1"
+                            onClick={() => setViewingQuote(quote)}
+                            className="px-4 py-2 bg-teal-600 text-white text-sm font-semibold rounded-lg hover:bg-teal-700 flex items-center gap-1"
                           >
-                            <CheckCircle className="w-4 h-4" /> Accept
+                            <Eye className="w-4 h-4" /> View PDF
                           </button>
-                          <button
-                            onClick={() => handleDeclineQuote(quote.id)}
-                            className="px-4 py-2 border border-red-300 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50 flex items-center gap-1"
-                          >
-                            <XCircle className="w-4 h-4" /> Decline
-                          </button>
+                          {quote.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleAcceptQuote(quote.id)}
+                                className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1"
+                              >
+                                <CheckCircle className="w-4 h-4" /> Accept
+                              </button>
+                              <button
+                                onClick={() => handleDeclineQuote(quote.id)}
+                                className="px-4 py-2 border border-red-300 text-red-600 text-sm font-semibold rounded-lg hover:bg-red-50 flex items-center gap-1"
+                              >
+                                <XCircle className="w-4 h-4" /> Decline
+                              </button>
+                            </>
+                          )}
                         </div>
-                      )}
                     </div>
                   </div>
                 ))}
@@ -534,6 +544,8 @@ const AppointmentRequests: React.FC = () => {
             )}
           </div>
         )}
+      {viewingQuote && <QuotePDF quote={viewingQuote} onClose={() => setViewingQuote(null)} />}
+
       {showBookingModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
