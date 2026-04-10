@@ -341,39 +341,35 @@ const App: React.FC = () => {
   const [user, setUser] = useState<{ name: string; role: UserRole } | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // === ORIGINAL AUTH CHECK (commented out for dev access) ===
-  // useEffect(() => {
-  //   const checkAuthStatus = async () => {
-  //     const token = localStorage.getItem('token');
-  //     if (token) {
-  //       try {
-  //         const response = await authAPI.getProfile();
-  //         if (response.success) {
-  //           const roleMap: Record<string, string> = {
-  //             super_admin: 'superadmin',
-  //             hospital_admin: 'hospital',
-  //             patient: 'patient',
-  //           };
-  //           const frontendRole = roleMap[response.data.user.role] ?? 'patient';
-  //           
-  //           setUser({
-  //             name: response.data.user.name,
-  //             role: frontendRole as UserRole
-  //           });
-  //         }
-  //       } catch (error) {
-  //         localStorage.removeItem('token');
-  //       }
-  //     }
-  //     setLoading(false);
-  //   };
-  //   checkAuthStatus();
-  // }, []);
-  // === END ORIGINAL AUTH CHECK ===
-
-  // DEV BYPASS: skip auth check, just mark loading as done
+  // Check for existing token on app load
   useEffect(() => {
-    setLoading(false);
+    const checkAuthStatus = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await authAPI.getProfile();
+          if (response.success) {
+            const roleMap: Record<string, string> = {
+              super_admin: 'superadmin',
+              hospital_admin: 'hospital',
+              patient: 'patient',
+            };
+            const frontendRole = roleMap[response.data.user.role] ?? 'patient';
+            
+            setUser({
+              name: response.data.user.name,
+              role: frontendRole as UserRole
+            });
+          }
+        } catch (error) {
+          // Token is invalid, remove it
+          localStorage.removeItem('token');
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuthStatus();
   }, []);
 
   const login = (name: string, role: UserRole) => setUser({ name, role });
