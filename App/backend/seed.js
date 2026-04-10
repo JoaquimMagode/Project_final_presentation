@@ -110,6 +110,13 @@ const seedDatabase = async () => {
     }
 
     // Seed hospitals
+    // Get the actual hospital admin user ID dynamically
+    const [[hospitalAdminRow]] = await pool.execute(
+      "SELECT id FROM users WHERE email = 'hospital@demo.com' LIMIT 1"
+    );
+    const hospitalAdminId = hospitalAdminRow?.id;
+    if (!hospitalAdminId) throw new Error('Hospital admin user not found after seeding');
+
     const hospitals = [
       {
         name: 'Apollo Hospitals Mumbai',
@@ -118,7 +125,7 @@ const seedDatabase = async () => {
         specialties: ['Cardiology', 'Orthopedics', 'Neurology', 'Cancer Treatment'],
         email: 'info@apollomumbai.com',
         phone: '+91-22-6767-4444',
-        admin_id: 2
+        admin_id: hospitalAdminId
       },
       {
         name: 'Fortis Memorial Research Institute',
@@ -127,7 +134,7 @@ const seedDatabase = async () => {
         specialties: ['Cardiology', 'Neurosurgery', 'Oncology', 'Kidney Transplant'],
         email: 'info@fortismemorial.com',
         phone: '+91-11-4277-6222',
-        admin_id: 2
+        admin_id: hospitalAdminId
       },
       {
         name: 'Max Healthcare',
@@ -136,7 +143,7 @@ const seedDatabase = async () => {
         specialties: ['Orthopedics', 'Cardiology', 'Gastroenterology', 'Joint Replacement'],
         email: 'info@maxhealthcare.com',
         phone: '+91-11-2651-5050',
-        admin_id: 2
+        admin_id: hospitalAdminId
       },
       {
         name: 'Manipal Hospitals',
@@ -145,7 +152,7 @@ const seedDatabase = async () => {
         specialties: ['Neurology', 'Cardiac Surgery', 'IVF Treatment', 'Eye Surgery'],
         email: 'info@manipalhospitals.com',
         phone: '+91-80-2502-4444',
-        admin_id: 2
+        admin_id: hospitalAdminId
       },
       {
         name: 'Medanta - The Medicity',
@@ -154,7 +161,7 @@ const seedDatabase = async () => {
         specialties: ['Liver Transplant', 'Spine Surgery', 'Cosmetic Surgery', 'Dental Treatment'],
         email: 'info@medanta.org',
         phone: '+91-124-414-1414',
-        admin_id: 2
+        admin_id: hospitalAdminId
       }
     ];
 

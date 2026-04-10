@@ -45,6 +45,7 @@ const statusLabel = (s: string) =>
 const PatientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activePage, setActivePage] = useState<Page>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [appointmentCount, setAppointmentCount] = useState(0);
 
   useEffect(() => {
@@ -68,24 +69,43 @@ const PatientDashboard: React.FC = () => {
     <div className="flex min-h-screen bg-gray-50">
 
       {/* ── Sidebar ── */}
-      <aside className="hidden md:flex flex-col w-56 bg-white border-r border-gray-100 py-6 px-3 gap-1">
+      <aside className={`hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-100 py-6 px-3 gap-1 transition-all duration-300 relative flex-shrink-0`}>
+        {/* Toggle button */}
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          className="absolute -right-3 top-6 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors z-10"
+        >
+          <ChevronRight className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} />
+        </button>
+
         {NAV.map(({ page, icon: Icon, label }) => (
-          <button
-            key={page}
-            onClick={() => setActivePage(page)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors w-full text-left
-              ${activePage === page
-                ? 'bg-emerald-600 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100'}`}
-          >
-            <Icon className="w-5 h-5 flex-shrink-0" />
-            <span className="flex-1">{label}</span>
-            {page === 'appointments' && appointmentCount > 0 && (
-              <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                {appointmentCount}
-              </span>
+          <div key={page} className="relative group">
+            <button
+              onClick={() => setActivePage(page)}
+              className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors w-full text-left
+                ${activePage === page
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              <Icon className="w-5 h-5 flex-shrink-0" />
+              {sidebarOpen && <span className="flex-1">{label}</span>}
+              {sidebarOpen && page === 'appointments' && appointmentCount > 0 && (
+                <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                  {appointmentCount}
+                </span>
+              )}
+              {!sidebarOpen && page === 'appointments' && appointmentCount > 0 && (
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              )}
+            </button>
+            {/* Tooltip when collapsed */}
+            {!sidebarOpen && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
+                {label}
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+              </div>
             )}
-          </button>
+          </div>
         ))}
       </aside>
 

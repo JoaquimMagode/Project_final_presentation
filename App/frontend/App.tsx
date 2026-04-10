@@ -203,14 +203,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="bg-white">
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-6">
-              {isDashboardPage && user && (
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('toggleSidebar'))}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                >
-                  <Menu className="w-5 h-5 text-gray-600" />
-                </button>
-              )}
               {!isDashboardPage && (
                 <div className="hidden md:flex items-center gap-6">
                   <Link to="/" className="text-black hover:text-slate-700 font-normal text-sm pb-1 border-b-2 border-transparent hover:border-emerald-600 transition-colors">Home</Link>

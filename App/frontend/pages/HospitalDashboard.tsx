@@ -59,22 +59,16 @@ const HospitalDashboard: React.FC = () => {
       }
     };
     
-    const handleToggleSidebar = () => {
-      setSidebarOpen(prev => !prev);
-    };
-
     const handleNavigatePage = (e: Event) => {
       const page = (e as CustomEvent).detail;
       if (page) setActivePage(page);
     };
     
     document.addEventListener('mousedown', handleClickOutside);
-    window.addEventListener('toggleSidebar', handleToggleSidebar);
     window.addEventListener('navigateHospitalPage', handleNavigatePage);
     
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
-      window.removeEventListener('toggleSidebar', handleToggleSidebar);
       window.removeEventListener('navigateHospitalPage', handleNavigatePage);
     };
   }, []);
@@ -128,7 +122,6 @@ const HospitalDashboard: React.FC = () => {
     { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
     { icon: Settings, label: 'Setting', active: activePage === 'setting', page: 'setting' },
     { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
-    { icon: User, label: 'Profile', active: activePage === 'profile', page: 'profile' }
   ];
 
   const appointments = [
@@ -264,36 +257,53 @@ const HospitalDashboard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-teal-800 transition-all duration-300 flex flex-col`}>
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-teal-800 transition-all duration-300 flex flex-col relative flex-shrink-0`}>
+        {/* Toggle button */}
+        <button
+          onClick={() => setSidebarOpen(o => !o)}
+          className="absolute -right-3 top-6 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors z-10"
+        >
+          <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${sidebarOpen ? '-rotate-90' : 'rotate-90'}`} />
+        </button>
+
         {/* Menu Items */}
-        <nav className="flex-1 p-4">
-          <div className="space-y-2">
+        <nav className="flex-1 p-4 pt-6">
+          <div className="space-y-1">
             {sidebarItems.map((item, index) => (
-              <button
-                key={index}
-                onClick={() => setActivePage(item.page)}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
-                  item.active 
-                    ? 'bg-teal-700 text-white' 
-                    : 'text-teal-100 hover:bg-teal-700 hover:text-white'
-                }`}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="font-medium flex-1">{item.label}</span>}
-                {item.page === 'appointments' && pendingCount > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                    {pendingCount}
-                  </span>
+              <div key={index} className="relative group">
+                <button
+                  onClick={() => setActivePage(item.page)}
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                    item.active
+                      ? 'bg-teal-700 text-white'
+                      : 'text-teal-100 hover:bg-teal-700 hover:text-white'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  {sidebarOpen && <span className="font-medium flex-1 text-left">{item.label}</span>}
+                  {item.page === 'appointments' && pendingCount > 0 && sidebarOpen && (
+                    <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                      {pendingCount}
+                    </span>
+                  )}
+                  {item.page === 'appointments' && pendingCount > 0 && !sidebarOpen && (
+                    <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  )}
+                </button>
+                {/* Tooltip when collapsed */}
+                {!sidebarOpen && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
+                    {item.label}
+                    <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                  </div>
                 )}
-              </button>
+              </div>
             ))}
           </div>
         </nav>
 
-        {/* Other Menu */}
         {sidebarOpen && (
-          <div className="p-0 border-t border-teal-700">
-          </div>
+          <div className="p-0 border-t border-teal-700" />
         )}
       </div>
 

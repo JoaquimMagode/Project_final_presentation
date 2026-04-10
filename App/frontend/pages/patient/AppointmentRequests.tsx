@@ -32,6 +32,46 @@ interface Hospital {
   phone?: string;
 }
 
+const HospitalCombobox: React.FC<{ hospitals: Hospital[]; value: string; onChange: (v: string) => void }> = ({ hospitals, value, onChange }) => {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const selected = hospitals.find(h => h.id.toString() === value);
+  const filteredList = query
+    ? hospitals.filter(h => h.name.toLowerCase().includes(query.toLowerCase()) || h.city.toLowerCase().includes(query.toLowerCase()))
+    : hospitals;
+  return (
+    <div className="relative">
+      <input
+        type="text"
+        value={open ? query : selected ? `${selected.name} — ${selected.city}` : query}
+        onChange={e => { setQuery(e.target.value); onChange(''); setOpen(true); }}
+        onFocus={() => { setOpen(true); if (selected) setQuery(''); }}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        placeholder="Type or select a hospital..."
+        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
+      {open && filteredList.length > 0 && (
+        <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+          {filteredList.map(h => (
+            <li key={h.id}
+              onMouseDown={() => { onChange(h.id.toString()); setQuery(''); setOpen(false); }}
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700 ${
+                value === h.id.toString() ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+              }`}>
+              {h.name} <span className="text-gray-400">— {h.city}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && query && filteredList.length === 0 && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg px-3 py-2 text-sm text-gray-400">
+          No hospitals found
+        </div>
+      )}
+    </div>
+  );
+};
+
 const STATUS_CONFIG = {
   pending:   { color: 'bg-amber-50 text-amber-700 border-amber-200',      icon: Clock },
   confirmed: { color: 'bg-blue-50 text-blue-700 border-blue-200',         icon: CheckCircle },
@@ -427,11 +467,11 @@ const AppointmentRequests: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Select Hospital *</label>
-                <select value={bookingForm.hospitalId} onChange={e => setBookingForm({ ...bookingForm, hospitalId: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Choose a hospital</option>
-                  {hospitals.map(h => <option key={h.id} value={h.id}>{h.name} — {h.city}</option>)}
-                </select>
+                <HospitalCombobox
+                  hospitals={hospitals}
+                  value={bookingForm.hospitalId}
+                  onChange={val => setBookingForm({ ...bookingForm, hospitalId: val })}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
