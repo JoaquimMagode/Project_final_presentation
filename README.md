@@ -39,8 +39,10 @@ A comprehensive medical tourism platform connecting international patients direc
 After setting up the database, use these credentials to test the application:
 
 - **Patient**: `patient@demo.com` / `password`
-- **Hospital Admin**: `hospital@demo.com` / `password`
+- **Hospital Admin**: `admin.apollohospitalsmumbai@imapsolution.com` / `password`
 - **Super Admin**: `admin@imapsolution.com` / `password`
+
+> Each hospital has its own dedicated admin account. Format: `admin.<hospitalnameslug>@imapsolution.com` / `password`
 
 ## Sample Data
 
@@ -63,7 +65,6 @@ cd App/backend
 npm install
 npm run create-db
 npm run seed
-npm run dev
 ```
 
 ### Frontend Setup (in new terminal)

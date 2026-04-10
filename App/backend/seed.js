@@ -109,14 +109,6 @@ const seedDatabase = async () => {
       }
     }
 
-    // Seed hospitals
-    // Get the actual hospital admin user ID dynamically
-    const [[hospitalAdminRow]] = await pool.execute(
-      "SELECT id FROM users WHERE email = 'hospital@demo.com' LIMIT 1"
-    );
-    const hospitalAdminId = hospitalAdminRow?.id;
-    if (!hospitalAdminId) throw new Error('Hospital admin user not found after seeding');
-
     const hospitals = [
       {
         name: 'Apollo Hospitals Mumbai',
@@ -125,7 +117,6 @@ const seedDatabase = async () => {
         specialties: ['Cardiology', 'Orthopedics', 'Neurology', 'Cancer Treatment'],
         email: 'info@apollomumbai.com',
         phone: '+91-22-6767-4444',
-        admin_id: hospitalAdminId
       },
       {
         name: 'Fortis Memorial Research Institute',
@@ -134,7 +125,6 @@ const seedDatabase = async () => {
         specialties: ['Cardiology', 'Neurosurgery', 'Oncology', 'Kidney Transplant'],
         email: 'info@fortismemorial.com',
         phone: '+91-11-4277-6222',
-        admin_id: hospitalAdminId
       },
       {
         name: 'Max Healthcare',
@@ -143,7 +133,6 @@ const seedDatabase = async () => {
         specialties: ['Orthopedics', 'Cardiology', 'Gastroenterology', 'Joint Replacement'],
         email: 'info@maxhealthcare.com',
         phone: '+91-11-2651-5050',
-        admin_id: hospitalAdminId
       },
       {
         name: 'Manipal Hospitals',
@@ -152,7 +141,6 @@ const seedDatabase = async () => {
         specialties: ['Neurology', 'Cardiac Surgery', 'IVF Treatment', 'Eye Surgery'],
         email: 'info@manipalhospitals.com',
         phone: '+91-80-2502-4444',
-        admin_id: hospitalAdminId
       },
       {
         name: 'Medanta - The Medicity',
@@ -161,28 +149,36 @@ const seedDatabase = async () => {
         specialties: ['Liver Transplant', 'Spine Surgery', 'Cosmetic Surgery', 'Dental Treatment'],
         email: 'info@medanta.org',
         phone: '+91-124-414-1414',
-        admin_id: hospitalAdminId
       }
     ];
 
-    console.log('🏥 Seeding hospitals...');
+    console.log('🏥 Seeding hospitals with dedicated admin users...');
     for (const hospital of hospitals) {
+      const slug = hospital.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const adminEmail = `admin.${slug}@imapsolution.com`;
+
+      const [adminResult] = await pool.execute(
+        'INSERT INTO users (email, password, name, phone, role, status) VALUES (?, ?, ?, ?, ?, ?)',
+        [adminEmail, hashedPassword, hospital.name, hospital.phone, 'hospital_admin', 'active']
+      );
+      const adminId = adminResult.insertId;
+
       const [result] = await pool.execute(
         'INSERT INTO hospitals (name, city, state, address, specialties, email, phone, admin_id, status, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
-          hospital.name, 
-          hospital.city, 
-          hospital.state, 
-          `${hospital.city}, ${hospital.state}, India`, 
-          JSON.stringify(hospital.specialties), 
-          hospital.email, 
-          hospital.phone, 
-          hospital.admin_id, 
+          hospital.name,
+          hospital.city,
+          hospital.state,
+          `${hospital.city}, ${hospital.state}, India`,
+          JSON.stringify(hospital.specialties),
+          hospital.email,
+          hospital.phone,
+          adminId,
           'active',
           `Leading healthcare provider in ${hospital.city} offering comprehensive medical services.`
         ]
       );
-      console.log(`✅ Created hospital: ${hospital.name} (ID: ${result.insertId})`);
+      console.log(`✅ Created hospital: ${hospital.name} (ID: ${result.insertId}) → Admin: ${adminEmail}`);
     }
 
     // Seed appointments
@@ -261,8 +257,14 @@ const seedDatabase = async () => {
     console.log('🎉 Database seeding completed successfully!');
     console.log('\n📋 Demo Credentials:');
     console.log('Patient: patient@demo.com / password');
-    console.log('Hospital Admin: hospital@demo.com / password');
+    console.log('Hospital Admin: hospital@demo.com / password (legacy demo)');
     console.log('Super Admin: admin@imapsolution.com / password');
+    console.log('\n🔑 Hospital Admin Accounts (password: password):');
+    console.log('- admin.apollohospitalsmumbai@imapsolution.com');
+    console.log('- admin.fortismemorialresearchinstitute@imapsolution.com');
+    console.log('- admin.maxhealthcare@imapsolution.com');
+    console.log('- admin.manipalhospitals@imapsolution.com');
+    console.log('- admin.medantathemedicity@imapsolution.com');
     console.log('\n🏥 Sample hospitals with direct appointment booking:');
     console.log('- Apollo Hospitals Mumbai (Cardiology, Orthopedics)');
     console.log('- Fortis Memorial Research Institute (Neurosurgery, Oncology)');
