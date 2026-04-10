@@ -120,12 +120,12 @@ const HospitalDashboard: React.FC = () => {
     { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
     { icon: Users, label: 'Patients', active: activePage === 'patients', page: 'patients' },
     { icon: Calendar, label: 'Appointment', active: activePage === 'appointments', page: 'appointments' },
+    { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
     { icon: CreditCard, label: 'Payments', active: activePage === 'payments', page: 'payments' },
     { icon: UserCheck, label: 'Employee', active: activePage === 'employee', page: 'employee' },
     { icon: ActivityIcon, label: 'Activity', active: activePage === 'activity', page: 'activity' },
     { icon: BarChart3, label: 'Statistic', active: activePage === 'statistic', page: 'statistic' },
     { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
-    { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
   ];
 
   const appointments = [

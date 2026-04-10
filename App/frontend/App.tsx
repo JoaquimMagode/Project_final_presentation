@@ -49,6 +49,12 @@ interface LangContextType {
 const LangContext = createContext<LangContextType>({ lang: 'EN', setLang: () => {} });
 export const useLang = () => useContext(LangContext);
 
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
+
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -403,6 +409,7 @@ const App: React.FC = () => {
     <AuthContext.Provider value={{ user, login, logout }}>
       <LangContext.Provider value={{ lang, setLang }}>
         <HashRouter>
+          <ScrollToTop />
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
