@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Home, Calendar, FileText,
   HelpCircle, Phone, Upload, ChevronRight,
-  CheckCircle, Clock, AlertCircle, CreditCard
+  CheckCircle, Clock, AlertCircle, CreditCard, Building2, MapPin
 } from 'lucide-react';
 import { useAuth } from '../App';
 import PatientRegistration from './patient/PatientRegistration';
@@ -28,24 +28,20 @@ const QUICK_ACTIONS = [
   { page: 'billing' as Page,      icon: Upload,    label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
 ];
 
-const upcomingAppointments = [
-  { hospital: 'Apollo Hospital Mumbai', type: 'Cardiology Consultation', date: 'Jan 20, 2024', time: '10:00 AM', status: 'confirmed' },
-  { hospital: 'Fortis Delhi',           type: 'General Check-up',        date: 'Jan 22, 2024', time: '2:30 PM',  status: 'pending' },
-];
-
-const statusIcon = (s: string) =>
-  s === 'confirmed' ? <CheckCircle className="w-4 h-4 text-emerald-500" /> :
-  s === 'pending'   ? <Clock        className="w-4 h-4 text-amber-500"   /> :
-                      <AlertCircle  className="w-4 h-4 text-red-500"     />;
-
-const statusLabel = (s: string) =>
-  s === 'confirmed' ? 'Confirmed' : s === 'pending' ? 'Pending' : 'Cancelled';
+const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
+  confirmed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
+  pending:   { color: 'bg-amber-50 text-amber-700 border-amber-200',       icon: Clock },
+  cancelled: { color: 'bg-red-50 text-red-600 border-red-200',             icon: AlertCircle },
+  completed: { color: 'bg-blue-50 text-blue-700 border-blue-200',          icon: CheckCircle },
+};
 
 const PatientDashboard: React.FC = () => {
   const { user } = useAuth();
   const [activePage, setActivePage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [appointmentCount, setAppointmentCount] = useState(0);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+  const [stats, setStats] = useState({ pending: 0, confirmed: 0, completed: 0 });
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -54,10 +50,16 @@ const PatientDashboard: React.FC = () => {
     })
       .then(r => r.json())
       .then(data => {
-        const active = (data?.data?.appointments || []).filter(
-          (a: any) => a.status === 'pending'
-        ).length;
-        setAppointmentCount(active);
+        const all = data?.data?.appointments || [];
+        const pending   = all.filter((a: any) => a.status === 'pending').length;
+        const confirmed = all.filter((a: any) => a.status === 'confirmed').length;
+        const completed = all.filter((a: any) => a.status === 'completed').length;
+        setAppointmentCount(pending);
+        setStats({ pending, confirmed, completed });
+        const upcoming = all
+          .filter((a: any) => ['pending', 'confirmed'].includes(a.status))
+          .slice(0, 3);
+        setUpcomingAppointments(upcoming);
       })
       .catch(() => {});
   }, []);
@@ -137,31 +139,45 @@ const PatientDashboard: React.FC = () => {
 
           {/* ── Dashboard Home ── */}
           {activePage === 'dashboard' && (
-            <div className="max-w-3xl mx-auto space-y-8">
+            <div className="max-w-3xl space-y-6">
 
               {/* Greeting */}
-              <div className="bg-emerald-600 rounded-2xl p-6 text-white">
+              <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-6 text-white">
                 <p className="text-emerald-100 text-sm mb-1">Welcome back 👋</p>
                 <h1 className="text-2xl font-bold">{firstName}</h1>
-                <p className="text-emerald-100 text-sm mt-1">How can we help you today?</p>
+                <p className="text-emerald-100 text-sm mt-1">Here's your health overview</p>
+              </div>
+
+              {/* Stats Strip */}
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: 'Pending',   value: stats.pending,   color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-100' },
+                  { label: 'Confirmed', value: stats.confirmed, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
+                  { label: 'Completed', value: stats.completed, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                ].map(({ label, value, color, bg, border }) => (
+                  <div key={label} className={`${bg} border ${border} rounded-xl p-4 text-center`}>
+                    <p className={`text-2xl font-black ${color}`}>{value}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                  </div>
+                ))}
               </div>
 
               {/* Quick Actions */}
               <section>
-                <h2 className="text-base font-semibold text-gray-700 mb-3">What would you like to do?</h2>
-                <div className="grid grid-cols-2 gap-3">
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h2>
+                <div className="grid grid-cols-3 gap-3">
                   {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc, color }) => (
                     <button
                       key={page}
                       onClick={() => setActivePage(page)}
                       className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left flex flex-col gap-3"
                     >
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${color}`}>
-                        <Icon className="w-6 h-6" />
+                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+                        <Icon className="w-5 h-5" />
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{label}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
                       </div>
                     </button>
                   ))}
@@ -171,7 +187,7 @@ const PatientDashboard: React.FC = () => {
               {/* Upcoming Appointments */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-base font-semibold text-gray-700">Upcoming Appointments</h2>
+                  <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Upcoming Appointments</h2>
                   <button
                     onClick={() => setActivePage('appointments')}
                     className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:underline"
@@ -181,56 +197,61 @@ const PatientDashboard: React.FC = () => {
                 </div>
 
                 {upcomingAppointments.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-6 text-center text-gray-400 border border-dashed border-gray-200">
-                    <Calendar className="w-10 h-10 mx-auto mb-2 opacity-40" />
-                    <p className="text-sm">No upcoming appointments</p>
+                  <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-gray-200">
+                    <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <p className="text-sm text-gray-400 mb-3">No upcoming appointments</p>
                     <button
-                      onClick={() => setActivePage('hospitals')}
-                      className="mt-3 text-emerald-600 text-sm font-medium hover:underline"
+                      onClick={() => setActivePage('appointments')}
+                      className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
                     >
-                      Book one now →
+                      Book Appointment
                     </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {upcomingAppointments.map((apt, i) => (
-                      <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
-                        <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                          <Calendar className="w-6 h-6 text-blue-500" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital}</p>
-                          <p className="text-xs text-gray-500">{apt.type}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{apt.date} · {apt.time}</p>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs font-medium flex-shrink-0">
-                          {statusIcon(apt.status)}
-                          <span className={apt.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-600'}>
-                            {statusLabel(apt.status)}
+                    {upcomingAppointments.map((apt: any, i: number) => {
+                      const cfg = STATUS_CONFIG[apt.status] || STATUS_CONFIG.pending;
+                      const Icon = cfg.icon;
+                      return (
+                        <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                          <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                            <Building2 className="w-5 h-5 text-emerald-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital_name}</p>
+                            <p className="text-xs text-gray-500 truncate">{apt.reason}</p>
+                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />{apt.hospital_city}
+                              <span className="mx-1">·</span>
+                              <Clock className="w-3 h-3" />
+                              {new Date(apt.appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                            </p>
+                          </div>
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${cfg.color}`}>
+                            <Icon className="w-3 h-3" />
+                            {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
                           </span>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </section>
 
               {/* Need Help */}
-              <section>
-                <button
-                  onClick={() => setActivePage('help')}
-                  className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4"
-                >
-                  <div className="w-11 h-11 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <Phone className="w-5 h-5 text-gray-600" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-semibold text-gray-900 text-sm">Need Help?</p>
-                    <p className="text-xs text-gray-500">Contact our support team anytime</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
-                </button>
-              </section>
+              <button
+                onClick={() => setActivePage('help')}
+                className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4"
+              >
+                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <Phone className="w-5 h-5 text-gray-600" />
+                </div>
+                <div className="text-left">
+                  <p className="font-semibold text-gray-900 text-sm">Need Help?</p>
+                  <p className="text-xs text-gray-400">Contact our support team anytime</p>
+                </div>
+                <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+              </button>
 
             </div>
           )}

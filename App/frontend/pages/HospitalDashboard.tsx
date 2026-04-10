@@ -1,10 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Menu, X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
-  TrendingUp, TrendingDown, MoreHorizontal, Plus, Settings, HelpCircle,
-  BarChart3, PieChart, Home, FileText, CreditCard, UserCheck, 
+  X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
+  TrendingUp, TrendingDown, MoreHorizontal, Plus, HelpCircle,
+  BarChart3, Home, FileText, CreditCard, UserCheck, 
   Building2, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut
 } from 'lucide-react';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS, CategoryScale, LinearScale, PointElement,
+  LineElement, Title, Tooltip, Legend, Filler
+} from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 import { useAuth } from '../App';
 import { useNavigate } from 'react-router-dom';
 import UserAvatar from '../components/UserAvatar';
@@ -17,7 +23,6 @@ import Employee from './hospital/Employee';
 import ActivityPage from './hospital/Activity';
 import Statistic from './hospital/Statistic';
 import HelpCenter from './hospital/HelpCenter';
-import Setting from './hospital/Setting';
 import Report from './hospital/Report';
 import HospitalProfile from './hospital/HospitalProfile';
 import ReceptionistDashboard from './hospital/ReceptionistDashboard';
@@ -120,7 +125,6 @@ const HospitalDashboard: React.FC = () => {
     { icon: ActivityIcon, label: 'Activity', active: activePage === 'activity', page: 'activity' },
     { icon: BarChart3, label: 'Statistic', active: activePage === 'statistic', page: 'statistic' },
     { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
-    { icon: Settings, label: 'Setting', active: activePage === 'setting', page: 'setting' },
     { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
   ];
 
@@ -152,70 +156,72 @@ const HospitalDashboard: React.FC = () => {
     </div>
   );
 
-  const PatientChart = () => (
-    <div className="relative h-64">
-      <svg className="w-full h-full" viewBox="0 0 400 200">
-        {/* Grid lines */}
-        <defs>
-          <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-            <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid)" />
-        
-        {/* Chart lines */}
-        <path
-          d="M 20 150 Q 60 120 100 140 T 180 100 T 260 120 T 340 80 T 380 90"
-          fill="none"
-          stroke="#10b981"
-          strokeWidth="3"
-          className="drop-shadow-sm"
-        />
-        <path
-          d="M 20 170 Q 60 160 100 150 T 180 130 T 260 140 T 340 110 T 380 120"
-          fill="none"
-          stroke="#6b7280"
-          strokeWidth="2"
-        />
-        
-        {/* Highlight circle */}
-        <circle cx="260" cy="120" r="8" fill="#10b981" className="drop-shadow-sm" />
-        <circle cx="260" cy="120" r="4" fill="white" />
-        
-        {/* Tooltip */}
-        <g transform="translate(240, 80)">
-          <rect x="0" y="0" width="60" height="30" rx="6" fill="#1f2937" />
-          <text x="30" y="20" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">1,856</text>
-        </g>
-        
-        {/* Month labels */}
-        {['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'].map((month, i) => (
-          <text key={month} x={20 + i * 30} y="190" textAnchor="middle" fill="#6b7280" fontSize="10">
-            {month}
-          </text>
-        ))}
-        
-        {/* Y-axis labels */}
-        {[0, 1, 2, 3].map((val) => (
-          <text key={val} x="10" y={170 - val * 40} textAnchor="middle" fill="#6b7280" fontSize="10">
-            {val}k
-          </text>
-        ))}
-      </svg>
-      
-      {/* Legend */}
-      <div className="absolute bottom-4 left-4 flex gap-4">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-          <span className="text-xs text-gray-600">New patients</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-          <span className="text-xs text-gray-600">Old patients</span>
-        </div>
-      </div>
-    </div>
-  );
+  const currentYear = new Date().getFullYear();
+  const PERIODS = ['Week', 'Month', `Year-${currentYear}`];
+
+  const CHART_DATA: Record<string, { labels: string[]; newPatients: number[]; returning: number[] }> = {
+    Week: {
+      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      newPatients: [12, 19, 14, 22, 18, 9, 7],
+      returning:   [8,  14, 10, 16, 12, 6, 4],
+    },
+    Month: {
+      labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+      newPatients: [55, 72, 63, 80],
+      returning:   [38, 50, 44, 58],
+    },
+    [`Year-${currentYear}`]: {
+      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+      newPatients: [30, 45, 38, 60, 55, 72, 65, 80, 75, 90, 85, 95],
+      returning:   [20, 30, 25, 40, 35, 50, 45, 55, 50, 60, 58, 65],
+    },
+  };
+
+  const PatientChart = () => {
+    const d = CHART_DATA[selectedPeriod] || CHART_DATA[`Year-${currentYear}`];
+    const data = {
+      labels: d.labels,
+      datasets: [
+        {
+          label: 'New patients',
+          data: d.newPatients,
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.08)',
+          borderWidth: 2.5,
+          pointBackgroundColor: '#10b981',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.4,
+          fill: true,
+        },
+        {
+          label: 'Returning patients',
+          data: d.returning,
+          borderColor: '#6b7280',
+          backgroundColor: 'rgba(107,114,128,0.05)',
+          borderWidth: 2,
+          pointBackgroundColor: '#6b7280',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.4,
+          fill: true,
+        },
+      ],
+    };
+    const options = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' as const, labels: { boxWidth: 10, font: { size: 12 } } },
+        tooltip: { mode: 'index' as const, intersect: false },
+      },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+        y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } }, beginAtZero: true },
+      },
+    };
+    return <div className="h-64"><Line data={data} options={options} /></div>;
+  };
 
   const CircularProgress = ({ percentage, color, size = 120 }: any) => {
     const radius = (size - 20) / 2;
@@ -257,7 +263,7 @@ const HospitalDashboard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-teal-800 transition-all duration-300 flex flex-col relative flex-shrink-0`}>
+      <aside className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex flex-col relative flex-shrink-0 py-6 px-3 gap-1`}>
         {/* Toggle button */}
         <button
           onClick={() => setSidebarOpen(o => !o)}
@@ -267,20 +273,20 @@ const HospitalDashboard: React.FC = () => {
         </button>
 
         {/* Menu Items */}
-        <nav className="flex-1 p-4 pt-6">
+        <nav className="flex-1">
           <div className="space-y-1">
             {sidebarItems.map((item, index) => (
               <div key={index} className="relative group">
                 <button
                   onClick={() => setActivePage(item.page)}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
                     item.active
-                      ? 'bg-teal-700 text-white'
-                      : 'text-teal-100 hover:bg-teal-700 hover:text-white'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
-                  {sidebarOpen && <span className="font-medium flex-1 text-left">{item.label}</span>}
+                  {sidebarOpen && <span className="flex-1 text-left">{item.label}</span>}
                   {item.page === 'appointments' && pendingCount > 0 && sidebarOpen && (
                     <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                       {pendingCount}
@@ -301,11 +307,7 @@ const HospitalDashboard: React.FC = () => {
             ))}
           </div>
         </nav>
-
-        {sidebarOpen && (
-          <div className="p-0 border-t border-teal-700" />
-        )}
-      </div>
+      </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -371,7 +373,7 @@ const HospitalDashboard: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900">Patient statistics</h3>
                 <div className="flex items-center gap-4">
                   <div className="flex gap-2">
-                    {['Week', 'Month', 'Year-2022'].map((period) => (
+                    {PERIODS.map((period) => (
                       <button
                         key={period}
                         onClick={() => setSelectedPeriod(period)}
@@ -560,7 +562,6 @@ const HospitalDashboard: React.FC = () => {
           {activePage === 'activity' && <ActivityPage />}
           {activePage === 'statistic' && <Statistic />}
           {activePage === 'help' && <HelpCenter />}
-          {activePage === 'setting' && <Setting />}
           {activePage === 'report' && <Report />}
           {activePage === 'profile' && <HospitalProfile />}
         </main>
