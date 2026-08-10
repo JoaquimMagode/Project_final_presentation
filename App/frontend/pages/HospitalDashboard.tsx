@@ -56,7 +56,7 @@ const DashboardHeader: React.FC<{
   return (
     <header className="hidden md:flex items-center justify-between h-[73px] px-6 bg-white border-b border-gray-100 flex-shrink-0 gap-4">
       {/* Search */}
-      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 max-w-xl">
+      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
         <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
         <input type="text" placeholder="Search patients, appointments..." className="bg-transparent text-sm outline-none w-full text-gray-700 placeholder-gray-400" />
       </div>

@@ -68,7 +68,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const searchRef = useRef<HTMLInputElement>(null);
   
   const isDashboardPage = ['/superadmin', '/hospital', '/patient'].includes(location.pathname);
-  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/patient-registration';
+  const hideHeaderFooter = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/patient-registration' || location.pathname === '/hospital' || location.pathname === '/patient';
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
