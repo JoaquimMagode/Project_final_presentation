@@ -118,34 +118,65 @@ router.get('/:id', async (req, res) => {
 
     const hospital = await prisma.hospitals.findUnique({
       where: { id: hospitalId },
-      include: { users: { select: { name: true, email: true } } },
+      include: {
+        users: { select: { name: true, email: true } },
+        doctors: {
+          where: { status: 'active' },
+          select: {
+            id: true, name: true, specialization: true, sub_specialization: true,
+            qualification: true, experience_years: true, consultation_fee: true,
+            languages_spoken: true, bio: true, profile_picture_url: true,
+          }
+        },
+        hospital_services: {
+          where: { is_active: true },
+          select: {
+            id: true, service_name: true, service_category: true,
+            description: true, price: true, currency: true, duration_minutes: true,
+          },
+          orderBy: { service_category: 'asc' },
+        },
+      },
     });
 
     if (!hospital) return res.status(404).json({ success: false, message: 'Hospital not found' });
 
-    const stats = await prisma.appointments.aggregate({
-      where: { hospital_id: hospitalId },
-      _count: { id: true },
-    });
+    const [stats, completed, uniquePatients] = await Promise.all([
+      prisma.appointments.aggregate({ where: { hospital_id: hospitalId }, _count: { id: true } }),
+      prisma.appointments.count({ where: { hospital_id: hospitalId, status: 'completed' } }),
+      prisma.appointments.findMany({
+        where: { hospital_id: hospitalId },
+        select: { patient_id: true },
+        distinct: ['patient_id'],
+      }),
+    ]);
 
-    const completed = await prisma.appointments.count({
-      where: { hospital_id: hospitalId, status: 'completed' },
-    });
+    const formattedHospital = {
+      ...formatHospital(hospital),
+      admin_name: hospital.users?.name || null,
+      admin_email: hospital.users?.email || null,
+      users: undefined,
+      doctors: hospital.doctors.map(d => ({
+        ...d,
+        languages_spoken: parseJson(d.languages_spoken),
+        consultation_fee: d.consultation_fee ? parseFloat(d.consultation_fee) : null,
+      })),
+      services: hospital.hospital_services.map(s => ({
+        ...s,
+        price: s.price ? parseFloat(s.price) : null,
+      })),
+      hospital_services: undefined,
+    };
 
     res.json({
       success: true,
       data: {
-        hospital: {
-          ...formatHospital(hospital),
-          admin_name: hospital.users?.name || null,
-          admin_email: hospital.users?.email || null,
-          users: undefined,
-        },
-        doctors: [],
+        hospital: formattedHospital,
+        doctors: formattedHospital.doctors,
         statistics: {
           total_appointments: stats._count.id,
           completed_appointments: completed,
-          total_patients: 0,
+          total_patients: uniquePatients.length,
           total_revenue: 0,
         }
       }

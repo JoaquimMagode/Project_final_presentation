@@ -2,11 +2,21 @@ import React, { useState, useEffect } from 'react';
 import {
   Calendar, Clock, MapPin, Search, Plus, CheckCircle, XCircle,
   AlertCircle, Eye, Edit2, Trash2, Building2, History, FileText,
-  Send, DollarSign, Filter, X
+  Send, DollarSign, Filter, X, Paperclip, Lock, Unlock, Tag
 } from 'lucide-react';
-import { patientsAPI, hospitalsAPI, appointmentsAPI } from '../../services/api';
+import { patientsAPI, hospitalsAPI, appointmentsAPI, documentsAPI } from '../../services/api';
 import { quoteStore, Quote } from '../../services/quoteStore';
 import QuotePDF from '../../components/QuotePDF';
+
+interface MedDoc {
+  id: number;
+  title: string;
+  category: string;
+  privacy_status: 'private' | 'shared';
+  original_name: string;
+  mimetype: string;
+  file_size: number;
+}
 
 interface Appointment {
   id: string;
@@ -101,10 +111,19 @@ const AppointmentRequests: React.FC = () => {
     reason: '', notes: ''
   });
 
+  // Medical documents for appointment attachment
+  const [myDocs, setMyDocs] = useState<MedDoc[]>([]);
+  const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
+  const [showDocPicker, setShowDocPicker] = useState(false);
+
   useEffect(() => {
     fetchAppointments();
     fetchHospitals();
     setQuotes(quoteStore.getQuotes());
+    // Load patient's own documents for attachment
+    documentsAPI.getDocuments({ limit: 200 })
+      .then(r => setMyDocs(r.data?.documents ?? []))
+      .catch(() => {});
   }, []);
 
   const fetchAppointments = async () => {
@@ -166,9 +185,28 @@ const AppointmentRequests: React.FC = () => {
         reason: bookingForm.reason,
         notes: bookingForm.notes
       });
-      setSuccess('Appointment booked successfully!');
+
+      // Share selected documents with the hospital
+      if (selectedDocIds.length > 0) {
+        try {
+          await fetch(`http://localhost:5000/api/medical-documents/share-with-appointment`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+            body: JSON.stringify({
+              document_ids: selectedDocIds,
+              hospital_id: parseInt(bookingForm.hospitalId),
+            }),
+          });
+        } catch { /* non-critical */ }
+      }
+
+      setSuccess(`Appointment booked successfully!${selectedDocIds.length > 0 ? ` ${selectedDocIds.length} document(s) shared with the hospital.` : ''}`);
       setShowBookingModal(false);
       setBookingForm({ hospitalId: '', date: '', time: '', type: 'consultation', reason: '', notes: '' });
+      setSelectedDocIds([]);
       fetchAppointments();
     } catch (err: any) {
       setError(err.message || 'Failed to book appointment');
@@ -580,7 +618,7 @@ const AppointmentRequests: React.FC = () => {
           <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <h3 className="text-lg font-bold text-gray-900">Book Hospital Appointment</h3>
-              <button onClick={() => setShowBookingModal(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
+              <button onClick={() => { setShowBookingModal(false); setSelectedDocIds([]); setShowDocPicker(false); }} className="p-1.5 hover:bg-gray-100 rounded-lg">
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
@@ -638,10 +676,81 @@ const AppointmentRequests: React.FC = () => {
                   rows={2} placeholder="Any additional information for the hospital"
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
+
+              {/* ── Attach Medical Documents ── */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                    <Paperclip className="w-4 h-4 text-gray-400" /> Attach Medical Documents
+                    <span className="text-xs text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  {selectedDocIds.length > 0 && (
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
+                      {selectedDocIds.length} selected
+                    </span>
+                  )}
+                </div>
+
+                {!showDocPicker ? (
+                  <button type="button" onClick={() => setShowDocPicker(true)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                    <Paperclip className="w-4 h-4" />
+                    {myDocs.length === 0 ? 'No documents uploaded yet' : 'Select documents to share with hospital'}
+                  </button>
+                ) : (
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b border-gray-200">
+                      <span className="text-xs font-semibold text-gray-600">
+                        {myDocs.length} document{myDocs.length !== 1 ? 's' : ''} available
+                      </span>
+                      <button onClick={() => setShowDocPicker(false)} className="text-gray-400 hover:text-gray-600">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {myDocs.length === 0 ? (
+                      <div className="px-3 py-4 text-center text-xs text-gray-400">
+                        Upload documents first from My Medical Documents
+                      </div>
+                    ) : (
+                      <div className="max-h-44 overflow-y-auto divide-y divide-gray-50">
+                        {myDocs.map(doc => {
+                          const checked = selectedDocIds.includes(doc.id);
+                          return (
+                            <label key={doc.id} className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors
+                              ${checked ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                              <input type="checkbox" checked={checked}
+                                onChange={() => setSelectedDocIds(ids =>
+                                  checked ? ids.filter(i => i !== doc.id) : [...ids, doc.id]
+                                )}
+                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold text-gray-900 truncate">{doc.title}</p>
+                                <p className="text-xs text-gray-400 truncate">{doc.category.replace(/_/g, ' ')} · {doc.original_name}</p>
+                              </div>
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold flex-shrink-0
+                                ${doc.privacy_status === 'shared' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                                {doc.privacy_status === 'shared' ? <span className="flex items-center gap-0.5"><Unlock className="w-2.5 h-2.5 inline" /> Shared</span>
+                                  : <span className="flex items-center gap-0.5"><Lock className="w-2.5 h-2.5 inline" /> Private</span>}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedDocIds.length > 0 && (
+                  <p className="mt-1.5 text-xs text-blue-600 flex items-center gap-1">
+                    <Paperclip className="w-3 h-3" />
+                    {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} will be shared with the hospital when the appointment is booked
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="px-6 pb-6 flex gap-3">
-              <button onClick={() => setShowBookingModal(false)}
+              <button onClick={() => { setShowBookingModal(false); setSelectedDocIds([]); setShowDocPicker(false); }}
                 className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
                 Cancel
               </button>

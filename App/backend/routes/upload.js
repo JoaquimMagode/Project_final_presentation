@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { authenticateToken } = require('../middleware/auth');
+const prisma = require('../config/prisma');
 const router = express.Router();
 
 // Ensure upload directories exist
@@ -56,7 +57,7 @@ const upload = multer({
 });
 
 // @route   POST /api/upload/documents
-// @desc    Upload multiple documents
+// @desc    Upload multiple documents and persist metadata to DB
 // @access  Private
 router.post('/documents', authenticateToken, upload.array('documents', 10), async (req, res) => {
   try {
@@ -67,20 +68,50 @@ router.post('/documents', authenticateToken, upload.array('documents', 10), asyn
       });
     }
 
-    const uploadedFiles = req.files.map(file => ({
-      filename: file.filename,
-      originalName: file.originalname,
-      path: file.path,
-      size: file.size,
-      mimetype: file.mimetype,
-      uploadedAt: new Date()
-    }));
+    const category = req.body.category || 'other';
+
+    // Resolve patient record for the authenticated user (patients only have a patients row)
+    let patientId = null;
+    if (req.user.role === 'patient') {
+      const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
+      if (patient) patientId = patient.id;
+    }
+
+    // Persist each file's metadata to patient_documents if we have a patient_id
+    const savedDocs = await Promise.all(
+      req.files.map(async (file) => {
+        const doc = patientId
+          ? await prisma.patient_documents.create({
+              data: {
+                patient_id: patientId,
+                filename: file.filename,
+                original_name: file.originalname,
+                category,
+                mimetype: file.mimetype,
+                file_size: file.size,
+              },
+            })
+          : null;
+
+        return {
+          id: doc?.id || null,
+          filename: file.filename,
+          originalName: file.originalname,
+          category,
+          path: file.path,
+          size: file.size,
+          mimetype: file.mimetype,
+          url: `/uploads/documents/${file.filename}`,
+          uploadedAt: doc?.uploaded_at || new Date(),
+        };
+      })
+    );
 
     res.json({
       success: true,
       message: 'Files uploaded successfully',
       data: {
-        files: uploadedFiles
+        files: savedDocs
       }
     });
 
@@ -165,9 +196,9 @@ router.get('/file/:filename', authenticateToken, (req, res) => {
 });
 
 // @route   DELETE /api/upload/file/:filename
-// @desc    Delete uploaded file
+// @desc    Delete uploaded file and its DB record
 // @access  Private
-router.delete('/file/:filename', authenticateToken, (req, res) => {
+router.delete('/file/:filename', authenticateToken, async (req, res) => {
   try {
     const filename = req.params.filename;
     const filePaths = [
@@ -191,6 +222,9 @@ router.delete('/file/:filename', authenticateToken, (req, res) => {
         message: 'File not found'
       });
     }
+
+    // Remove DB record if it exists
+    await prisma.patient_documents.deleteMany({ where: { filename } });
 
     res.json({
       success: true,

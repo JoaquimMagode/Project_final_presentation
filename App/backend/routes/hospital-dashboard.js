@@ -134,6 +134,22 @@ router.get('/patients/:id', authenticateToken, authorizeHospitalAdmin, async (re
           where: { hospital_id: hospitalId },
           orderBy: { created_at: 'desc' },
         },
+        patient_documents: {
+          orderBy: { uploaded_at: 'desc' },
+        },
+        medical_reports: {
+          where: { hospital_id: hospitalId },
+          orderBy: { report_date: 'desc' },
+          select: {
+            id: true,
+            title: true,
+            report_type: true,
+            file_url: true,
+            file_type: true,
+            report_date: true,
+            description: true,
+          },
+        },
       },
     });
 
@@ -162,6 +178,17 @@ router.get('/patients/:id', authenticateToken, authorizeHospitalAdmin, async (re
             .reduce((sum, p) => sum + Number(p.amount), 0),
           appointments: patient.appointments,
           payments: patient.payments,
+          documents: patient.patient_documents.map(d => ({
+            id: d.id,
+            filename: d.filename,
+            original_name: d.original_name,
+            category: d.category,
+            mimetype: d.mimetype,
+            file_size: d.file_size,
+            uploaded_at: d.uploaded_at,
+            url: `/uploads/documents/${d.filename}`,
+          })),
+          medical_reports: patient.medical_reports,
         }
       }
     });

@@ -1,11 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   MapPin, ShieldCheck, Phone, Mail, Users, Award, X, Calendar,
   DollarSign, Stethoscope, Heart, Globe, CheckCircle, AlertCircle,
-  Bed, UserCheck, ArrowLeft, Lock
+  Bed, UserCheck, ArrowLeft, Lock, Wrench, ExternalLink
 } from 'lucide-react';
 import { hospitalsAPI } from '../services/api';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet default marker icons
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
 
 interface Hospital {
   id: number; name: string; email: string; phone: string;
@@ -14,6 +24,12 @@ interface Hospital {
   commission_rate: number; logo_url: string; description: string; website_url: string;
   established_year: number; bed_capacity: number; status: string;
   admin_name: string; admin_email: string; created_at: string; updated_at: string;
+  services?: Service[];
+}
+
+interface Service {
+  id: number; service_name: string; service_category: string;
+  description: string; price: number; currency: string; duration_minutes: number;
 }
 
 interface Doctor {
@@ -41,10 +57,48 @@ const HospitalDetail: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
 
   const availableTimes = ['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'];
 
   useEffect(() => { if (id) fetchHospitalDetails(); }, [id]);
+
+  // Geocode hospital address using Nominatim (OpenStreetMap)
+  const geocodeAddress = async (h: Hospital): Promise<[number, number] | null> => {
+    if (h.latitude && h.longitude) return [h.latitude, h.longitude];
+    const query = encodeURIComponent(`${h.name}, ${h.city}, ${h.state}, India`);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, {
+        headers: { 'Accept-Language': 'en' }
+      });
+      const data = await res.json();
+      if (data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+    } catch {}
+    return null;
+  };
+
+  useEffect(() => {
+    if (!hospital || !mapRef.current || !isLoggedIn) return;
+    // Destroy previous map instance
+    if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
+
+    geocodeAddress(hospital).then(coords => {
+      if (!coords || !mapRef.current) return;
+      const [lat, lng] = coords;
+      const map = L.map(mapRef.current).setView([lat, lng], 15);
+      mapInstanceRef.current = map;
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      L.marker([lat, lng])
+        .addTo(map)
+        .bindPopup(`<b>${hospital.name}</b><br/>${hospital.address || hospital.city}`)
+        .openPopup();
+    });
+
+    return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
+  }, [hospital, isLoggedIn]);
 
   const fetchHospitalDetails = async () => {
     try {
@@ -226,7 +280,7 @@ const HospitalDetail: React.FC = () => {
         {hospital.specialties?.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Heart className="w-4 h-4 text-rose-500" /> Medical Specialties
+              <Heart className="w-4 h-4 text-rose-500" /> Medical Specializations
             </h2>
             <div className="flex flex-wrap gap-2">
               {hospital.specialties.map((s, i) => (
@@ -239,7 +293,7 @@ const HospitalDetail: React.FC = () => {
         {hospital.accreditations?.length > 0 && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-500" /> Accreditations
+              <Award className="w-4 h-4 text-amber-500" /> Accreditations & Certifications
             </h2>
             <div className="space-y-2">
               {hospital.accreditations.map((a, i) => (
@@ -250,6 +304,68 @@ const HospitalDetail: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Services */}
+      {hospital.services && hospital.services.length > 0 && (() => {
+        const grouped = hospital.services.reduce((acc: Record<string, Service[]>, s: Service) => {
+          const cat = s.service_category || 'General';
+          if (!acc[cat]) acc[cat] = [];
+          acc[cat].push(s);
+          return acc;
+        }, {});
+        return (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 className="text-base font-bold text-gray-800 mb-5 flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-violet-500" /> Services & Procedures
+              <span className="ml-1 text-xs font-normal text-gray-400">({hospital.services!.length} services)</span>
+            </h2>
+            <div className="space-y-5">
+              {Object.entries(grouped).map(([category, services]: [string, Service[]]) => (
+                <div key={category}>
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">{category}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {services.map((s: Service) => (
+                      <div key={s.id} className="border border-gray-100 rounded-xl p-3 hover:border-violet-200 transition-colors">
+                        <p className="font-semibold text-gray-900 text-sm mb-1">{s.service_name}</p>
+                        {s.description && <p className="text-xs text-gray-500 mb-2 line-clamp-2">{s.description}</p>}
+                        <div className="flex items-center justify-between text-xs">
+                          {s.price ? (
+                            <span className="font-bold text-emerald-600">{formatCurrency(s.price)}</span>
+                          ) : <span />}
+                          {s.duration_minutes && (
+                            <span className="text-gray-400">{s.duration_minutes} min</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Map */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+        <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <MapPin className="w-4 h-4 text-red-500" /> Location & Directions
+        </h2>
+        <p className="text-sm text-gray-500 mb-3 flex items-center gap-1.5">
+          <MapPin className="w-3.5 h-3.5" />
+          {hospital.address}, {hospital.city}, {hospital.state}, {hospital.country}
+          {hospital.postal_code && ` - ${hospital.postal_code}`}
+        </p>
+        <div ref={mapRef} className="w-full h-72 rounded-xl overflow-hidden border border-gray-100 z-0" />
+        <a
+          href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(`${hospital.name}, ${hospital.city}, India`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
+        >
+          <ExternalLink className="w-3.5 h-3.5" /> Open in OpenStreetMap
+        </a>
       </div>
 
       {/* Doctors */}

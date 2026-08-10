@@ -3,7 +3,7 @@ import {
   Home, Calendar, FileText,
   HelpCircle, Phone, Upload, ChevronRight,
   CheckCircle, Clock, AlertCircle, CreditCard, Building2, MapPin,
-  Menu, Search, Bell, Globe, ChevronDown, LogOut, User, AlertTriangle, Hospital
+  Menu, Search, Bell, Globe, ChevronDown, LogOut, User, AlertTriangle, Hospital, FolderOpen
 } from 'lucide-react';
 import { useAuth, useLang } from '../App';
 import { LANGUAGES } from '../constants';
@@ -16,22 +16,24 @@ import PatientSettings from './patient/PatientSettings';
 import PatientHelp from './patient/PatientHelp';
 import Billing from './patient/Billing';
 import FindHospitals from './patient/FindHospitals';
+import PatientDocuments from './patient/PatientDocuments';
 
-type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help' | 'find-hospitals';
+type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help' | 'find-hospitals' | 'documents';
 
 const NAV = [
   { page: 'dashboard' as Page,       icon: Home,        label: 'Dashboard' },
   { page: 'appointments' as Page,    icon: Calendar,    label: 'Appointments' },
+  { page: 'documents' as Page,       icon: FolderOpen,  label: 'My Documents' },
   { page: 'billing' as Page,         icon: CreditCard,  label: 'Records & Billing' },
   { page: 'reports' as Page,         icon: FileText,    label: 'My Reports' },
   { page: 'help' as Page,            icon: HelpCircle,  label: 'Help' },
 ];
 
 const QUICK_ACTIONS = [
-  { page: 'appointments' as Page,   icon: Calendar,  label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
-  { page: 'find-hospitals' as Page, icon: Hospital,  label: 'Find Hospitals',     desc: 'Search & book hospitals',     color: 'bg-emerald-50 text-emerald-600' },
-  { page: 'reports' as Page,        icon: FileText,  label: 'Medical Reports',    desc: 'View your test results',      color: 'bg-violet-50 text-violet-600' },
-  { page: 'billing' as Page,        icon: Upload,    label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
+  { page: 'appointments' as Page,   icon: Calendar,    label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
+  { page: 'find-hospitals' as Page, icon: Hospital,    label: 'Find Hospitals',     desc: 'Search & book hospitals',     color: 'bg-emerald-50 text-emerald-600' },
+  { page: 'documents' as Page,      icon: FolderOpen,  label: 'My Documents',       desc: 'Upload & share health records', color: 'bg-violet-50 text-violet-600' },
+  { page: 'billing' as Page,        icon: Upload,      label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
 ];
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
@@ -491,6 +493,7 @@ const PatientDashboard: React.FC = () => {
           {activePage === 'billing'         && <Billing />}
           {activePage === 'settings'        && <PatientSettings />}
           {activePage === 'help'            && <PatientHelp />}
+          {activePage === 'documents'       && <PatientDocuments />}
 
         </main>
       </div>

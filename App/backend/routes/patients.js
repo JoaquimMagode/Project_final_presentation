@@ -212,7 +212,55 @@ router.post('/registration', authenticateToken, authorize('patient'), async (req
 
 // GET /api/patients/documents
 router.get('/documents', authenticateToken, authorize('patient'), async (req, res) => {
-  res.json({ success: true, data: { documents: [] } });
+  try {
+    const patient = await ensurePatientRow(req.user.id);
+    const docs = await prisma.patient_documents.findMany({
+      where: { patient_id: patient.id },
+      orderBy: { uploaded_at: 'desc' },
+    });
+
+    const documents = docs.map(d => ({
+      id: String(d.id),
+      name: d.original_name,
+      filename: d.filename,
+      type: d.mimetype || '',
+      size: d.file_size || 0,
+      uploadDate: d.uploaded_at,
+      category: d.category,
+      url: `/uploads/documents/${d.filename}`,
+    }));
+
+    res.json({ success: true, data: { documents } });
+  } catch (error) {
+    console.error('Get patient documents error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get documents' });
+  }
+});
+
+// DELETE /api/patients/documents/:id
+router.delete('/documents/:id', authenticateToken, authorize('patient'), async (req, res) => {
+  try {
+    const docId = parseInt(req.params.id);
+    const patient = await ensurePatientRow(req.user.id);
+
+    const doc = await prisma.patient_documents.findFirst({
+      where: { id: docId, patient_id: patient.id },
+    });
+    if (!doc) return res.status(404).json({ success: false, message: 'Document not found' });
+
+    // Delete from disk
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, '../uploads/documents', doc.filename);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+    await prisma.patient_documents.delete({ where: { id: docId } });
+
+    res.json({ success: true, message: 'Document deleted successfully' });
+  } catch (error) {
+    console.error('Delete patient document error:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete document' });
+  }
 });
 
 // GET /api/patients
