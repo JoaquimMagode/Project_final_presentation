@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Home, Calendar, FileText,
-  HelpCircle, Phone, Upload, ChevronRight,
-  CheckCircle, Clock, AlertCircle, CreditCard, Building2, MapPin,
-  Menu, Search, Bell, Globe, ChevronDown, LogOut, User, AlertTriangle, Hospital, FolderOpen
-} from 'lucide-react';
+  HomeIcon, CalendarIcon, DocumentTextIcon,
+  QuestionMarkCircleIcon, PhoneIcon, ArrowUpTrayIcon, ChevronRightIcon,
+  CheckCircleIcon, ClockIcon, ExclamationCircleIcon, CreditCardIcon,
+  BuildingOffice2Icon, MapPinIcon, Bars3Icon, MagnifyingGlassIcon,
+  BellIcon, GlobeAltIcon, ChevronDownIcon, ArrowRightOnRectangleIcon,
+  UserIcon, ExclamationTriangleIcon, BuildingOfficeIcon, FolderOpenIcon
+} from '@heroicons/react/24/outline';
 import { useAuth, useLang } from '../App';
 import { LANGUAGES } from '../constants';
 import { Language } from '../types';
@@ -21,26 +23,26 @@ import PatientDocuments from './patient/PatientDocuments';
 type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help' | 'find-hospitals' | 'documents';
 
 const NAV = [
-  { page: 'dashboard' as Page,       icon: Home,        label: 'Dashboard' },
-  { page: 'appointments' as Page,    icon: Calendar,    label: 'Appointments' },
-  { page: 'documents' as Page,       icon: FolderOpen,  label: 'My Documents' },
-  { page: 'billing' as Page,         icon: CreditCard,  label: 'Records & Billing' },
-  { page: 'reports' as Page,         icon: FileText,    label: 'My Reports' },
-  { page: 'help' as Page,            icon: HelpCircle,  label: 'Help' },
+  { page: 'dashboard' as Page,       icon: HomeIcon,              label: 'Dashboard' },
+  { page: 'appointments' as Page,    icon: CalendarIcon,          label: 'Appointments' },
+  { page: 'documents' as Page,       icon: FolderOpenIcon,        label: 'My Documents' },
+  { page: 'billing' as Page,         icon: CreditCardIcon,        label: 'Records & Billing' },
+  { page: 'reports' as Page,         icon: DocumentTextIcon,      label: 'My Reports' },
+  { page: 'help' as Page,            icon: QuestionMarkCircleIcon, label: 'Help' },
 ];
 
 const QUICK_ACTIONS = [
-  { page: 'appointments' as Page,   icon: Calendar,    label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
-  { page: 'find-hospitals' as Page, icon: Hospital,    label: 'Find Hospitals',     desc: 'Search & book hospitals',     color: 'bg-emerald-50 text-emerald-600' },
-  { page: 'documents' as Page,      icon: FolderOpen,  label: 'My Documents',       desc: 'Upload & share health records', color: 'bg-violet-50 text-violet-600' },
-  { page: 'billing' as Page,        icon: Upload,      label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
+  { page: 'appointments' as Page,   icon: CalendarIcon,      label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
+  { page: 'find-hospitals' as Page, icon: BuildingOfficeIcon, label: 'Find Hospitals',     desc: 'Search & book hospitals',     color: 'bg-emerald-50 text-emerald-600' },
+  { page: 'documents' as Page,      icon: FolderOpenIcon,    label: 'My Documents',       desc: 'Upload & share health records', color: 'bg-violet-50 text-violet-600' },
+  { page: 'billing' as Page,        icon: ArrowUpTrayIcon,   label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
 ];
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
-  confirmed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
-  pending:   { color: 'bg-amber-50 text-amber-700 border-amber-200',       icon: Clock },
-  cancelled: { color: 'bg-red-50 text-red-600 border-red-200',             icon: AlertCircle },
-  completed: { color: 'bg-blue-50 text-blue-700 border-blue-200',          icon: CheckCircle },
+  confirmed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircleIcon },
+  pending:   { color: 'bg-amber-50 text-amber-700 border-amber-200',       icon: ClockIcon },
+  cancelled: { color: 'bg-red-50 text-red-600 border-red-200',             icon: ExclamationCircleIcon },
+  completed: { color: 'bg-blue-50 text-blue-700 border-blue-200',          icon: CheckCircleIcon },
 };
 
 const MOCK_NOTIFICATIONS = [
@@ -81,7 +83,7 @@ const PatientHeader: React.FC<{
     <header className="hidden md:flex items-center justify-between h-[73px] px-6 bg-white border-b border-gray-100 flex-shrink-0 gap-4">
       {/* Search */}
       <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
-        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
         <input type="text" placeholder="Search appointments, reports..." className="bg-transparent text-sm outline-none w-full text-gray-700 placeholder-gray-400" />
       </div>
 
@@ -97,7 +99,7 @@ const PatientHeader: React.FC<{
 
         {/* Language */}
         <div className="flex items-center gap-1.5 text-gray-600">
-          <Globe className="w-4 h-4" />
+          <GlobeAltIcon className="w-4 h-4" />
           <select
             value={lang}
             onChange={e => setLang(e.target.value as Language)}
@@ -113,7 +115,7 @@ const PatientHeader: React.FC<{
             onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
             className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <Bell className="w-5 h-5 text-gray-600" />
+            <BellIcon className="w-5 h-5 text-gray-600" />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -168,7 +170,7 @@ const PatientHeader: React.FC<{
               <div className="text-sm font-semibold text-gray-900">{user?.name || 'Patient'}</div>
               <div className="text-xs text-gray-500">Patient</div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {profileOpen && (
@@ -188,21 +190,21 @@ const PatientHeader: React.FC<{
                 onClick={() => { setActivePage('settings'); setProfileOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <User className="w-4 h-4 text-gray-500" />
+                <UserIcon className="w-4 h-4 text-gray-500" />
                 Profile Settings
               </button>
               <button
                 onClick={() => { setActivePage('help'); setProfileOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <HelpCircle className="w-4 h-4 text-gray-500" />
+                <QuestionMarkCircleIcon className="w-4 h-4 text-gray-500" />
                 FAQ
               </button>
               <button
                 onClick={() => setProfileOpen(false)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
               >
-                <AlertTriangle className="w-4 h-4" />
+                <ExclamationTriangleIcon className="w-4 h-4" />
                 Report Emergency
               </button>
               <div className="border-t border-gray-100 mt-1" />
@@ -210,7 +212,7 @@ const PatientHeader: React.FC<{
                 onClick={() => { logout(); navigate('/login'); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <LogOut className="w-4 h-4 text-gray-500" />
+                <ArrowRightOnRectangleIcon className="w-4 h-4 text-gray-500" />
                 Logout
               </button>
             </div>
@@ -285,7 +287,7 @@ const PatientDashboard: React.FC = () => {
             onClick={() => setSidebarOpen(o => !o)}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <Menu className="w-4 h-4 text-gray-500" />
+            <Bars3Icon className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
@@ -422,13 +424,13 @@ const PatientDashboard: React.FC = () => {
                     onClick={() => setActivePage('appointments')}
                     className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:underline"
                   >
-                    See all <ChevronRight className="w-4 h-4" />
+                    See all <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
 
                 {upcomingAppointments.length === 0 ? (
                   <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-gray-200">
-                    <Calendar className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <CalendarIcon className="w-10 h-10 mx-auto mb-3 text-gray-300" />
                     <p className="text-sm text-gray-400 mb-3">No upcoming appointments</p>
                     <button
                       onClick={() => setActivePage('appointments')}
@@ -445,15 +447,15 @@ const PatientDashboard: React.FC = () => {
                       return (
                         <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
                           <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <Building2 className="w-5 h-5 text-emerald-600" />
+                            <BuildingOffice2Icon className="w-5 h-5 text-emerald-600" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital_name}</p>
                             <p className="text-xs text-gray-500 truncate">{apt.reason}</p>
                             <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />{apt.hospital_city}
+                              <MapPinIcon className="w-3 h-3" />{apt.hospital_city}
                               <span className="mx-1">·</span>
-                              <Clock className="w-3 h-3" />
+                              <ClockIcon className="w-3 h-3" />
                               {new Date(apt.appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                             </p>
                           </div>
@@ -474,13 +476,13 @@ const PatientDashboard: React.FC = () => {
                 className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4"
               >
                 <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-gray-600" />
+                  <PhoneIcon className="w-5 h-5 text-gray-600" />
                 </div>
                 <div className="text-left">
                   <p className="font-semibold text-gray-900 text-sm">Need Help?</p>
                   <p className="text-xs text-gray-400">Contact our support team anytime</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
+                <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
               </button>
 
             </div>

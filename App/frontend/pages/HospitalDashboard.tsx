@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
-  TrendingUp, TrendingDown, MoreHorizontal, HelpCircle,
-  BarChart3, Home, FileText, CreditCard, UserCheck, 
-  Clock, DollarSign, Eye, ChevronDown, LogOut, Menu,
-  AlertTriangle, Globe
-} from 'lucide-react';
+import {
+  MagnifyingGlassIcon, BellIcon, UserIcon, CalendarIcon, PhoneIcon, UsersIcon,
+  BoltIcon as ActivityIcon,
+  ArrowTrendingUpIcon, ArrowTrendingDownIcon, EllipsisHorizontalIcon, QuestionMarkCircleIcon,
+  ChartBarIcon, HomeIcon, DocumentTextIcon, CreditCardIcon, UserPlusIcon,
+  ClockIcon, CurrencyDollarIcon, EyeIcon, ChevronDownIcon, ArrowRightOnRectangleIcon, Bars3Icon,
+  ExclamationTriangleIcon, GlobeAltIcon
+} from '@heroicons/react/24/outline';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
@@ -57,14 +58,14 @@ const DashboardHeader: React.FC<{
     <header className="hidden md:flex items-center justify-between h-[73px] px-6 bg-white border-b border-gray-100 flex-shrink-0 gap-4">
       {/* Search */}
       <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
-        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
         <input type="text" placeholder="Search patients, appointments..." className="bg-transparent text-sm outline-none w-full text-gray-700 placeholder-gray-400" />
       </div>
 
       <div className="flex items-center gap-3">
         {/* Language */}
         <div className="flex items-center gap-1.5 text-gray-600">
-          <Globe className="w-4 h-4" />
+          <GlobeAltIcon className="w-4 h-4" />
           <select
             value={lang}
             onChange={e => setLang(e.target.value as Language)}
@@ -80,7 +81,7 @@ const DashboardHeader: React.FC<{
             onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
             className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            <Bell className="w-5 h-5 text-gray-600" />
+            <BellIcon className="w-5 h-5 text-gray-600" />
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -135,7 +136,7 @@ const DashboardHeader: React.FC<{
               <div className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</div>
               <div className="text-xs text-gray-500">Hospital Admin</div>
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+            <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {profileOpen && (
@@ -155,21 +156,21 @@ const DashboardHeader: React.FC<{
                 onClick={() => { setActivePage('profile'); setProfileOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <User className="w-4 h-4 text-gray-500" />
+                <UserIcon className="w-4 h-4 text-gray-500" />
                 Profile Settings
               </button>
               <button
                 onClick={() => { setActivePage('help'); setProfileOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <HelpCircle className="w-4 h-4 text-gray-500" />
+                <QuestionMarkCircleIcon className="w-4 h-4 text-gray-500" />
                 FAQ
               </button>
               <button
                 onClick={() => setProfileOpen(false)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
               >
-                <AlertTriangle className="w-4 h-4" />
+                <ExclamationTriangleIcon className="w-4 h-4" />
                 Report Emergency
               </button>
               <div className="border-t border-gray-100 mt-1" />
@@ -177,7 +178,7 @@ const DashboardHeader: React.FC<{
                 onClick={() => { logout(); navigate('/login'); }}
                 className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
-                <LogOut className="w-4 h-4 text-gray-500" />
+                <ArrowRightOnRectangleIcon className="w-4 h-4 text-gray-500" />
                 Logout
               </button>
             </div>
@@ -311,15 +312,15 @@ const HospitalDashboard: React.FC = () => {
   };
   
   const sidebarItems = [
-    { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
-    { icon: Users, label: 'Patients', active: activePage === 'patients', page: 'patients' },
-    { icon: Calendar, label: 'Appointment', active: activePage === 'appointments', page: 'appointments', hasDropdown: true },
-    { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
-    { icon: CreditCard, label: 'Payments', active: activePage === 'payments', page: 'payments' },
-    { icon: UserCheck, label: 'Employee', active: activePage === 'employee', page: 'employee' },
-    { icon: ActivityIcon, label: 'Activity', active: activePage === 'activity', page: 'activity' },
-    { icon: BarChart3, label: 'Statistic', active: activePage === 'statistic', page: 'statistic' },
-    { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
+    { icon: HomeIcon,       label: 'Dashboard',   active: activePage === 'dashboard',    page: 'dashboard' },
+    { icon: UsersIcon,      label: 'Patients',    active: activePage === 'patients',     page: 'patients' },
+    { icon: CalendarIcon,   label: 'Appointment', active: activePage === 'appointments', page: 'appointments', hasDropdown: true },
+    { icon: DocumentTextIcon, label: 'Report',    active: activePage === 'report',       page: 'report' },
+    { icon: CreditCardIcon, label: 'Payments',    active: activePage === 'payments',     page: 'payments' },
+    { icon: UserPlusIcon,   label: 'Employee',    active: activePage === 'employee',     page: 'employee' },
+    { icon: ActivityIcon,   label: 'Activity',    active: activePage === 'activity',     page: 'activity' },
+    { icon: ChartBarIcon,   label: 'Statistic',   active: activePage === 'statistic',    page: 'statistic' },
+    { icon: QuestionMarkCircleIcon, label: 'Help & Center', active: activePage === 'help', page: 'help' },
   ];
 
   const StatCard = ({ icon: Icon, title, value, change, changeType, color }: any) => (
@@ -331,7 +332,7 @@ const HospitalDashboard: React.FC = () => {
         <div className="text-right">
           <div className="text-2xl font-bold text-gray-900">{value}</div>
           <div className={`text-sm flex items-center gap-1 ${changeType === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-            {changeType === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+            {changeType === 'up' ? <ArrowTrendingUpIcon className="w-4 h-4" /> : <ArrowTrendingDownIcon className="w-4 h-4" />}
             {change}
           </div>
         </div>
@@ -598,33 +599,33 @@ const HospitalDashboard: React.FC = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-6 md:mb-8">
             <StatCard
-              icon={Calendar}
+              icon={CalendarIcon}
               title="Appointments"
-              value={loading ? "..." : (dashboardStats?.total_appointments || "0")}
+            value={loading ? "..." : (dashboardStats?.total_appointments || "0")}
               change="4.8% from last week"
               changeType="up"
               color="bg-blue-500"
             />
             <StatCard
-              icon={Phone}
+              icon={PhoneIcon}
               title="Total Patients"
-              value={loading ? "..." : (dashboardStats?.total_patients || "0")}
+            value={loading ? "..." : (dashboardStats?.total_patients || "0")}
               change="6.0% from last week"
               changeType="up"
               color="bg-green-500"
             />
             <StatCard
-              icon={Users}
+              icon={UsersIcon}
               title="Completed"
-              value={loading ? "..." : (dashboardStats?.completed_appointments || "0")}
+            value={loading ? "..." : (dashboardStats?.completed_appointments || "0")}
               change="2.5% from last week"
               changeType="up"
               color="bg-teal-500"
             />
             <StatCard
-              icon={DollarSign}
+              icon={CurrencyDollarIcon}
               title="Total Revenue"
-              value={loading ? "..." : `₹${(dashboardStats?.total_revenue || 0).toLocaleString()}`}
+            value={loading ? "..." : `₹${(dashboardStats?.total_revenue || 0).toLocaleString()}`}
               change="2.1% from last week"
               changeType="up"
               color="bg-blue-400"
