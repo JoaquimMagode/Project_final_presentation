@@ -206,7 +206,11 @@ router.get('/appointments', authenticateToken, authorizeHospitalAdmin, async (re
 
     const where = { hospital_id: hospitalId };
     if (status) where.status = status;
-    if (date) where.appointment_date = new Date(date);
+    if (date) {
+      const start = new Date(date + 'T00:00:00.000Z');
+      const end   = new Date(date + 'T23:59:59.999Z');
+      where.appointment_date = { gte: start, lte: end };
+    }
 
     const appointments = await prisma.appointments.findMany({
       where,
@@ -491,12 +495,12 @@ router.get('/today-schedule', authenticateToken, authorizeHospitalAdmin, async (
     const hospitalId = req.user.hospital_id;
 
     const today = new Date();
-    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
     const appointments = await prisma.appointments.findMany({
       where: {
         hospital_id: hospitalId,
-        appointment_date: new Date(todayStr),
+        appointment_date: new Date(todayStr + 'T00:00:00.000Z'),
         status: { in: ['pending', 'confirmed'] },
       },
       include: {
@@ -507,9 +511,15 @@ router.get('/today-schedule', authenticateToken, authorizeHospitalAdmin, async (
     });
 
     const schedule = appointments.map(a => {
-      const timeStr = a.appointment_time
-        ? new Date(a.appointment_time).toISOString().substring(11, 16)
-        : '00:00';
+      let timeStr = '00:00';
+      if (a.appointment_time) {
+        if (a.appointment_time instanceof Date) {
+          timeStr = a.appointment_time.toISOString().substring(11, 16);
+        } else {
+          // MySQL TIME string: "HH:MM:SS" or "HH:MM"
+          timeStr = String(a.appointment_time).substring(0, 5);
+        }
+      }
       const [hh, mm] = timeStr.split(':').map(Number);
       const suffix = hh >= 12 ? 'pm' : 'am';
       const h12 = hh % 12 || 12;

@@ -144,12 +144,12 @@ const HospitalDetailView: React.FC<DetailViewProps> = ({ hospital, statistics, o
   const services = hospital.services || [];
   const doctors = hospital.doctors || [];
 
-  const groupedServices = services.reduce((acc: Record<string, Service[]>, s) => {
+  const groupedServices: Record<string, Service[]> = services.reduce((acc: Record<string, Service[]>, s) => {
     const cat = s.service_category || 'General';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(s);
     return acc;
-  }, {});
+  }, {} as Record<string, Service[]>);
 
   const handleBook = async () => {
     if (!bookingForm.date || !bookingForm.time || !bookingForm.reason) {
@@ -555,6 +555,59 @@ const HospitalDetailView: React.FC<DetailViewProps> = ({ hospital, statistics, o
   );
 };
 
+// ── Hospital List Card ────────────────────────────────────────────────────────
+const HospitalListCard: React.FC<{ hospital: Hospital; onViewDetails: (id: number) => void }> = ({ hospital, onViewDetails }) => (
+  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
+    <div className="p-5 flex gap-4">
+      {hospital.logo_url ? (
+        <img src={hospital.logo_url} alt={hospital.name}
+          className="w-16 h-16 rounded-xl object-cover border border-gray-100 flex-shrink-0"
+          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+      ) : (
+        <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-2xl font-black flex-shrink-0">
+          {hospital.name.charAt(0)}
+        </div>
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex flex-wrap gap-1 mb-1.5">
+          {(hospital.accreditations || []).slice(0, 2).map((a, i) => (
+            <span key={i} className="bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full flex items-center gap-0.5 border border-emerald-100">
+              <ShieldCheck className="w-2.5 h-2.5" /> {a}
+            </span>
+          ))}
+        </div>
+        <h3 className="font-bold text-gray-900 leading-tight truncate">{hospital.name}</h3>
+        <p className="text-gray-400 text-xs flex items-center gap-1 mt-0.5">
+          <MapPin className="w-3 h-3" /> {hospital.city}{hospital.state ? `, ${hospital.state}` : ''}
+        </p>
+      </div>
+    </div>
+    {(hospital.specialties || []).length > 0 && (
+      <div className="px-5 pb-3">
+        <div className="flex flex-wrap gap-1">
+          {hospital.specialties.slice(0, 4).map((s, i) => (
+            <span key={i} className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-md">{s}</span>
+          ))}
+          {hospital.specialties.length > 4 && (
+            <span className="bg-slate-100 text-slate-400 text-[10px] font-bold px-2 py-0.5 rounded-md">+{hospital.specialties.length - 4} more</span>
+          )}
+        </div>
+      </div>
+    )}
+    <div className="px-5 pb-4 flex items-center justify-between border-t border-gray-50 pt-3">
+      <div className="flex items-center gap-1.5 text-xs text-gray-500">
+        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+        <span className="font-semibold text-gray-700">Accredited</span>
+      </div>
+      <button
+        onClick={() => onViewDetails(hospital.id)}
+        className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-blue-600 transition-colors">
+        View Details
+      </button>
+    </div>
+  </div>
+);
+
 // ── Main FindHospitals page ───────────────────────────────────────────────────
 const FindHospitals: React.FC = () => {
   const [city, setCity] = useState('');
@@ -666,3 +719,112 @@ const FindHospitals: React.FC = () => {
   if (selectedHospital) {
     return <HospitalDetailView hospital={selectedHospital} statistics={statistics} onBack={handleBack} />;
   }
+
+  // ── Search / List view ───────────────────────────────────────────────────
+  const displayList = hasSearched ? filteredHospitals : hospitals;
+
+  return (
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">Find Hospitals</h1>
+        <p className="text-gray-500 text-sm">Search from our network of accredited hospitals across India</p>
+      </div>
+
+      {/* Search form */}
+      <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">City / Location</label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <select value={city} onChange={e => setCity(e.target.value)}
+                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white">
+                <option value="">All Cities</option>
+                {INDIAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Specialization / Procedure</label>
+            <div className="relative">
+              <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <select value={procedure} onChange={e => setProcedure(e.target.value)}
+                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white">
+                <option value="">All Specializations</option>
+                {PROCEDURES.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <button type="submit" disabled={loading}
+            className="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 disabled:bg-blue-300 transition-colors flex items-center justify-center gap-2 text-sm">
+            <Search className="w-4 h-4" />
+            {loading ? 'Searching…' : 'Search Hospitals'}
+          </button>
+          {(city || procedure || hasSearched) && (
+            <button type="button" onClick={() => { setCity(''); setProcedure(''); setHasSearched(false); setFilteredHospitals([]); setError(''); }}
+              className="px-4 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm flex items-center gap-1.5">
+              <X className="w-4 h-4" /> Clear
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <p className="text-red-600 text-sm font-medium">{error}</p>
+          <button onClick={fetchAll} className="ml-auto text-sm text-blue-600 font-semibold hover:underline">Retry</button>
+        </div>
+      )}
+
+      {/* Results header */}
+      {!loading && !error && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            {hasSearched
+              ? `${filteredHospitals.length} hospital${filteredHospitals.length !== 1 ? 's' : ''} found`
+              : `${hospitals.length} hospital${hospitals.length !== 1 ? 's' : ''} available`}
+          </p>
+        </div>
+      )}
+
+      {/* Hospital cards */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 animate-pulse">
+              <div className="flex gap-4">
+                <div className="w-16 h-16 bg-gray-100 rounded-xl flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  <div className="h-4 bg-gray-100 rounded w-2/3" />
+                  <div className="h-3 bg-gray-100 rounded w-1/2" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : displayList.length === 0 && (hasSearched || !loading) ? (
+        <div className="bg-white rounded-2xl border border-gray-100 p-12 text-center">
+          <Building2 className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <h3 className="font-bold text-gray-700 mb-1">No hospitals found</h3>
+          <p className="text-gray-400 text-sm">Try adjusting your search criteria</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {displayList.map(hospital => (
+            <HospitalListCard key={hospital.id} hospital={hospital} onViewDetails={handleViewDetails} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default FindHospitals;

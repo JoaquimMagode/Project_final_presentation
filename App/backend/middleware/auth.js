@@ -93,6 +93,15 @@ const authorizeHospitalAdmin = async (req, res, next) => {
 
     if (req.user.isHospital) req.user.hospital_id = req.user.id;
 
+    // Last-resort: try to resolve hospital_id from admin_id if still missing
+    if (!req.user.hospital_id) {
+      const hospital = await prisma.hospitals.findFirst({
+        where: { admin_id: req.user.id },
+        select: { id: true }
+      });
+      if (hospital) req.user.hospital_id = hospital.id;
+    }
+
     if (!req.user.hospital_id) {
       return res.status(403).json({ success: false, message: 'No hospital associated with this admin account. Please contact super admin.' });
     }

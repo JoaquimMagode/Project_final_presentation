@@ -130,8 +130,8 @@ router.post('/appointments', authenticateToken, authorize('patient'), async (req
       data: {
         patient_id: patient.id,
         hospital_id: parseInt(hospital_id),
-        appointment_date: new Date(appointment_date),
-        appointment_time: new Date(`1970-01-01T${appointment_time}`),
+        appointment_date: new Date(appointment_date + 'T00:00:00.000Z'),
+        appointment_time: new Date(`1970-01-01T${appointment_time}:00Z`),
         reason,
         notes: reason,
         status: 'pending',

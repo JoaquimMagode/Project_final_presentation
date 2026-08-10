@@ -14,9 +14,10 @@ router.get('/', authenticateToken, async (req, res) => {
       if (!patient) return res.json({ success: true, data: { appointments: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } } });
       where.patient_id = patient.id;
     } else if (req.user.role === 'hospital_admin') {
-      const hospital = await prisma.hospitals.findFirst({ where: { admin_id: req.user.id } });
-      if (!hospital) return res.json({ success: true, data: { appointments: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } } });
-      where.hospital_id = hospital.id;
+      const hospitalId = req.user.hospital_id ||
+        (await prisma.hospitals.findFirst({ where: { admin_id: req.user.id }, select: { id: true } }))?.id;
+      if (!hospitalId) return res.json({ success: true, data: { appointments: [], pagination: { page: 1, limit: 10, total: 0, pages: 0 } } });
+      where.hospital_id = hospitalId;
     }
 
     if (status) where.status = status;
@@ -101,8 +102,8 @@ router.post('/', authenticateToken, authorize('patient'), async (req, res) => {
     const conflict = await prisma.appointments.findFirst({
       where: {
         patient_id: patient.id,
-        appointment_date: new Date(appointment_date),
-        appointment_time: new Date(`1970-01-01T${appointment_time}`),
+        appointment_date: new Date(appointment_date + 'T00:00:00.000Z'),
+        appointment_time: new Date(`1970-01-01T${appointment_time}:00Z`),
         status: { notIn: ['cancelled', 'completed'] },
       },
     });
@@ -112,8 +113,8 @@ router.post('/', authenticateToken, authorize('patient'), async (req, res) => {
       data: {
         patient_id: patient.id,
         hospital_id: parseInt(hospital_id),
-        appointment_date: new Date(appointment_date),
-        appointment_time: new Date(`1970-01-01T${appointment_time}`),
+        appointment_date: new Date(appointment_date + 'T00:00:00.000Z'),
+        appointment_time: new Date(`1970-01-01T${appointment_time}:00Z`),
         type: type || 'consultation',
         reason,
         notes: notes || null,
@@ -146,16 +147,18 @@ router.put('/:id', authenticateToken, async (req, res) => {
     if (req.user.role === 'patient' && appointment.patients?.user_id === req.user.id) {
       if (appointment.status !== 'pending') return res.status(400).json({ success: false, message: 'Can only modify pending appointments' });
       canUpdate = true;
-    } else if (req.user.role === 'hospital_admin' && req.user.hospital_id === appointment.hospital_id) {
-      canUpdate = true;
+    } else if (req.user.role === 'hospital_admin') {
+      const hospitalId = req.user.hospital_id ||
+        (await prisma.hospitals.findFirst({ where: { admin_id: req.user.id }, select: { id: true } }))?.id;
+      if (hospitalId === appointment.hospital_id) canUpdate = true;
     } else if (req.user.role === 'super_admin') {
       canUpdate = true;
     }
     if (!canUpdate) return res.status(403).json({ success: false, message: 'Access denied' });
 
     const data = {};
-    if (appointment_date) data.appointment_date = new Date(appointment_date);
-    if (appointment_time) data.appointment_time = new Date(`1970-01-01T${appointment_time}`);
+    if (appointment_date) data.appointment_date = new Date(appointment_date + 'T00:00:00.000Z');
+    if (appointment_time) data.appointment_time = new Date(`1970-01-01T${appointment_time}:00Z`);
     if (reason !== undefined) data.reason = reason;
     if (notes !== undefined) data.notes = notes;
     if (status && req.user.role !== 'patient') data.status = status;
@@ -186,7 +189,11 @@ router.delete('/:id', authenticateToken, async (req, res) => {
 
     let canCancel = false;
     if (req.user.role === 'patient' && appointment.patients?.user_id === req.user.id) canCancel = true;
-    else if (req.user.role === 'hospital_admin' && req.user.hospital_id === appointment.hospital_id) canCancel = true;
+    else if (req.user.role === 'hospital_admin') {
+      const hospitalId = req.user.hospital_id ||
+        (await prisma.hospitals.findFirst({ where: { admin_id: req.user.id }, select: { id: true } }))?.id;
+      if (hospitalId === appointment.hospital_id) canCancel = true;
+    }
     else if (req.user.role === 'super_admin') canCancel = true;
     if (!canCancel) return res.status(403).json({ success: false, message: 'Access denied' });
 
