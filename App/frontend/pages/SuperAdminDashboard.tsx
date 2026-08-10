@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Building2, Plus, Users, DollarSign, FileText, Settings, 
-  Bell, User, Search, CheckCircle, XCircle, Edit, Ban, Eye,
-  Save, X, MapPin, Stethoscope, Shield, Clock, HeartPulse, Upload, Tag
-} from 'lucide-react';
+import {
+  BuildingOffice2Icon, PlusIcon, UsersIcon, CurrencyDollarIcon, DocumentTextIcon,
+  Cog6ToothIcon, BellIcon, UserIcon, MagnifyingGlassIcon, CheckCircleIcon,
+  XCircleIcon, PencilIcon, NoSymbolIcon, EyeIcon,
+  CheckIcon, XMarkIcon, MapPinIcon, BeakerIcon, ShieldCheckIcon,
+  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon
+} from '@heroicons/react/24/outline';
 
 const SuperAdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('HOSPITAL_MANAGEMENT');
@@ -114,14 +116,14 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   const sidebarItems = [
-    { id: 'DASHBOARD', label: 'Dashboard', icon: Building2 },
-    { id: 'HOSPITAL_MANAGEMENT', label: 'Hospital Management', icon: Stethoscope },
-    { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: Plus },
-    { id: 'MANAGE_HOSPITALS', label: 'Manage Hospitals', icon: Building2 },
-    { id: 'PATIENTS', label: 'Patient Overview', icon: Users },
-    { id: 'REVENUE', label: 'Revenue & Commissions', icon: DollarSign },
-    { id: 'REPORTS', label: 'System Reports', icon: FileText },
-    { id: 'SETTINGS', label: 'Platform Settings', icon: Settings }
+    { id: 'DASHBOARD', label: 'Dashboard', icon: BuildingOffice2Icon },
+    { id: 'HOSPITAL_MANAGEMENT', label: 'Hospital Management', icon: BeakerIcon },
+    { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: PlusIcon },
+    { id: 'MANAGE_HOSPITALS', label: 'Manage Hospitals', icon: BuildingOffice2Icon },
+    { id: 'PATIENTS', label: 'Patient Overview', icon: UsersIcon },
+    { id: 'REVENUE', label: 'Revenue & Commissions', icon: CurrencyDollarIcon },
+    { id: 'REPORTS', label: 'System Reports', icon: DocumentTextIcon },
+    { id: 'SETTINGS', label: 'Platform Settings', icon: Cog6ToothIcon }
   ];
 
   const handleAddHospital = (e: React.FormEvent) => {
@@ -218,7 +220,7 @@ const SuperAdminDashboard: React.FC = () => {
         <div className="p-4 md:p-6 border-b border-slate-200">
           <div className="flex items-center gap-3">
             <div className="bg-emerald-600 p-2 rounded-lg text-white flex-shrink-0">
-              <HeartPulse className="w-6 h-6" />
+              <HeartIcon className="w-6 h-6" />
             </div>
             {sidebarOpen && (
               <div>
@@ -275,7 +277,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500 mb-1">Total Doctors</p>
                       <p className="text-3xl font-bold text-slate-900">42</p>
                     </div>
-                    <Stethoscope className="w-10 h-10 text-emerald-600" />
+                    <BeakerIcon className="w-10 h-10 text-emerald-600" />
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -284,7 +286,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500 mb-1">Requests</p>
                       <p className="text-3xl font-bold text-slate-900">12</p>
                     </div>
-                    <Clock className="w-10 h-10 text-yellow-600" />
+                    <ClockIcon className="w-10 h-10 text-yellow-600" />
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -293,7 +295,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500 mb-1">Confirmed</p>
                       <p className="text-3xl font-bold text-slate-900">128</p>
                     </div>
-                    <CheckCircle className="w-10 h-10 text-green-600" />
+                    <CheckCircleIcon className="w-10 h-10 text-green-600" />
                   </div>
                 </div>
               </div>
@@ -318,14 +320,14 @@ const SuperAdminDashboard: React.FC = () => {
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="text-lg font-semibold text-slate-900">Medical Staff</h3>
                     <button className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
+                    <PlusIcon className="w-4 h-4" />
                       Add Doctor
                     </button>
                   </div>
                   
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Building2 className="w-8 h-8 text-slate-400" />
+                      <BuildingOffice2Icon className="w-8 h-8 text-slate-400" />
                     </div>
                     <p className="text-slate-500 text-lg">No hospitals found</p>
                   </div>
@@ -344,7 +346,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500">Total Hospitals</p>
                       <p className="text-2xl font-bold text-slate-900">{summaryData.totalHospitals}</p>
                     </div>
-                    <Building2 className="w-8 h-8 text-emerald-600" />
+                    <BuildingOffice2Icon className="w-8 h-8 text-emerald-600" />
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -353,7 +355,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500">Active Hospitals</p>
                       <p className="text-2xl font-bold text-slate-900">{summaryData.activeHospitals}</p>
                     </div>
-                    <CheckCircle className="w-8 h-8 text-green-600" />
+                    <CheckCircleIcon className="w-8 h-8 text-green-600" />
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -362,7 +364,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500">Total Patients</p>
                       <p className="text-2xl font-bold text-slate-900">{summaryData.totalPatients}</p>
                     </div>
-                    <Users className="w-8 h-8 text-blue-600" />
+                    <UsersIcon className="w-8 h-8 text-blue-600" />
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -371,7 +373,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500">Total Revenue</p>
                       <p className="text-2xl font-bold text-slate-900">${summaryData.totalRevenue.toLocaleString()}</p>
                     </div>
-                    <DollarSign className="w-8 h-8 text-emerald-600" />
+                    <CurrencyDollarIcon className="w-8 h-8 text-emerald-600" />
                   </div>
                 </div>
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -380,7 +382,7 @@ const SuperAdminDashboard: React.FC = () => {
                       <p className="text-sm text-slate-500">Pending Approvals</p>
                       <p className="text-2xl font-bold text-slate-900">{summaryData.pendingApprovals}</p>
                     </div>
-                    <Clock className="w-8 h-8 text-yellow-600" />
+                    <ClockIcon className="w-8 h-8 text-yellow-600" />
                   </div>
                 </div>
               </div>
@@ -452,7 +454,7 @@ const SuperAdminDashboard: React.FC = () => {
                           <img src={newHospital.logoPreview} alt="Logo preview" className="w-full h-full object-cover" />
                         ) : (
                           <div className="text-center">
-                            <Upload className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+                            <ArrowUpTrayIcon className="w-8 h-8 text-slate-400 mx-auto mb-1" />
                             <span className="text-xs text-slate-500">Upload Logo</span>
                           </div>
                         )}
@@ -568,7 +570,7 @@ const SuperAdminDashboard: React.FC = () => {
                         onClick={addSpecialty}
                         className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
                       >
-                        <Plus className="w-4 h-4" />
+                        <PlusIcon className="w-4 h-4" />
                         Add
                       </button>
                     </div>
@@ -578,14 +580,14 @@ const SuperAdminDashboard: React.FC = () => {
                           key={index}
                           className="px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm flex items-center gap-2"
                         >
-                          <Tag className="w-3 h-3" />
+                          <TagIcon className="w-3 h-3" />
                           {specialty}
                           <button
                             type="button"
                             onClick={() => removeSpecialty(specialty)}
                             className="text-emerald-600 hover:text-emerald-800"
                           >
-                            <X className="w-3 h-3" />
+                            <XMarkIcon className="w-3 h-3" />
                           </button>
                         </span>
                       ))}
@@ -659,7 +661,7 @@ const SuperAdminDashboard: React.FC = () => {
                         onClick={addAccreditation}
                         className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
                       >
-                        <Plus className="w-4 h-4" />
+                        <PlusIcon className="w-4 h-4" />
                         Add
                       </button>
                     </div>
@@ -669,14 +671,14 @@ const SuperAdminDashboard: React.FC = () => {
                           key={index}
                           className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center gap-2"
                         >
-                          <Shield className="w-3 h-3" />
+                          <ShieldCheckIcon className="w-3 h-3" />
                           {accreditation}
                           <button
                             type="button"
                             onClick={() => removeAccreditation(accreditation)}
                             className="text-blue-600 hover:text-blue-800"
                           >
-                            <X className="w-3 h-3" />
+                            <XMarkIcon className="w-3 h-3" />
                           </button>
                         </span>
                       ))}
@@ -688,7 +690,7 @@ const SuperAdminDashboard: React.FC = () => {
                       type="submit"
                       className="px-6 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
                     >
-                      <Save className="w-4 h-4" />
+                      <CheckIcon className="w-4 h-4" />
                       Add Hospital to Network
                     </button>
                     <button
@@ -716,7 +718,7 @@ const SuperAdminDashboard: React.FC = () => {
                   onClick={() => setActiveTab('ADD_HOSPITAL')}
                   className="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-2"
                 >
-                  <Plus className="w-4 h-4" />
+                  <PlusIcon className="w-4 h-4" />
                   Add New Hospital
                 </button>
               </div>
@@ -762,13 +764,13 @@ const SuperAdminDashboard: React.FC = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
                             <button className="p-1 text-emerald-600 hover:bg-emerald-50 rounded">
-                              <Edit className="w-4 h-4" />
+                              <PencilIcon className="w-4 h-4" />
                             </button>
                             <button className="p-1 text-slate-600 hover:bg-slate-50 rounded">
-                              <Eye className="w-4 h-4" />
+                              <EyeIcon className="w-4 h-4" />
                             </button>
                             <button className="p-1 text-red-600 hover:bg-red-50 rounded">
-                              <Ban className="w-4 h-4" />
+                              <NoSymbolIcon className="w-4 h-4" />
                             </button>
                           </div>
                         </td>

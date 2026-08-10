@@ -129,13 +129,18 @@ export const hospitalsAPI = {
     location?: string;
     specialization?: string;
     name?: string;
+    state?: string;
   }) => {
     const queryParams = new URLSearchParams({ limit: '100' });
     Object.entries(params).forEach(([key, value]) => {
       if (value) queryParams.append(key, value);
     });
-    
     return apiRequest(`/hospitals/search?${queryParams.toString()}`);
+  },
+
+  getFilters: async (): Promise<Record<string, Record<string, string[]>>> => {
+    const res = await apiRequest('/hospitals/filters');
+    return res.data;
   },
 };
 

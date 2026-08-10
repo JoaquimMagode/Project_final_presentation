@@ -111,6 +111,40 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/hospitals/filters — returns { state: { city: [specialties] } }
+router.get('/filters', async (req, res) => {
+  try {
+    const hospitals = await prisma.hospitals.findMany({
+      where: { status: 'active' },
+      select: { state: true, city: true, specialties: true },
+    });
+
+    const map = {};
+    for (const h of hospitals) {
+      const state = h.state || 'Unknown';
+      const city = h.city || 'Unknown';
+      const specs = parseJson(h.specialties);
+      if (!map[state]) map[state] = {};
+      if (!map[state][city]) map[state][city] = new Set();
+      specs.forEach(s => map[state][city].add(s));
+    }
+
+    // Convert Sets to sorted arrays
+    const result = {};
+    for (const [state, cities] of Object.entries(map)) {
+      result[state] = {};
+      for (const [city, specs] of Object.entries(cities)) {
+        result[state][city] = [...specs].sort();
+      }
+    }
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    console.error('Filters error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get filters' });
+  }
+});
+
 // GET /api/hospitals/:id
 router.get('/:id', async (req, res) => {
   try {

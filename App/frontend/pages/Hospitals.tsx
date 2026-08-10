@@ -9,21 +9,37 @@ const Hospitals: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const isLoggedIn = !!localStorage.getItem('user');
-  const [condition, setCondition] = useState('');
-  const [location, setLocation] = useState('');
+
+  // Cascading filter state
+  const [filtersMap, setFiltersMap] = useState<Record<string, Record<string, string[]>>>({});
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedSpec, setSelectedSpec] = useState('');
+
   const [filteredHospitals, setFilteredHospitals] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const popularSearches = ['Cardiology', 'Orthopedics', 'Neurology & Neurosurgery', 'Obstetrics & Gynecology', 'Urology', 'Dermatology'];
+  // Derived options
+  const states = Object.keys(filtersMap).sort();
+  const cities = selectedState ? Object.keys(filtersMap[selectedState] || {}).sort() : [];
+  const specializations = selectedState && selectedCity
+    ? (filtersMap[selectedState]?.[selectedCity] || [])
+    : selectedState
+    ? [...new Set(Object.values(filtersMap[selectedState] || {}).flat())].sort()
+    : [];
 
-  const fetchHospitals = async (city: string, specialization: string) => {
+  useEffect(() => {
+    hospitalsAPI.getFilters().then(setFiltersMap).catch(() => {});
+  }, []);
+
+  const fetchHospitals = async (state: string, city: string, specialization: string) => {
     setLoading(true);
     try {
       const res: any = await hospitalsAPI.searchHospitals({
+        state: state || undefined,
         location: city || undefined,
         specialization: specialization || undefined,
-        name: (!specialization && !city) ? undefined : undefined,
       });
       setFilteredHospitals(res?.data?.hospitals || []);
     } catch {
@@ -33,30 +49,32 @@ const Hospitals: React.FC = () => {
     }
   };
 
-  // Load search parameters from URL on component mount
   useEffect(() => {
     const destination = searchParams.get('destination') || '';
     const procedure = searchParams.get('procedure') || '';
-    setLocation(destination);
-    setCondition(procedure);
+    setSelectedCity(destination);
+    setSelectedSpec(procedure);
     setHasSearched(true);
-    fetchHospitals(destination, procedure);
+    fetchHospitals('', destination, procedure);
   }, [searchParams]);
 
-  const handleHospitalClick = (hospitalId: number) => {
-    navigate(`/hospital/${hospitalId}`);
-  };
+  const handleHospitalClick = (hospitalId: number) => navigate(`/hospital/${hospitalId}`);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setHasSearched(true);
-    fetchHospitals(location, condition);
+    fetchHospitals(selectedState, selectedCity, selectedSpec);
   };
 
-  const handlePopularSearchClick = (search: string) => {
-    setCondition(search);
-    setHasSearched(true);
-    fetchHospitals(location, search);
+  const handleStateChange = (state: string) => {
+    setSelectedState(state);
+    setSelectedCity('');
+    setSelectedSpec('');
+  };
+
+  const handleCityChange = (city: string) => {
+    setSelectedCity(city);
+    setSelectedSpec('');
   };
 
   return (
@@ -75,24 +93,39 @@ const Hospitals: React.FC = () => {
             {/* Search Form */}
             <div className="bg-white rounded-lg p-8 shadow-sm border border-slate-200">
               <form onSubmit={handleSearch} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <input
-                    type="text"
-                    placeholder="Condition, procedure, or name"
-                    value={condition}
-                    onChange={(e) => setCondition(e.target.value)}
-                    className="px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                  />
-                  <div className="relative">
-                    <input
-                      type="text"
-                      placeholder="City or Zip Code"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                      className="w-full px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none"
-                    />
-                    <MapPin className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* State */}
+                  <select
+                    value={selectedState}
+                    onChange={(e) => handleStateChange(e.target.value)}
+                    className="px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none bg-white text-slate-700"
+                  >
+                    <option value="">All States</option>
+                    {states.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+
+                  {/* City */}
+                  <select
+                    value={selectedCity}
+                    onChange={(e) => handleCityChange(e.target.value)}
+                    disabled={!selectedState}
+                    className="px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none bg-white text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">All Cities</option>
+                    {cities.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+
+                  {/* Specialization */}
+                  <select
+                    value={selectedSpec}
+                    onChange={(e) => setSelectedSpec(e.target.value)}
+                    disabled={!selectedState}
+                    className="px-4 py-3 border border-slate-300 rounded focus:ring-2 focus:ring-slate-900 focus:border-slate-900 outline-none bg-white text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">All Specializations</option>
+                    {specializations.map(sp => <option key={sp} value={sp}>{sp}</option>)}
+                  </select>
+
                   <button
                     type="submit"
                     className="px-8 py-3 bg-slate-900 text-white rounded font-bold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
@@ -100,20 +133,6 @@ const Hospitals: React.FC = () => {
                     <Search className="w-5 h-5" />
                     Search
                   </button>
-                </div>
-
-                {/* Popular Searches */}
-                <div className="flex flex-wrap gap-2 items-center pt-2">
-                  <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Popular:</span>
-                  {popularSearches.slice(0, 5).map((search, i) => (
-                    <button
-                      key={i}
-                      onClick={() => handlePopularSearchClick(search)}
-                      className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-3 py-1 border border-slate-200 rounded-full hover:border-slate-900 transition-colors"
-                    >
-                      {search}
-                    </button>
-                  ))}
                 </div>
               </form>
             </div>
@@ -255,12 +274,14 @@ const Hospitals: React.FC = () => {
                 <div>
                   <h3 className="font-bold text-slate-900 text-lg">No hospitals found</h3>
                   <p className="text-slate-500 text-sm mt-2">
-                    {condition && location 
-                      ? `No hospitals found for "${condition}" in "${location}".`
-                      : condition
-                      ? `No hospitals found for "${condition}".`
-                      : location
-                      ? `No hospitals found in "${location}".`
+                    {selectedSpec && selectedCity
+                      ? `No hospitals found for "${selectedSpec}" in "${selectedCity}"${selectedState ? `, ${selectedState}` : ''}.`
+                      : selectedSpec
+                      ? `No hospitals found for "${selectedSpec}".`
+                      : selectedCity
+                      ? `No hospitals found in "${selectedCity}".`
+                      : selectedState
+                      ? `No hospitals found in "${selectedState}".`
                       : 'Try adjusting your search criteria.'}
                   </p>
                 </div>

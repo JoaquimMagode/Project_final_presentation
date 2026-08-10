@@ -472,7 +472,7 @@ const HospitalDashboard: React.FC = () => {
             onClick={() => setSidebarOpen(o => !o)}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <Menu className="w-4 h-4 text-gray-500" />
+            <Bars3Icon className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
@@ -499,7 +499,7 @@ const HospitalDashboard: React.FC = () => {
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   {sidebarOpen && <span className="flex-1 text-left">{item.label}</span>}
                   {item.hasDropdown && sidebarOpen && (
-                    <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${appointmentsDropdownOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDownIcon className={`w-4 h-4 flex-shrink-0 transition-transform ${appointmentsDropdownOpen ? 'rotate-180' : ''}`} />
                   )}
                   {item.page === 'appointments' && pendingCount > 0 && !item.hasDropdown && sidebarOpen && (
                     <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
@@ -588,7 +588,7 @@ const HospitalDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="bg-white rounded-lg px-3 py-2 border border-gray-200 flex items-center gap-2 self-start sm:self-auto">
-                    <Calendar className="w-4 h-4 text-gray-600" />
+                    <CalendarIcon className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium">
                       {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
@@ -685,7 +685,7 @@ const HospitalDashboard: React.FC = () => {
                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
                           apt.status === 'confirmed' ? 'bg-emerald-100' : 'bg-amber-50'
                         }`}>
-                          <Clock className={`w-5 h-5 ${apt.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-500'}`} />
+                          <ClockIcon className={`w-5 h-5 ${apt.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-500'}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 text-sm truncate">{apt.title}</div>
@@ -725,7 +725,7 @@ const HospitalDashboard: React.FC = () => {
                     {recentReports.slice(0, 3).map((report) => (
                       <div key={report.id} className="flex items-start gap-3">
                         <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <FileText className="w-4 h-4 text-teal-600" />
+                          <DocumentTextIcon className="w-4 h-4 text-teal-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900 truncate">{report.title}</div>
@@ -765,7 +765,7 @@ const HospitalDashboard: React.FC = () => {
                   className="text-gray-400 hover:text-gray-600"
                   title="View payments"
                 >
-                  <Eye className="w-4 h-4" />
+                  <EyeIcon className="w-4 h-4" />
                 </button>
               </div>
 
@@ -815,7 +815,7 @@ const HospitalDashboard: React.FC = () => {
                   onClick={() => setActivePage('appointments')}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <MoreHorizontal className="w-5 h-5" />
+                  <EllipsisHorizontalIcon className="w-5 h-5" />
                 </button>
               </div>
 
@@ -866,14 +866,14 @@ const HospitalDashboard: React.FC = () => {
                   onClick={() => setActivePage('employee')}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <MoreHorizontal className="w-5 h-5" />
+                  <EllipsisHorizontalIcon className="w-5 h-5" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-3 bg-emerald-50 rounded-xl">
                   <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <UserCheck className="w-5 h-5 text-white" />
+                    <UserPlusIcon className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">
@@ -885,7 +885,7 @@ const HospitalDashboard: React.FC = () => {
 
                 <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-xl">
                   <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Users className="w-5 h-5 text-white" />
+                    <UsersIcon className="w-5 h-5 text-white" />
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">
