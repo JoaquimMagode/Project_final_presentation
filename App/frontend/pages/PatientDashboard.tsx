@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Home, Calendar, FileText,
   HelpCircle, Phone, Upload, ChevronRight,
-  CheckCircle, Clock, AlertCircle, CreditCard, Building2, MapPin
+  CheckCircle, Clock, AlertCircle, CreditCard, Building2, MapPin,
+  Menu, Search, Bell, Globe, ChevronDown, LogOut, User, AlertTriangle
 } from 'lucide-react';
-import { useAuth } from '../App';
+import { useAuth, useLang } from '../App';
+import { LANGUAGES } from '../constants';
+import { Language } from '../types';
+import { useNavigate } from 'react-router-dom';
 import PatientRegistration from './patient/PatientRegistration';
 import MedicalReports from './patient/MedicalReports';
 import AppointmentRequests from './patient/AppointmentRequests';
@@ -15,7 +19,7 @@ import Billing from './patient/Billing';
 type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help';
 
 const NAV = [
-  { page: 'dashboard' as Page,     icon: Home,        label: 'Home' },
+  { page: 'dashboard' as Page,     icon: Home,        label: 'Dashboard' },
   { page: 'appointments' as Page,  icon: Calendar,    label: 'Appointments' },
   { page: 'billing' as Page,       icon: CreditCard,  label: 'Records & Billing' },
   { page: 'reports' as Page,       icon: FileText,    label: 'My Reports' },
@@ -35,8 +39,179 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
   completed: { color: 'bg-blue-50 text-blue-700 border-blue-200',          icon: CheckCircle },
 };
 
+const MOCK_NOTIFICATIONS = [
+  { id: 1, title: 'Appointment confirmed', desc: 'Your appointment at Apollo Mumbai is confirmed', time: '5 min ago', unread: true },
+  { id: 2, title: 'Report ready', desc: 'Your lab results are now available', time: '1 hr ago', unread: true },
+  { id: 3, title: 'Reminder', desc: 'Appointment tomorrow at 10:00 AM', time: '3 hr ago', unread: false },
+];
+
+// ── Patient Dashboard Header ──────────────────────────────────────────────────
+const PatientHeader: React.FC<{
+  user: { name: string } | null;
+  logout: () => void;
+  navigate: (path: string) => void;
+  appointmentCount: number;
+  setActivePage: (page: Page) => void;
+}> = ({ user, logout, navigate, appointmentCount, setActivePage }) => {
+  const { lang, setLang } = useLang();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen]     = useState(false);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notifRef   = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter(n => n.unread).length + appointmentCount;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+      if (notifRef.current   && !notifRef.current.contains(e.target as Node))   setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const markAllRead = () => setNotifications(n => n.map(x => ({ ...x, unread: false })));
+
+  return (
+    <header className="hidden md:flex items-center justify-between h-[73px] px-6 bg-white border-b border-gray-100 flex-shrink-0 gap-4">
+      {/* Search */}
+      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
+        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <input type="text" placeholder="Search appointments, reports..." className="bg-transparent text-sm outline-none w-full text-gray-700 placeholder-gray-400" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Language */}
+        <div className="flex items-center gap-1.5 text-gray-600">
+          <Globe className="w-4 h-4" />
+          <select
+            value={lang}
+            onChange={e => setLang(e.target.value as Language)}
+            className="text-sm bg-transparent border-none outline-none cursor-pointer text-gray-700 font-medium"
+          >
+            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.code}</option>)}
+          </select>
+        </div>
+
+        {/* Notifications */}
+        <div className="relative" ref={notifRef}>
+          <button
+            onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
+            className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Bell className="w-5 h-5 text-gray-600" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {notifOpen && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <span className="font-semibold text-gray-900 text-sm">Notifications</span>
+                <button onClick={markAllRead} className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Mark all read</button>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {appointmentCount > 0 && (
+                  <button
+                    onClick={() => { setActivePage('appointments'); setNotifOpen(false); }}
+                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 text-left border-b border-gray-50"
+                  >
+                    <span className="w-2 h-2 mt-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{appointmentCount} pending appointment{appointmentCount > 1 ? 's' : ''}</div>
+                      <div className="text-xs text-gray-500">Tap to review</div>
+                    </div>
+                  </button>
+                )}
+                {notifications.map(n => (
+                  <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0">
+                    <span className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${n.unread ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">{n.title}</div>
+                      <div className="text-xs text-gray-500 truncate">{n.desc}</div>
+                    </div>
+                    <span className="text-xs text-gray-400 flex-shrink-0">{n.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Profile */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); }}
+            className="flex items-center gap-2.5 pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+              {(user?.name || 'P').charAt(0).toUpperCase()}
+            </div>
+            <div className="leading-tight text-left">
+              <div className="text-sm font-semibold text-gray-900">{user?.name || 'Patient'}</div>
+              <div className="text-xs text-gray-500">Patient</div>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {profileOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-50">
+              <div className="px-4 py-2.5 border-b border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white font-semibold">
+                    {(user?.name || 'P').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900 truncate max-w-[130px]">{user?.name || 'Patient'}</div>
+                    <div className="text-xs text-gray-500">Patient</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => { setActivePage('settings'); setProfileOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <User className="w-4 h-4 text-gray-500" />
+                Profile Settings
+              </button>
+              <button
+                onClick={() => { setActivePage('help'); setProfileOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <HelpCircle className="w-4 h-4 text-gray-500" />
+                FAQ
+              </button>
+              <button
+                onClick={() => setProfileOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Report Emergency
+              </button>
+              <div className="border-t border-gray-100 mt-1" />
+              <button
+                onClick={() => { logout(); navigate('/login'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-gray-500" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const PatientDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activePage, setActivePage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [appointmentCount, setAppointmentCount] = useState(0);
@@ -56,10 +231,7 @@ const PatientDashboard: React.FC = () => {
         const completed = all.filter((a: any) => a.status === 'completed').length;
         setAppointmentCount(pending);
         setStats({ pending, confirmed, completed });
-        const upcoming = all
-          .filter((a: any) => ['pending', 'confirmed'].includes(a.status))
-          .slice(0, 3);
-        setUpcomingAppointments(upcoming);
+        setUpcomingAppointments(all.filter((a: any) => ['pending', 'confirmed'].includes(a.status)).slice(0, 3));
       })
       .catch(() => {});
   }, []);
@@ -67,79 +239,107 @@ const PatientDashboard: React.FC = () => {
   const firstName = user?.name?.split(' ')[0] ?? 'Patient';
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
 
       {/* ── Sidebar ── */}
-      <aside className={`hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-100 py-6 px-3 gap-1 transition-all duration-300 relative flex-shrink-0`}>
-        {/* Toggle button */}
-        <button
-          onClick={() => setSidebarOpen(o => !o)}
-          className="absolute -right-3 top-6 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors z-10"
-        >
-          <ChevronRight className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${sidebarOpen ? 'rotate-180' : ''}`} />
-        </button>
-
-        {NAV.map(({ page, icon: Icon, label }) => (
-          <div key={page} className="relative group">
-            <button
-              onClick={() => setActivePage(page)}
-              className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors w-full text-left
-                ${activePage === page
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-gray-600 hover:bg-gray-100'}`}
-            >
-              <Icon className="w-5 h-5 flex-shrink-0" />
-              {sidebarOpen && <span className="flex-1">{label}</span>}
-              {sidebarOpen && page === 'appointments' && appointmentCount > 0 && (
-                <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                  {appointmentCount}
-                </span>
-              )}
-              {!sidebarOpen && page === 'appointments' && appointmentCount > 0 && (
-                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-              )}
-            </button>
-            {/* Tooltip when collapsed */}
-            {!sidebarOpen && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
-                {label}
-                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+      <aside className={`hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex-shrink-0`}>
+        {/* Logo bar */}
+        <div className={`flex items-center border-b border-gray-100 h-[73px] px-3 flex-shrink-0 ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+          {sidebarOpen && (
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-emerald-600 p-1.5 rounded-lg flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
               </div>
-            )}
-          </div>
-        ))}
-      </aside>
+              <span className="font-bold text-sm text-gray-900 truncate">IMAP Solution</span>
+            </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <Menu className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
 
-      {/* ── Main ── */}
-      <main className="flex-1 overflow-auto">
-
-        {/* ── Bottom nav (mobile) ── */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex justify-around py-2">
-          {NAV.slice(0, 5).map(({ page, icon: Icon, label }) => (
-            <button
-              key={page}
-              onClick={() => setActivePage(page)}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs relative
-                ${activePage === page ? 'text-emerald-600' : 'text-gray-500'}`}
-            >
-              <div className="relative">
-                <Icon className="w-5 h-5" />
-                {page === 'appointments' && appointmentCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
+        {/* Nav items */}
+        <nav className="flex-1 py-4 px-3">
+          {NAV.map(({ page, icon: Icon, label }) => (
+            <div key={page} className="relative group mb-1">
+              <button
+                onClick={() => setActivePage(page)}
+                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors w-full text-left
+                  ${activePage === page ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}
+                  ${!sidebarOpen ? 'justify-center' : ''}`}
+              >
+                <Icon className="w-5 h-5 flex-shrink-0" />
+                {sidebarOpen && <span className="flex-1">{label}</span>}
+                {sidebarOpen && page === 'appointments' && appointmentCount > 0 && (
+                  <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                     {appointmentCount}
                   </span>
                 )}
-              </div>
-              <span>{label}</span>
-            </button>
+                {!sidebarOpen && page === 'appointments' && appointmentCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+              {!sidebarOpen && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
+                  {label}
+                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                </div>
+              )}
+            </div>
           ))}
         </nav>
+      </aside>
 
-        <div className="p-4 md:p-8 pb-24 md:pb-8">
+      {/* ── Main ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Mobile top bar */}
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
+          <span className="font-semibold text-gray-900 text-sm">Patient Dashboard</span>
+        </div>
+
+        {/* Dashboard Header */}
+        <PatientHeader
+          user={user}
+          logout={logout}
+          navigate={navigate}
+          appointmentCount={appointmentCount}
+          setActivePage={setActivePage}
+        />
+
+        {/* Content */}
+        <main className="flex-1 overflow-auto p-4 md:p-8 pb-24 md:pb-8">
+
+          {/* ── Bottom nav (mobile) ── */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex justify-around py-2">
+            {NAV.slice(0, 5).map(({ page, icon: Icon, label }) => (
+              <button
+                key={page}
+                onClick={() => setActivePage(page)}
+                className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs relative
+                  ${activePage === page ? 'text-emerald-600' : 'text-gray-500'}`}
+              >
+                <div className="relative">
+                  <Icon className="w-5 h-5" />
+                  {page === 'appointments' && appointmentCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[14px] h-[14px] flex items-center justify-center px-0.5">
+                      {appointmentCount}
+                    </span>
+                  )}
+                </div>
+                <span>{label}</span>
+              </button>
+            ))}
+          </nav>
 
           {/* ── Dashboard Home ── */}
           {activePage === 'dashboard' && (
-            <div className="max-w-3xl space-y-6">
+            <div className="space-y-6">
 
               {/* Greeting */}
               <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-6 text-white">
@@ -263,8 +463,8 @@ const PatientDashboard: React.FC = () => {
           {activePage === 'settings'     && <PatientSettings />}
           {activePage === 'help'         && <PatientHelp />}
 
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
