@@ -219,10 +219,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
             <div className="flex items-center gap-4 ml-auto">
               {!isDashboardPage && (
-                <Link to="/contact" className="hidden md:flex items-center gap-2 px-5 py-2 bg-black text-white rounded text-sm font-bold hover:bg-slate-800 transition-colors">
-                  <Headphones className="w-4 h-4" />
-                  Call Support
-                </Link>
+                <>
+                  <Link to="/hospitals" className="hidden md:flex items-center gap-2 px-5 py-2 bg-emerald-600 text-white rounded text-sm font-bold hover:bg-emerald-700 transition-colors">
+                    <Search className="w-4 h-4" />
+                    Find Hospitals
+                  </Link>
+                  <Link to="/contact" className="hidden md:flex items-center gap-2 px-5 py-2 bg-black text-white rounded text-sm font-bold hover:bg-slate-800 transition-colors">
+                    <Headphones className="w-4 h-4" />
+                    Call Support
+                  </Link>
+                </>
               )}
               
               {isSearchOpen ? (

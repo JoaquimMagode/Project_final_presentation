@@ -3,7 +3,7 @@ import {
   Home, Calendar, FileText,
   HelpCircle, Phone, Upload, ChevronRight,
   CheckCircle, Clock, AlertCircle, CreditCard, Building2, MapPin,
-  Menu, Search, Bell, Globe, ChevronDown, LogOut, User, AlertTriangle
+  Menu, Search, Bell, Globe, ChevronDown, LogOut, User, AlertTriangle, Hospital
 } from 'lucide-react';
 import { useAuth, useLang } from '../App';
 import { LANGUAGES } from '../constants';
@@ -15,21 +15,23 @@ import AppointmentRequests from './patient/AppointmentRequests';
 import PatientSettings from './patient/PatientSettings';
 import PatientHelp from './patient/PatientHelp';
 import Billing from './patient/Billing';
+import FindHospitals from './patient/FindHospitals';
 
-type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help';
+type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help' | 'find-hospitals';
 
 const NAV = [
-  { page: 'dashboard' as Page,     icon: Home,        label: 'Dashboard' },
-  { page: 'appointments' as Page,  icon: Calendar,    label: 'Appointments' },
-  { page: 'billing' as Page,       icon: CreditCard,  label: 'Records & Billing' },
-  { page: 'reports' as Page,       icon: FileText,    label: 'My Reports' },
-  { page: 'help' as Page,          icon: HelpCircle,  label: 'Help' },
+  { page: 'dashboard' as Page,       icon: Home,        label: 'Dashboard' },
+  { page: 'appointments' as Page,    icon: Calendar,    label: 'Appointments' },
+  { page: 'billing' as Page,         icon: CreditCard,  label: 'Records & Billing' },
+  { page: 'reports' as Page,         icon: FileText,    label: 'My Reports' },
+  { page: 'help' as Page,            icon: HelpCircle,  label: 'Help' },
 ];
 
 const QUICK_ACTIONS = [
-  { page: 'appointments' as Page, icon: Calendar,  label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
-  { page: 'reports' as Page,      icon: FileText,  label: 'Medical Reports',    desc: 'View your test results',      color: 'bg-violet-50 text-violet-600' },
-  { page: 'billing' as Page,      icon: Upload,    label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
+  { page: 'appointments' as Page,   icon: Calendar,  label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
+  { page: 'find-hospitals' as Page, icon: Hospital,  label: 'Find Hospitals',     desc: 'Search & book hospitals',     color: 'bg-emerald-50 text-emerald-600' },
+  { page: 'reports' as Page,        icon: FileText,  label: 'Medical Reports',    desc: 'View your test results',      color: 'bg-violet-50 text-violet-600' },
+  { page: 'billing' as Page,        icon: Upload,    label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
 ];
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
@@ -82,6 +84,15 @@ const PatientHeader: React.FC<{
       </div>
 
       <div className="flex items-center gap-3">
+        {/* Find Hospitals */}
+        <button
+          onClick={() => setActivePage('find-hospitals')}
+          className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex-shrink-0"
+        >
+          <Hospital className="w-4 h-4" />
+          Find Hospitals
+        </button>
+
         {/* Language */}
         <div className="flex items-center gap-1.5 text-gray-600">
           <Globe className="w-4 h-4" />
@@ -473,12 +484,13 @@ const PatientDashboard: React.FC = () => {
             </div>
           )}
 
-          {activePage === 'registration' && <PatientRegistration />}
-          {activePage === 'reports'      && <MedicalReports />}
-          {activePage === 'appointments' && <AppointmentRequests />}
-          {activePage === 'billing'      && <Billing />}
-          {activePage === 'settings'     && <PatientSettings />}
-          {activePage === 'help'         && <PatientHelp />}
+          {activePage === 'registration'   && <PatientRegistration />}
+          {activePage === 'reports'         && <MedicalReports />}
+          {activePage === 'appointments'    && <AppointmentRequests />}
+          {activePage === 'find-hospitals'  && <FindHospitals />}
+          {activePage === 'billing'         && <Billing />}
+          {activePage === 'settings'        && <PatientSettings />}
+          {activePage === 'help'            && <PatientHelp />}
 
         </main>
       </div>
