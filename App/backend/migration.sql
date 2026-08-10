@@ -6,7 +6,15 @@ ALTER TABLE appointments ADD COLUMN IF NOT EXISTS doctor_name VARCHAR(255);
 -- Add missing columns to patients table if they don't exist
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS city VARCHAR(100);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS state VARCHAR(100);
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS country VARCHAR(100);
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS blood_group VARCHAR(5);
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS allergies TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS current_medications TEXT;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS insurance_provider VARCHAR(255);
 ALTER TABLE patients ADD COLUMN IF NOT EXISTS insurance_policy_number VARCHAR(100);
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS insurance_expiry_date DATE;
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS emergency_contact_name VARCHAR(255);
+ALTER TABLE patients ADD COLUMN IF NOT EXISTS emergency_contact_phone VARCHAR(20);
 
 -- Insert sample hospitals if the table is empty
 INSERT IGNORE INTO hospitals (name, email, phone, address, city, state, country, specialties, accreditations, description, status) VALUES
