@@ -17,27 +17,33 @@ router.post('/register', validateUserRegistration, async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const user = await prisma.users.create({
-      data: { email, password: hashedPassword, name, phone, role }
-    });
-
-    if (role === 'patient') {
-      await prisma.patients.create({
-        data: {
-          user_id: user.id,
-          date_of_birth: dateOfBirth ? new Date(dateOfBirth) : null,
-          gender: gender || null,
-          blood_group: bloodType || null,
-          country: country || null,
-          medical_history: medicalHistory ? JSON.stringify(medicalHistory) : null,
-          allergies: allergies || null,
-          current_medications: currentMedications || null,
-          insurance_provider: (hasInsurance && insuranceProvider) ? insuranceProvider : null,
-          insurance_policy_number: (hasInsurance && insurancePolicyNumber) ? insurancePolicyNumber : null,
-          insurance_expiry_date: (hasInsurance && insuranceExpiryDate) ? new Date(insuranceExpiryDate) : null,
-        }
+    // Use a transaction so that if patients.create fails the users row is rolled back,
+    // preventing "orphaned" users that have no matching patients row.
+    const user = await prisma.$transaction(async (tx) => {
+      const createdUser = await tx.users.create({
+        data: { email, password: hashedPassword, name, phone, role }
       });
-    }
+
+      if (role === 'patient') {
+        await tx.patients.create({
+          data: {
+            user_id: createdUser.id,
+            date_of_birth: dateOfBirth ? new Date(dateOfBirth) : null,
+            gender: gender || null,
+            blood_group: bloodType || null,
+            country: country || null,
+            medical_history: medicalHistory ? JSON.stringify(medicalHistory) : null,
+            allergies: allergies || null,
+            current_medications: currentMedications || null,
+            insurance_provider: (hasInsurance && insuranceProvider) ? insuranceProvider : null,
+            insurance_policy_number: (hasInsurance && insurancePolicyNumber) ? insurancePolicyNumber : null,
+            insurance_expiry_date: (hasInsurance && insuranceExpiryDate) ? new Date(insuranceExpiryDate) : null,
+          }
+        });
+      }
+
+      return createdUser;
+    });
 
     const token = generateToken({ userId: user.id, email: user.email, role: user.role });
 

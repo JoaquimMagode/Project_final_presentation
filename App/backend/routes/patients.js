@@ -10,11 +10,23 @@ const parseHistory = (p) => {
   return p;
 };
 
+// Ensures a patients row exists for the given user_id, creating one if missing.
+// This recovers accounts where the users row was created without a matching patients row
+// (e.g. seeded data, partially failed registration, or direct DB inserts).
+const ensurePatientRow = async (userId) => {
+  let patient = await prisma.patients.findFirst({ where: { user_id: userId } });
+  if (!patient) {
+    patient = await prisma.patients.create({ data: { user_id: userId } });
+  }
+  return patient;
+};
+
 // GET /api/patients/profile
 router.get('/profile', authenticateToken, authorize('patient'), async (req, res) => {
   try {
-    const patient = await prisma.patients.findFirst({
-      where: { user_id: req.user.id },
+    const basePatient = await ensurePatientRow(req.user.id);
+    const patient = await prisma.patients.findUnique({
+      where: { id: basePatient.id },
       include: { users: { select: { name: true, email: true, phone: true, status: true } } },
     });
     if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
@@ -32,8 +44,7 @@ router.put('/profile', authenticateToken, authorize('patient'), async (req, res)
       emergency_contact_name, emergency_contact_phone, medical_history, allergies,
       current_medications, insurance_provider, insurance_policy_number } = req.body;
 
-    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
-    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
+    const patient = await ensurePatientRow(req.user.id);
 
     const updated = await prisma.patients.update({
       where: { id: patient.id },
@@ -66,8 +77,7 @@ router.put('/profile', authenticateToken, authorize('patient'), async (req, res)
 // GET /api/patients/appointments
 router.get('/appointments', authenticateToken, authorize('patient'), async (req, res) => {
   try {
-    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
-    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
+    const patient = await ensurePatientRow(req.user.id);
 
     const appointments = await prisma.appointments.findMany({
       where: { patient_id: patient.id },
@@ -95,8 +105,7 @@ router.post('/appointments', authenticateToken, authorize('patient'), async (req
   try {
     const { hospital_id, appointment_date, appointment_time, reason } = req.body;
 
-    const patient = await prisma.patients.findFirst({ where: { user_id: req.user.id } });
-    if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
+    const patient = await ensurePatientRow(req.user.id);
 
     const appointment = await prisma.appointments.create({
       data: {

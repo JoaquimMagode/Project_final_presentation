@@ -3,7 +3,8 @@ import {
   X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
   TrendingUp, TrendingDown, MoreHorizontal, Plus, HelpCircle,
   BarChart3, Home, FileText, CreditCard, UserCheck, 
-  Building2, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut
+  Building2, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut, Menu,
+  Settings, AlertTriangle, Globe
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -11,9 +12,182 @@ import {
   LineElement, Title, Tooltip, Legend, Filler
 } from 'chart.js';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
-import { useAuth } from '../App';
+import { useAuth, useLang } from '../App';
 import { useNavigate } from 'react-router-dom';
 import UserAvatar from '../components/UserAvatar';
+import { LANGUAGES } from '../constants';
+import { Language } from '../types';
+
+// ── Dashboard Header ──────────────────────────────────────────────────────────
+const MOCK_NOTIFICATIONS = [
+  { id: 1, title: 'New appointment request', desc: 'Patient John Doe – Cardiology', time: '2 min ago', unread: true },
+  { id: 2, title: 'Appointment confirmed', desc: 'Dr. Smith confirmed slot at 10:00', time: '15 min ago', unread: true },
+  { id: 3, title: 'Payment received', desc: '₹12,500 from patient #4821', time: '1 hr ago', unread: false },
+  { id: 4, title: 'Report uploaded', desc: 'Lab report for patient #3310', time: '3 hr ago', unread: false },
+];
+
+const DashboardHeader: React.FC<{
+  user: { name: string } | null;
+  logout: () => void;
+  navigate: (path: string) => void;
+  pendingCount: number;
+  setActivePage: (page: string) => void;
+}> = ({ user, logout, navigate, pendingCount, setActivePage }) => {
+  const { lang, setLang } = useLang();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen]   = useState(false);
+  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  const profileRef = useRef<HTMLDivElement>(null);
+  const notifRef   = useRef<HTMLDivElement>(null);
+
+  const unreadCount = notifications.filter(n => n.unread).length + pendingCount;
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+      if (notifRef.current   && !notifRef.current.contains(e.target as Node))   setNotifOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const markAllRead = () => setNotifications(n => n.map(x => ({ ...x, unread: false })));
+
+  return (
+    <header className="hidden md:flex items-center justify-between h-[73px] px-6 bg-white border-b border-gray-100 flex-shrink-0 gap-4">
+      {/* Search */}
+      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 max-w-xl">
+        <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <input type="text" placeholder="Search patients, appointments..." className="bg-transparent text-sm outline-none w-full text-gray-700 placeholder-gray-400" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Language */}
+        <div className="flex items-center gap-1.5 text-gray-600">
+          <Globe className="w-4 h-4" />
+          <select
+            value={lang}
+            onChange={e => setLang(e.target.value as Language)}
+            className="text-sm bg-transparent border-none outline-none cursor-pointer text-gray-700 font-medium"
+          >
+            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.code}</option>)}
+          </select>
+        </div>
+
+        {/* Notifications */}
+        <div className="relative" ref={notifRef}>
+          <button
+            onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
+            className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Bell className="w-5 h-5 text-gray-600" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-0.5">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {notifOpen && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                <span className="font-semibold text-gray-900 text-sm">Notifications</span>
+                <button onClick={markAllRead} className="text-xs text-emerald-600 hover:text-emerald-700 font-medium">Mark all read</button>
+              </div>
+              <div className="max-h-72 overflow-y-auto">
+                {pendingCount > 0 && (
+                  <button
+                    onClick={() => { setActivePage('appointments'); setNotifOpen(false); }}
+                    className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 text-left border-b border-gray-50"
+                  >
+                    <span className="w-2 h-2 mt-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">{pendingCount} pending appointment{pendingCount > 1 ? 's' : ''}</div>
+                      <div className="text-xs text-gray-500">Tap to review</div>
+                    </div>
+                  </button>
+                )}
+                {notifications.map(n => (
+                  <div key={n.id} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0">
+                    <span className={`w-2 h-2 mt-1.5 rounded-full flex-shrink-0 ${n.unread ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-gray-900 truncate">{n.title}</div>
+                      <div className="text-xs text-gray-500 truncate">{n.desc}</div>
+                    </div>
+                    <span className="text-xs text-gray-400 flex-shrink-0">{n.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Profile */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); }}
+            className="flex items-center gap-2.5 pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+          >
+            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+              {(user?.name || 'A').charAt(0).toUpperCase()}
+            </div>
+            <div className="leading-tight text-left">
+              <div className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</div>
+              <div className="text-xs text-gray-500">Hospital Admin</div>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {profileOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-50">
+              <div className="px-4 py-2.5 border-b border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white font-semibold">
+                    {(user?.name || 'A').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900 truncate max-w-[130px]">{user?.name || 'Admin'}</div>
+                    <div className="text-xs text-gray-500">Hospital Admin</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => { setActivePage('profile'); setProfileOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <User className="w-4 h-4 text-gray-500" />
+                Profile Settings
+              </button>
+              <button
+                onClick={() => { setActivePage('help'); setProfileOpen(false); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <HelpCircle className="w-4 h-4 text-gray-500" />
+                FAQ
+              </button>
+              <button
+                onClick={() => setProfileOpen(false)}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Report Emergency
+              </button>
+              <div className="border-t border-gray-100 mt-1" />
+              <button
+                onClick={() => { logout(); navigate('/login'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-gray-500" />
+                Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 // Import hospital pages
 import Patients from './hospital/Patients';
@@ -273,18 +447,30 @@ const HospitalDashboard: React.FC = () => {
       <aside className={`
         fixed md:relative z-40 md:z-auto h-full
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0 py-6 px-3 gap-1
+        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0
       `}>
-        {/* Toggle button */}
-        <button
-          onClick={() => setSidebarOpen(o => !o)}
-          className="absolute -right-3 top-6 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:bg-gray-50 transition-colors z-10"
-        >
-          <ChevronDown className={`w-3.5 h-3.5 text-gray-500 transition-transform duration-300 ${sidebarOpen ? '-rotate-90' : 'rotate-90'}`} />
-        </button>
+        {/* Logo area — matches global header height */}
+        <div className={`flex items-center border-b border-gray-100 h-[73px] px-3 flex-shrink-0 ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+          {sidebarOpen && (
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-emerald-600 p-1.5 rounded-lg flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <span className="font-bold text-sm text-gray-900 truncate">IMAP Solution</span>
+            </div>
+          )}
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
+          >
+            <Menu className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
 
         {/* Menu Items */}
-        <nav className="flex-1">
+        <nav className="flex-1 py-4 px-3">
           <div className="space-y-1">
             {sidebarItems.map((item, index) => (
               <div key={index} className="relative group">
@@ -294,7 +480,7 @@ const HospitalDashboard: React.FC = () => {
                     item.active
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   {sidebarOpen && <span className="flex-1 text-left">{item.label}</span>}
@@ -329,6 +515,16 @@ const HospitalDashboard: React.FC = () => {
           </button>
           <span className="font-semibold text-gray-900 text-sm">Hospital Dashboard</span>
         </div>
+
+        {/* Dashboard Header */}
+        <DashboardHeader
+          user={user}
+          logout={logout}
+          navigate={navigate}
+          pendingCount={pendingCount}
+          setActivePage={setActivePage}
+        />
+
         {/* Dashboard Content */}
         <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
           {/* Render different pages based on activePage */}
