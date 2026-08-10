@@ -93,6 +93,7 @@ const AppointmentRequests: React.FC = () => {
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [viewingQuote, setViewingQuote] = useState<Quote | null>(null);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   const [bookingForm, setBookingForm] = useState({
     hospitalId: '', date: '', time: '',
@@ -250,15 +251,20 @@ const AppointmentRequests: React.FC = () => {
           </div>
         </div>
 
-        {showActions && (
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {appointment.status === 'pending' && (
-              <button onClick={() => handleCancel(appointment.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-        )}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {showActions && appointment.status === 'pending' && (
+            <button onClick={() => handleCancel(appointment.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Cancel appointment">
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            onClick={() => setSelectedAppointment(appointment)}
+            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title="View details"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -452,6 +458,121 @@ const AppointmentRequests: React.FC = () => {
       </div>
 
       {viewingQuote && <QuotePDF quote={viewingQuote} onClose={() => setViewingQuote(null)} />}
+
+      {/* Appointment Detail Modal */}
+      {selectedAppointment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setSelectedAppointment(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-gray-900">{selectedAppointment.hospital_name}</h2>
+                  <p className="text-xs text-gray-400">Appointment #{selectedAppointment.id}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedAppointment(null)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Status + Type */}
+              <div className="flex items-center justify-between">
+                <div>{getStatusBadge(selectedAppointment.status)}</div>
+                <span className="text-xs text-gray-500 capitalize bg-gray-100 px-2.5 py-1 rounded-full font-medium">
+                  {selectedAppointment.type.replace('_', ' ')}
+                </span>
+              </div>
+
+              {/* Date / Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                    <Calendar className="w-3 h-3" /> Date
+                  </p>
+                  <p className="font-semibold text-gray-900 text-sm">{formatDate(selectedAppointment.appointment_date)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                    <Clock className="w-3 h-3" /> Time
+                  </p>
+                  <p className="font-semibold text-gray-900 text-sm">{formatTime(selectedAppointment.appointment_time)}</p>
+                </div>
+              </div>
+
+              {/* Location */}
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                  <MapPin className="w-3 h-3" /> Location
+                </p>
+                <p className="font-semibold text-gray-900 text-sm">{selectedAppointment.hospital_name}</p>
+                {selectedAppointment.hospital_address && (
+                  <p className="text-xs text-gray-500 mt-0.5">{selectedAppointment.hospital_address}</p>
+                )}
+                <p className="text-xs text-gray-500">{selectedAppointment.hospital_city}</p>
+              </div>
+
+              {/* Reason */}
+              <div className="bg-gray-50 rounded-xl p-3">
+                <p className="text-xs text-gray-400 flex items-center gap-1 mb-1">
+                  <FileText className="w-3 h-3" /> Reason for Visit
+                </p>
+                <p className="text-sm text-gray-800">{selectedAppointment.reason}</p>
+              </div>
+
+              {/* Notes */}
+              {selectedAppointment.notes && (
+                <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                  <p className="text-xs text-blue-400 flex items-center gap-1 mb-1">
+                    <AlertCircle className="w-3 h-3" /> Additional Notes
+                  </p>
+                  <p className="text-sm text-blue-800">{selectedAppointment.notes}</p>
+                </div>
+              )}
+
+              {/* Fee */}
+              {selectedAppointment.consultation_fee && (
+                <div className="flex items-center justify-between bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                  <p className="text-xs text-emerald-600 flex items-center gap-1">
+                    <DollarSign className="w-3 h-3" /> Consultation Fee
+                  </p>
+                  <p className="font-bold text-emerald-700 text-sm">{formatCurrency(selectedAppointment.consultation_fee)}</p>
+                </div>
+              )}
+
+              {/* Booked On */}
+              {selectedAppointment.created_at && (
+                <p className="text-xs text-gray-400 text-right">
+                  Booked on {formatDate(selectedAppointment.created_at)}
+                </p>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 pb-6 flex gap-3">
+              {selectedAppointment.status === 'pending' && (
+                <button
+                  onClick={() => { handleCancel(selectedAppointment.id); setSelectedAppointment(null); }}
+                  className="flex-1 px-4 py-2.5 text-sm bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 font-medium transition-colors"
+                >
+                  Cancel Appointment
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedAppointment(null)}
+                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Booking Modal */}
       {showBookingModal && (

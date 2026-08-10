@@ -69,6 +69,10 @@ export const appointmentsAPI = {
     return apiRequest('/appointments');
   },
 
+  getAppointmentById: async (id: string | number) => {
+    return apiRequest(`/appointments/${id}`);
+  },
+
   createAppointment: async (appointmentData: {
     hospital_id: number;
     appointment_date: string;

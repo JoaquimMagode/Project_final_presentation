@@ -31,10 +31,10 @@ const STATUS_CONFIG = {
   no_show:   { color: 'bg-gray-100 text-gray-600 border-gray-200',     dot: 'bg-gray-400',    icon: XCircle },
 };
 
-const Appointments: React.FC = () => {
+const Appointments: React.FC<{ initialFilter?: string }> = ({ initialFilter = '' }) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(initialFilter);
   const [dateFilter, setDateFilter] = useState('');
   const [quoteTarget, setQuoteTarget] = useState<Appointment | null>(null);
   const [quoteForm, setQuoteForm] = useState<QuoteForm>({ amount: '', currency: 'INR', notes: '', patientEmail: '' });
@@ -45,6 +45,8 @@ const Appointments: React.FC = () => {
     setQuoteSent(quoteStore.getQuotes().map(q => parseInt(q.appointmentId)));
   }, []);
 
+  useEffect(() => { setStatusFilter(initialFilter); }, [initialFilter]);
+
   useEffect(() => { fetchAppointments(); }, [statusFilter, dateFilter]);
 
   const fetchAppointments = async () => {
@@ -52,14 +54,22 @@ const Appointments: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       const params = new URLSearchParams();
-      if (statusFilter) params.append('status', statusFilter);
+      if (statusFilter === 'history') {
+        // fetch all, filter client-side
+      } else if (statusFilter) {
+        params.append('status', statusFilter);
+      }
       if (dateFilter) params.append('date', dateFilter);
       const response = await fetch(`http://localhost:5000/api/hospital-dashboard/appointments?${params}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       if (response.ok) {
         const data = await response.json();
-        setAppointments(data.data.appointments);
+        let appts: Appointment[] = data.data.appointments;
+        if (statusFilter === 'history') {
+          appts = appts.filter(a => a.status === 'completed' || a.status === 'cancelled');
+        }
+        setAppointments(appts);
       }
     } catch (error) {
       console.error('Error fetching appointments:', error);

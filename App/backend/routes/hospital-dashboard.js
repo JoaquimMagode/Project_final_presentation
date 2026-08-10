@@ -196,6 +196,17 @@ router.get('/appointments', authenticateToken, authorizeHospitalAdmin, async (re
       patient_name: a.patients?.users?.name,
       patient_email: a.patients?.users?.email,
       patient_phone: a.patients?.users?.phone,
+      patient_country: a.patients?.country,
+      patient_city: a.patients?.city,
+      patient_gender: a.patients?.gender,
+      patient_dob: a.patients?.date_of_birth,
+      patient_blood_group: a.patients?.blood_group,
+      patient_insurance_provider: a.patients?.insurance_provider,
+      patient_insurance_policy: a.patients?.insurance_policy_number,
+      patient_allergies: a.patients?.allergies,
+      patient_medical_history: a.patients?.medical_history,
+      patient_emergency_contact_name: a.patients?.emergency_contact_name,
+      patient_emergency_contact_phone: a.patients?.emergency_contact_phone,
       patients: undefined,
     }));
 

@@ -215,6 +215,8 @@ const HospitalDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('Week');
   const [activePage, setActivePage] = useState('dashboard');
+  const [appointmentFilter, setAppointmentFilter] = useState('');
+  const [appointmentsDropdownOpen, setAppointmentsDropdownOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -293,7 +295,7 @@ const HospitalDashboard: React.FC = () => {
   const sidebarItems = [
     { icon: Home, label: 'Dashboard', active: activePage === 'dashboard', page: 'dashboard' },
     { icon: Users, label: 'Patients', active: activePage === 'patients', page: 'patients' },
-    { icon: Calendar, label: 'Appointment', active: activePage === 'appointments', page: 'appointments' },
+    { icon: Calendar, label: 'Appointment', active: activePage === 'appointments', page: 'appointments', hasDropdown: true },
     { icon: FileText, label: 'Report', active: activePage === 'report', page: 'report' },
     { icon: CreditCard, label: 'Payments', active: activePage === 'payments', page: 'payments' },
     { icon: UserCheck, label: 'Employee', active: activePage === 'employee', page: 'employee' },
@@ -475,7 +477,14 @@ const HospitalDashboard: React.FC = () => {
             {sidebarItems.map((item, index) => (
               <div key={index} className="relative group">
                 <button
-                  onClick={() => setActivePage(item.page)}
+                  onClick={() => {
+                    if (item.hasDropdown) {
+                      if (sidebarOpen) setAppointmentsDropdownOpen(o => !o);
+                      else { setActivePage('appointments'); setAppointmentFilter(''); }
+                    } else {
+                      setActivePage(item.page);
+                    }
+                  }}
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
                     item.active
                       ? 'bg-emerald-600 text-white shadow-sm'
@@ -484,7 +493,10 @@ const HospitalDashboard: React.FC = () => {
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
                   {sidebarOpen && <span className="flex-1 text-left">{item.label}</span>}
-                  {item.page === 'appointments' && pendingCount > 0 && sidebarOpen && (
+                  {item.hasDropdown && sidebarOpen && (
+                    <ChevronDown className={`w-4 h-4 flex-shrink-0 transition-transform ${appointmentsDropdownOpen ? 'rotate-180' : ''}`} />
+                  )}
+                  {item.page === 'appointments' && pendingCount > 0 && !item.hasDropdown && sidebarOpen && (
                     <span className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                       {pendingCount}
                     </span>
@@ -493,6 +505,34 @@ const HospitalDashboard: React.FC = () => {
                     <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                   )}
                 </button>
+
+                {/* Appointment sub-menu */}
+                {item.hasDropdown && sidebarOpen && appointmentsDropdownOpen && (
+                  <div className="ml-4 mt-0.5 space-y-0.5">
+                    {[
+                      { label: 'All Appointments', filter: '' },
+                      { label: 'Pending', filter: 'pending' },
+                      { label: 'Completed', filter: 'completed' },
+                      { label: 'History', filter: 'history' },
+                    ].map(sub => (
+                      <button
+                        key={sub.filter}
+                        onClick={() => { setActivePage('appointments'); setAppointmentFilter(sub.filter); }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
+                          activePage === 'appointments' && appointmentFilter === sub.filter
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'text-gray-500 hover:bg-gray-100'
+                        }`}
+                      >
+                        {sub.label}
+                        {sub.filter === 'pending' && pendingCount > 0 && (
+                          <span className="ml-1.5 bg-red-500 text-white text-[10px] font-bold rounded-full px-1">{pendingCount}</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Tooltip when collapsed */}
                 {!sidebarOpen && (
                   <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
@@ -770,7 +810,7 @@ const HospitalDashboard: React.FC = () => {
           
           {/* Other Pages */}
           {activePage === 'patients' && <Patients />}
-          {activePage === 'appointments' && <Appointments />}
+          {activePage === 'appointments' && <Appointments initialFilter={appointmentFilter} />}
           {activePage === 'payments' && <Payments />}
           {activePage === 'employee' && <Employee />}
           {activePage === 'activity' && <ActivityPage />}
