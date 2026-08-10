@@ -377,15 +377,21 @@ const Register: React.FC = () => {
               </button>
             </form>
 
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />
-              <p className="text-[11px] text-gray-400">Your data is stored securely. HIPAA & GDPR compliant.</p>
+            {/* divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100" /></div>
+              <div className="relative flex justify-center text-xs text-slate-400 bg-white px-3">or</div>
             </div>
 
-            <p className="text-center text-xs text-gray-500 pb-2">
+            <p className="text-center text-sm text-slate-500">
               Already have an account?{' '}
-              <Link to="/login" className="text-emerald-600 font-bold hover:underline">Sign in</Link>
+              <Link to="/login" className="text-emerald-600 font-bold hover:text-emerald-700 transition-colors">Sign in</Link>
             </p>
+
+            <div className="flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-300" />
+              <p className="text-[11px] text-slate-400 font-medium">256-bit encrypted · HIPAA & GDPR compliant</p>
+            </div>
           </div>
         </div>
       </div>
