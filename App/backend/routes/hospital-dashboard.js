@@ -198,6 +198,7 @@ router.get('/appointments', authenticateToken, authorizeHospitalAdmin, async (re
       patient_phone: a.patients?.users?.phone,
       patient_country: a.patients?.country,
       patient_city: a.patients?.city,
+      patient_address: a.patients?.address,
       patient_gender: a.patients?.gender,
       patient_dob: a.patients?.date_of_birth,
       patient_blood_group: a.patients?.blood_group,

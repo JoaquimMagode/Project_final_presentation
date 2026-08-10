@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, Phone, Mail, CheckCircle, XCircle, AlertCircle, Eye, Send, X, FileText, DollarSign, Filter } from 'lucide-react';
+import { Calendar, Clock, User, Phone, Mail, CheckCircle, XCircle, AlertCircle, Eye, Send, X, FileText, DollarSign, Filter, Globe, Heart, Shield } from 'lucide-react';
 import { quoteStore } from '../../services/quoteStore';
 
 interface Appointment {
@@ -13,6 +13,18 @@ interface Appointment {
   patient_name: string;
   patient_email: string;
   patient_phone: string;
+  patient_country?: string;
+  patient_city?: string;
+  patient_gender?: string;
+  patient_dob?: string;
+  patient_blood_group?: string;
+  patient_insurance_provider?: string;
+  patient_insurance_policy?: string;
+  patient_allergies?: string;
+  patient_medical_history?: string;
+  patient_address?: string;
+  patient_emergency_contact_name?: string;
+  patient_emergency_contact_phone?: string;
   notes?: string;
 }
 
@@ -40,6 +52,7 @@ const Appointments: React.FC<{ initialFilter?: string }> = ({ initialFilter = ''
   const [quoteForm, setQuoteForm] = useState<QuoteForm>({ amount: '', currency: 'INR', notes: '', patientEmail: '' });
   const [quoteSent, setQuoteSent] = useState<number[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const [detailTab, setDetailTab] = useState<'appointment' | 'patient' | 'medical'>('appointment');
 
   useEffect(() => {
     setQuoteSent(quoteStore.getQuotes().map(q => parseInt(q.appointmentId)));
@@ -263,7 +276,7 @@ const Appointments: React.FC<{ initialFilter?: string }> = ({ initialFilter = ''
                           )}
                         </>
                       )}
-                      <button onClick={() => setSelectedAppointment(appt)} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
+      <button onClick={() => { setSelectedAppointment(appt); setDetailTab('appointment'); }} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors">
                         <Eye className="w-4 h-4" />
                       </button>
                     </div>
@@ -334,8 +347,9 @@ const Appointments: React.FC<{ initialFilter?: string }> = ({ initialFilter = ''
       {/* Appointment Detail Modal */}
       {selectedAppointment && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center">
                   <User className="w-5 h-5 text-teal-600" />
@@ -350,63 +364,151 @@ const Appointments: React.FC<{ initialFilter?: string }> = ({ initialFilter = ''
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Status</span>
-                {getStatusBadge(selectedAppointment.status)}
-              </div>
+            {/* Tabs */}
+            <div className="flex border-b border-gray-100 flex-shrink-0">
+              {(['appointment', 'patient', 'medical'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setDetailTab(tab)}
+                  className={`flex-1 py-2.5 text-xs font-semibold capitalize transition-colors ${
+                    detailTab === tab
+                      ? 'text-teal-600 border-b-2 border-teal-600'
+                      : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {tab === 'appointment' ? 'Appointment' : tab === 'patient' ? 'Patient Info' : 'Medical'}
+                </button>
+              ))}
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><Calendar className="w-3 h-3" /> Date</p>
-                  <p className="font-semibold text-gray-900 text-sm">{formatDate(selectedAppointment.appointment_date)}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><Clock className="w-3 h-3" /> Time</p>
-                  <p className="font-semibold text-gray-900 text-sm">{formatTime(selectedAppointment.appointment_time)}</p>
-                </div>
-              </div>
+            {/* Tab Content */}
+            <div className="overflow-y-auto flex-1 p-5 space-y-3">
 
-              <div className="bg-gray-50 rounded-xl p-3">
-                <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><FileText className="w-3 h-3" /> Type & Reason</p>
-                <p className="font-semibold text-gray-900 text-sm capitalize">{selectedAppointment.type}</p>
-                <p className="text-gray-600 text-sm mt-0.5">{selectedAppointment.reason}</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-xs text-gray-400">Patient Contact</p>
-                <div className="flex items-center gap-2 text-sm text-gray-700"><Mail className="w-4 h-4 text-gray-400" />{selectedAppointment.patient_email || '—'}</div>
-                <div className="flex items-center gap-2 text-sm text-gray-700"><Phone className="w-4 h-4 text-gray-400" />{selectedAppointment.patient_phone || '—'}</div>
-              </div>
-
-              <div className="flex items-center justify-between bg-teal-50 border border-teal-100 rounded-xl p-3">
-                <span className="flex items-center gap-2 text-teal-700 text-sm"><DollarSign className="w-4 h-4" /> Consultation Fee</span>
-                <span className="font-bold text-teal-800">{formatCurrency(selectedAppointment.consultation_fee)}</span>
-              </div>
-
-              {selectedAppointment.notes && (
-                <div>
-                  <p className="text-xs text-gray-400 mb-1">Notes</p>
-                  <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-3">{selectedAppointment.notes}</p>
-                </div>
+              {/* ── Appointment Tab ── */}
+              {detailTab === 'appointment' && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500">Status</span>
+                    {getStatusBadge(selectedAppointment.status)}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><Calendar className="w-3 h-3" /> Date</p>
+                      <p className="font-semibold text-gray-900 text-sm">{formatDate(selectedAppointment.appointment_date)}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><Clock className="w-3 h-3" /> Time</p>
+                      <p className="font-semibold text-gray-900 text-sm">{formatTime(selectedAppointment.appointment_time)}</p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><FileText className="w-3 h-3" /> Type & Reason</p>
+                    <p className="font-semibold text-gray-900 text-sm capitalize">{selectedAppointment.type}</p>
+                    <p className="text-gray-600 text-sm mt-0.5">{selectedAppointment.reason}</p>
+                  </div>
+                  <div className="flex items-center justify-between bg-teal-50 border border-teal-100 rounded-xl p-3">
+                    <span className="flex items-center gap-2 text-teal-700 text-sm"><DollarSign className="w-4 h-4" /> Consultation Fee</span>
+                    <span className="font-bold text-teal-800">{formatCurrency(selectedAppointment.consultation_fee)}</span>
+                  </div>
+                  {selectedAppointment.notes && (
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 mb-1">Notes</p>
+                      <p className="text-sm text-gray-700">{selectedAppointment.notes}</p>
+                    </div>
+                  )}
+                </>
               )}
 
-              <div className="flex gap-3 pt-1">
-                {selectedAppointment.status === 'pending' && (
-                  <>
-                    <button onClick={() => { updateStatus(selectedAppointment.id, 'confirmed'); setSelectedAppointment(null); }}
-                      className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">Confirm</button>
-                    <button onClick={() => { updateStatus(selectedAppointment.id, 'cancelled'); setSelectedAppointment(null); }}
-                      className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100">Cancel</button>
-                  </>
-                )}
-                {selectedAppointment.status === 'confirmed' && (
-                  <button onClick={() => { updateStatus(selectedAppointment.id, 'completed'); setSelectedAppointment(null); }}
-                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Mark as Completed</button>
-                )}
-                <button onClick={() => setSelectedAppointment(null)}
-                  className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50">Close</button>
-              </div>
+              {/* ── Patient Info Tab ── */}
+              {detailTab === 'patient' && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><Globe className="w-3 h-3" /> Country</p>
+                      <p className="font-semibold text-gray-900 text-sm">{selectedAppointment.patient_country || '—'}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 mb-1">City</p>
+                      <p className="font-semibold text-gray-900 text-sm">{selectedAppointment.patient_city || '—'}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 mb-1">Gender</p>
+                      <p className="font-semibold text-gray-900 text-sm capitalize">{selectedAppointment.patient_gender || '—'}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 mb-1">Date of Birth</p>
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {selectedAppointment.patient_dob ? formatDate(selectedAppointment.patient_dob) : '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-400">Contact</p>
+                    <div className="flex items-center gap-2 text-sm text-gray-700"><Mail className="w-4 h-4 text-gray-400" />{selectedAppointment.patient_email || '—'}</div>
+                    <div className="flex items-center gap-2 text-sm text-gray-700"><Phone className="w-4 h-4 text-gray-400" />{selectedAppointment.patient_phone || '—'}</div>
+                  </div>
+                  {selectedAppointment.patient_address && (
+                    <div className="bg-gray-50 rounded-xl p-3">
+                      <p className="text-xs text-gray-400 mb-1">Address</p>
+                      <p className="text-sm text-gray-700">{selectedAppointment.patient_address}</p>
+                    </div>
+                  )}
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mb-2"><Shield className="w-3 h-3" /> Identity / Insurance</p>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Provider</span>
+                        <span className="font-medium text-gray-900">{selectedAppointment.patient_insurance_provider || '—'}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Policy No.</span>
+                        <span className="font-medium text-gray-900">{selectedAppointment.patient_insurance_policy || '—'}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-red-50 border border-red-100 rounded-xl p-3">
+                    <p className="text-xs text-red-400 mb-1">Emergency Contact</p>
+                    <p className="font-semibold text-gray-900 text-sm">{selectedAppointment.patient_emergency_contact_name || '—'}</p>
+                    <p className="text-sm text-gray-600">{selectedAppointment.patient_emergency_contact_phone || '—'}</p>
+                  </div>
+                </>
+              )}
+
+              {/* ── Medical Tab ── */}
+              {detailTab === 'medical' && (
+                <>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 flex items-center gap-1 mb-1"><Heart className="w-3 h-3" /> Blood Group</p>
+                    <p className="font-bold text-gray-900 text-lg">{selectedAppointment.patient_blood_group || '—'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Allergies</p>
+                    <p className="text-sm text-gray-700">{selectedAppointment.patient_allergies || 'None reported'}</p>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-3">
+                    <p className="text-xs text-gray-400 mb-1">Medical History</p>
+                    <p className="text-sm text-gray-700">{selectedAppointment.patient_medical_history || 'No history recorded'}</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 p-5 border-t border-gray-100 flex-shrink-0">
+              {selectedAppointment.status === 'pending' && (
+                <>
+                  <button onClick={() => { updateStatus(selectedAppointment.id, 'confirmed'); setSelectedAppointment(null); }}
+                    className="flex-1 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">Confirm</button>
+                  <button onClick={() => { updateStatus(selectedAppointment.id, 'cancelled'); setSelectedAppointment(null); }}
+                    className="flex-1 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg text-sm font-semibold hover:bg-red-100">Cancel</button>
+                </>
+              )}
+              {selectedAppointment.status === 'confirmed' && (
+                <button onClick={() => { updateStatus(selectedAppointment.id, 'completed'); setSelectedAppointment(null); }}
+                  className="flex-1 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700">Mark as Completed</button>
+              )}
+              <button onClick={() => setSelectedAppointment(null)}
+                className="flex-1 py-2 border border-gray-200 text-gray-600 rounded-lg text-sm font-semibold hover:bg-gray-50">Close</button>
             </div>
           </div>
         </div>
