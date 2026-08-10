@@ -4,7 +4,7 @@ import {
   Cog6ToothIcon, BellIcon, UserIcon, MagnifyingGlassIcon, CheckCircleIcon,
   XCircleIcon, PencilIcon, NoSymbolIcon, EyeIcon,
   CheckIcon, XMarkIcon, MapPinIcon, BeakerIcon, ShieldCheckIcon,
-  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon
+  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon, Squares2X2Icon
 } from '@heroicons/react/24/outline';
 
 const SuperAdminDashboard: React.FC = () => {
@@ -116,7 +116,7 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   const sidebarItems = [
-    { id: 'DASHBOARD', label: 'Dashboard', icon: BuildingOffice2Icon },
+    { id: 'DASHBOARD', label: 'Dashboard', icon: Squares2X2Icon },
     { id: 'HOSPITAL_MANAGEMENT', label: 'Hospital Management', icon: BeakerIcon },
     { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: PlusIcon },
     { id: 'MANAGE_HOSPITALS', label: 'Manage Hospitals', icon: BuildingOffice2Icon },

@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  HomeIcon, CalendarIcon, DocumentTextIcon,
+  Squares2X2Icon, CalendarIcon, DocumentTextIcon,
   QuestionMarkCircleIcon, PhoneIcon, ArrowUpTrayIcon, ChevronRightIcon,
   CheckCircleIcon, ClockIcon, ExclamationCircleIcon, CreditCardIcon,
-  BuildingOffice2Icon, MapPinIcon, Bars3Icon, MagnifyingGlassIcon,
+  BuildingOffice2Icon, MapPinIcon, MagnifyingGlassIcon,
   BellIcon, GlobeAltIcon, ChevronDownIcon, ArrowRightOnRectangleIcon,
   UserIcon, ExclamationTriangleIcon, BuildingOfficeIcon, FolderOpenIcon
 } from '@heroicons/react/24/outline';
@@ -23,7 +23,7 @@ import PatientDocuments from './patient/PatientDocuments';
 type Page = 'dashboard' | 'registration' | 'reports' | 'appointments' | 'billing' | 'settings' | 'help' | 'find-hospitals' | 'documents';
 
 const NAV = [
-  { page: 'dashboard' as Page,       icon: HomeIcon,              label: 'Dashboard' },
+  { page: 'dashboard' as Page,       icon: Squares2X2Icon,        label: 'Dashboard' },
   { page: 'appointments' as Page,    icon: CalendarIcon,          label: 'Appointments' },
   { page: 'documents' as Page,       icon: FolderOpenIcon,        label: 'My Documents' },
   { page: 'billing' as Page,         icon: CreditCardIcon,        label: 'Records & Billing' },
@@ -287,7 +287,10 @@ const PatientDashboard: React.FC = () => {
             onClick={() => setSidebarOpen(o => !o)}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <Bars3Icon className="w-4 h-4 text-gray-500" />
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="18" rx="2" strokeWidth="2"/>
+              <line x1="8" y1="3" x2="8" y2="21" strokeWidth="2"/>
+            </svg>
           </button>
         </div>
 

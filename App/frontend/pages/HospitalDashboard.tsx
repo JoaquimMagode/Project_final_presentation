@@ -3,8 +3,8 @@ import {
   MagnifyingGlassIcon, BellIcon, UserIcon, CalendarIcon, PhoneIcon, UsersIcon,
   BoltIcon as ActivityIcon,
   ArrowTrendingUpIcon, ArrowTrendingDownIcon, EllipsisHorizontalIcon, QuestionMarkCircleIcon,
-  ChartBarIcon, HomeIcon, DocumentTextIcon, CreditCardIcon, UserPlusIcon,
-  ClockIcon, CurrencyDollarIcon, EyeIcon, ChevronDownIcon, ArrowRightOnRectangleIcon, Bars3Icon,
+  ChartBarIcon, Squares2X2Icon, DocumentTextIcon, CreditCardIcon, UserPlusIcon,
+  ClockIcon, CurrencyDollarIcon, EyeIcon, ChevronDownIcon, ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon, GlobeAltIcon
 } from '@heroicons/react/24/outline';
 import { Line } from 'react-chartjs-2';
@@ -312,7 +312,7 @@ const HospitalDashboard: React.FC = () => {
   };
   
   const sidebarItems = [
-    { icon: HomeIcon,       label: 'Dashboard',   active: activePage === 'dashboard',    page: 'dashboard' },
+    { icon: Squares2X2Icon,   label: 'Dashboard',   active: activePage === 'dashboard',    page: 'dashboard' },
     { icon: UsersIcon,      label: 'Patients',    active: activePage === 'patients',     page: 'patients' },
     { icon: CalendarIcon,   label: 'Appointment', active: activePage === 'appointments', page: 'appointments', hasDropdown: true },
     { icon: DocumentTextIcon, label: 'Report',    active: activePage === 'report',       page: 'report' },
@@ -472,7 +472,10 @@ const HospitalDashboard: React.FC = () => {
             onClick={() => setSidebarOpen(o => !o)}
             className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            <Bars3Icon className="w-4 h-4 text-gray-500" />
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="18" rx="2" strokeWidth="2"/>
+              <line x1="8" y1="3" x2="8" y2="21" strokeWidth="2"/>
+            </svg>
           </button>
         </div>
 

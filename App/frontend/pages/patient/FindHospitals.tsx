@@ -44,18 +44,7 @@ interface Statistics {
 
 type BookingType = 'consultation' | 'procedure' | 'follow_up' | 'telemedicine';
 
-const INDIAN_CITIES = [
-  'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Pune', 'Kolkata',
-  'Ahmedabad', 'New Delhi', 'Mohali', 'Chandigarh', 'Jaipur', 'Surat',
-];
 
-const PROCEDURES = [
-  'Cardiology', 'Orthopedics', 'Neurology', 'Oncology', 'Urology',
-  'Dermatology', 'Gastroenterology', 'Nephrology', 'Pulmonology',
-  'Endocrinology', 'Ophthalmology', 'ENT', 'Obstetrics & Gynecology',
-  'Cardiac Surgery', 'Neurosurgery', 'Spine Surgery', 'Joint Replacement',
-  'Kidney Transplant', 'Liver Transplant', 'IVF Treatment',
-];
 
 const TIMES = [
   '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
@@ -610,8 +599,19 @@ const HospitalListCard: React.FC<{ hospital: Hospital; onViewDetails: (id: numbe
 
 // ── Main FindHospitals page ───────────────────────────────────────────────────
 const FindHospitals: React.FC = () => {
-  const [city, setCity] = useState('');
-  const [procedure, setProcedure] = useState('');
+  const [filtersMap, setFiltersMap] = useState<Record<string, Record<string, string[]>>>({});
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedSpec, setSelectedSpec] = useState('');
+
+  const states = Object.keys(filtersMap).sort();
+  const cities = selectedState ? Object.keys(filtersMap[selectedState] || {}).sort() : [];
+  const specializations = selectedState && selectedCity
+    ? (filtersMap[selectedState]?.[selectedCity] || [])
+    : selectedState
+    ? [...new Set(Object.values(filtersMap[selectedState] || {}).flat())].sort()
+    : [];
+
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
   const [filteredHospitals, setFilteredHospitals] = useState<Hospital[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
@@ -624,7 +624,10 @@ const FindHospitals: React.FC = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => {
+    hospitalsAPI.getFilters().then(setFiltersMap).catch(() => {});
+    fetchAll();
+  }, []);
 
   const fetchAll = async () => {
     try {
@@ -646,10 +649,11 @@ const FindHospitals: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const res = (city || procedure)
+      const res = (selectedState || selectedCity || selectedSpec)
         ? await hospitalsAPI.searchHospitals({
-            ...(city && { city }),
-            ...(procedure && { specialization: procedure }),
+            ...(selectedState && { state: selectedState }),
+            ...(selectedCity && { location: selectedCity }),
+            ...(selectedSpec && { specialization: selectedSpec }),
           })
         : await hospitalsAPI.getHospitals({ limit: 200 });
       if (res.success) setFilteredHospitals(res.data.hospitals || []);
@@ -733,27 +737,49 @@ const FindHospitals: React.FC = () => {
 
       {/* Search form */}
       <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          {/* State */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">City / Location</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">State</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <select value={city} onChange={e => setCity(e.target.value)}
+              <select value={selectedState}
+                onChange={e => { setSelectedState(e.target.value); setSelectedCity(''); setSelectedSpec(''); }}
                 className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white">
-                <option value="">All Cities</option>
-                {INDIAN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="">All States</option>
+                {states.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
+
+          {/* City */}
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Specialization / Procedure</label>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">City</label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              <select value={selectedCity}
+                onChange={e => { setSelectedCity(e.target.value); setSelectedSpec(''); }}
+                disabled={!selectedState}
+                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed">
+                <option value="">All Cities</option>
+                {cities.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          {/* Specialization */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Specialization</label>
             <div className="relative">
               <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              <select value={procedure} onChange={e => setProcedure(e.target.value)}
-                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white">
+              <select value={selectedSpec}
+                onChange={e => setSelectedSpec(e.target.value)}
+                disabled={!selectedState}
+                className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed">
                 <option value="">All Specializations</option>
-                {PROCEDURES.map(p => <option key={p} value={p}>{p}</option>)}
+                {specializations.map(sp => <option key={sp} value={sp}>{sp}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
             </div>
@@ -765,8 +791,8 @@ const FindHospitals: React.FC = () => {
             <Search className="w-4 h-4" />
             {loading ? 'Searching…' : 'Search Hospitals'}
           </button>
-          {(city || procedure || hasSearched) && (
-            <button type="button" onClick={() => { setCity(''); setProcedure(''); setHasSearched(false); setFilteredHospitals([]); setError(''); }}
+          {(selectedState || selectedCity || selectedSpec || hasSearched) && (
+            <button type="button" onClick={() => { setSelectedState(''); setSelectedCity(''); setSelectedSpec(''); setHasSearched(false); setFilteredHospitals([]); setError(''); }}
               className="px-4 py-2.5 border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm flex items-center gap-1.5">
               <X className="w-4 h-4" /> Clear
             </button>
