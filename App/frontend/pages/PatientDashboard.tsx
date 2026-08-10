@@ -89,9 +89,9 @@ const PatientHeader: React.FC<{
         {/* Find Hospitals */}
         <button
           onClick={() => setActivePage('find-hospitals')}
-          className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors flex-shrink-0"
+          className="hidden md:flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-md text-sm font-semibold hover:bg-emerald-700 transition-colors flex-shrink-0"
         >
-          <Hospital className="w-4 h-4" />
+
           Find Hospitals
         </button>
 
