@@ -280,6 +280,73 @@ export const uploadAPI = {
   },
 };
 
+// Medical Documents API
+export const documentsAPI = {
+  getDocuments: async (params?: { category?: string; search?: string; sort?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params) Object.entries(params).forEach(([k, v]) => v !== undefined && q.append(k, String(v)));
+    return apiRequest(`/medical-documents${q.toString() ? '?' + q.toString() : ''}`);
+  },
+
+  getCategories: async () => apiRequest('/medical-documents/categories'),
+
+  uploadDocument: async (file: File, meta: {
+    title: string;
+    category: string;
+    description?: string;
+    document_date?: string;
+    associated_hospital_id?: number;
+  }) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    Object.entries(meta).forEach(([k, v]) => v !== undefined && formData.append(k, String(v)));
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/medical-documents/upload`, {
+      method: 'POST',
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+      body: formData,
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Upload failed');
+    return data;
+  },
+
+  getFileUrl: (id: number, inline = false) => {
+    const token = localStorage.getItem('token');
+    return `${API_BASE_URL}/medical-documents/${id}/file${inline ? '?inline=true' : ''}${token ? (inline ? '&' : '?') + 'token=' + token : ''}`;
+  },
+
+  downloadDocument: async (id: number, filename: string) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/medical-documents/${id}/file`, {
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+    });
+    if (!response.ok) throw new Error('Download failed');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  },
+
+  deleteDocument: async (id: number) =>
+    apiRequest(`/medical-documents/${id}`, { method: 'DELETE' }),
+
+  shareDocument: async (id: number, hospital_id: number) =>
+    apiRequest(`/medical-documents/${id}/share`, {
+      method: 'POST',
+      body: JSON.stringify({ hospital_id }),
+    }),
+
+  revokeShare: async (id: number, hospitalId: number) =>
+    apiRequest(`/medical-documents/${id}/share/${hospitalId}`, { method: 'DELETE' }),
+
+  getShares: async (id: number) =>
+    apiRequest(`/medical-documents/${id}/shares`),
+};
+
 export default {
   authAPI,
   appointmentsAPI,

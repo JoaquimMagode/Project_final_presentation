@@ -320,4 +320,223 @@ router.get('/statistics', authenticateToken, authorizeHospitalAdmin, async (req,
   }
 });
 
+// GET /api/hospital-dashboard/hospital-info
+// Returns hospital name, location, admin name for the welcome header
+router.get('/hospital-info', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
+  try {
+    const hospitalId = req.user.hospital_id;
+
+    const hospital = await prisma.hospitals.findUnique({
+      where: { id: hospitalId },
+      include: { users: { select: { name: true } } },
+    });
+
+    if (!hospital) {
+      return res.status(404).json({ success: false, message: 'Hospital not found' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: hospital.id,
+        name: hospital.name,
+        city: hospital.city,
+        state: hospital.state,
+        country: hospital.country,
+        email: hospital.email,
+        phone: hospital.phone,
+        description: hospital.description,
+        logo_url: hospital.logo_url || null,
+        admin_name: hospital.users?.name || req.user.name || null,
+      }
+    });
+  } catch (error) {
+    console.error('Get hospital info error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get hospital info' });
+  }
+});
+
+// GET /api/hospital-dashboard/chart-data?period=week|month|year
+// Returns real patient trend data for the statistics chart
+router.get('/chart-data', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
+  try {
+    const hospitalId = req.user.hospital_id;
+    const { period = 'week' } = req.query;
+
+    const now = new Date();
+    let startDate;
+    let labels = [];
+
+    if (period === 'week') {
+      // Last 7 days
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+      labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    } else if (period === 'month') {
+      // Last 4 weeks
+      startDate = new Date(now);
+      startDate.setDate(now.getDate() - 27);
+      startDate.setHours(0, 0, 0, 0);
+      labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+    } else {
+      // Year — current year by month
+      startDate = new Date(now.getFullYear(), 0, 1);
+      labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    }
+
+    const appointments = await prisma.appointments.findMany({
+      where: {
+        hospital_id: hospitalId,
+        appointment_date: { gte: startDate },
+      },
+      select: {
+        appointment_date: true,
+        patient_id: true,
+        created_at: true,
+      },
+    });
+
+    // Bucket appointments into the right label slots
+    const totalBuckets = labels.length;
+    const newPatients = new Array(totalBuckets).fill(0);
+    const returning   = new Array(totalBuckets).fill(0);
+
+    // Track first-ever appointment date per patient for this hospital
+    const allPatientFirstVisit = await prisma.appointments.groupBy({
+      by: ['patient_id'],
+      where: { hospital_id: hospitalId },
+      _min: { appointment_date: true },
+    });
+    const firstVisitMap = {};
+    allPatientFirstVisit.forEach(p => {
+      firstVisitMap[p.patient_id] = p._min.appointment_date;
+    });
+
+    appointments.forEach(a => {
+      const apptDate = new Date(a.appointment_date);
+      let bucketIndex = -1;
+
+      if (period === 'week') {
+        // 0 = Mon of the week window … bucket by day-of-week offset from startDate
+        const diffDays = Math.floor((apptDate - startDate) / (1000 * 60 * 60 * 24));
+        bucketIndex = diffDays >= 0 && diffDays < 7 ? diffDays : -1;
+        // Map to Mon-Sun labels (startDate is 6 days ago, may not be Monday)
+        // Use actual day-of-week relative to label array
+        const dayOfWeek = apptDate.getDay(); // 0=Sun,1=Mon,...,6=Sat
+        const dayMap = { 1: 0, 2: 1, 3: 2, 4: 3, 5: 4, 6: 5, 0: 6 };
+        bucketIndex = diffDays >= 0 && diffDays < 7 ? dayMap[dayOfWeek] : -1;
+      } else if (period === 'month') {
+        const diffDays = Math.floor((apptDate - startDate) / (1000 * 60 * 60 * 24));
+        bucketIndex = Math.min(Math.floor(diffDays / 7), 3);
+        if (diffDays < 0) bucketIndex = -1;
+      } else {
+        bucketIndex = apptDate.getMonth(); // 0–11
+      }
+
+      if (bucketIndex < 0 || bucketIndex >= totalBuckets) return;
+
+      const firstVisit = firstVisitMap[a.patient_id];
+      const isNew = firstVisit &&
+        Math.abs(new Date(firstVisit) - apptDate) < 1000 * 60 * 60 * 24; // same day = first visit
+
+      if (isNew) {
+        newPatients[bucketIndex]++;
+      } else {
+        returning[bucketIndex]++;
+      }
+    });
+
+    res.json({
+      success: true,
+      data: { labels, newPatients, returning, period }
+    });
+  } catch (error) {
+    console.error('Get chart data error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get chart data' });
+  }
+});
+
+// GET /api/hospital-dashboard/today-schedule
+// Returns today's appointments as the schedule panel
+router.get('/today-schedule', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
+  try {
+    const hospitalId = req.user.hospital_id;
+
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    const appointments = await prisma.appointments.findMany({
+      where: {
+        hospital_id: hospitalId,
+        appointment_date: new Date(todayStr),
+        status: { in: ['pending', 'confirmed'] },
+      },
+      include: {
+        patients: { include: { users: { select: { name: true } } } },
+      },
+      orderBy: { appointment_time: 'asc' },
+      take: 10,
+    });
+
+    const schedule = appointments.map(a => {
+      const timeStr = a.appointment_time
+        ? new Date(a.appointment_time).toISOString().substring(11, 16)
+        : '00:00';
+      const [hh, mm] = timeStr.split(':').map(Number);
+      const suffix = hh >= 12 ? 'pm' : 'am';
+      const h12 = hh % 12 || 12;
+      const endH = (hh + 1) % 24;
+      const endSuffix = endH >= 12 ? 'pm' : 'am';
+      const endH12 = endH % 12 || 12;
+      return {
+        id: a.id,
+        time: `${String(h12).padStart(2, '0')}:${String(mm).padStart(2, '0')}`,
+        title: `${a.type ? a.type.charAt(0).toUpperCase() + a.type.slice(1).replace('_', ' ') : 'Appointment'} – ${a.patients?.users?.name || 'Patient'}`,
+        duration: `${String(h12).padStart(2, '0')}:${String(mm).padStart(2, '0')}${suffix} – ${String(endH12).padStart(2, '0')}:${String(mm).padStart(2, '0')}${endSuffix}`,
+        reason: a.reason,
+        status: a.status,
+        patient_name: a.patients?.users?.name || null,
+        type: a.type,
+      };
+    });
+
+    res.json({ success: true, data: { schedule, date: todayStr } });
+  } catch (error) {
+    console.error('Get today schedule error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get today\'s schedule' });
+  }
+});
+
+// GET /api/hospital-dashboard/recent-reports
+// Returns the most recent medical reports for this hospital
+router.get('/recent-reports', authenticateToken, authorizeHospitalAdmin, async (req, res) => {
+  try {
+    const hospitalId = req.user.hospital_id;
+
+    const reports = await prisma.medical_reports.findMany({
+      where: { hospital_id: hospitalId },
+      include: {
+        patients: { include: { users: { select: { name: true } } } },
+      },
+      orderBy: { created_at: 'desc' },
+      take: 5,
+    });
+
+    const result = reports.map(r => ({
+      id: r.id,
+      title: r.title,
+      report_type: r.report_type,
+      patient_name: r.patients?.users?.name || 'Unknown',
+      created_at: r.created_at,
+      file_url: r.file_url || null,
+    }));
+
+    res.json({ success: true, data: { reports: result } });
+  } catch (error) {
+    console.error('Get recent reports error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get recent reports' });
+  }
+});
+
 module.exports = router;

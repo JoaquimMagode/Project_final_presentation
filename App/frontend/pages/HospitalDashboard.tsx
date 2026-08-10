@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  X, Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
-  TrendingUp, TrendingDown, MoreHorizontal, Plus, HelpCircle,
+  Search, Bell, User, Calendar, Phone, Users, Activity as ActivityIcon, 
+  TrendingUp, TrendingDown, MoreHorizontal, HelpCircle,
   BarChart3, Home, FileText, CreditCard, UserCheck, 
-  Building2, Clock, DollarSign, Eye, Bed, ChevronDown, LogOut, Menu,
-  Settings, AlertTriangle, Globe
+  Clock, DollarSign, Eye, ChevronDown, LogOut, Menu,
+  AlertTriangle, Globe
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
@@ -217,39 +217,24 @@ const HospitalDashboard: React.FC = () => {
   const [activePage, setActivePage] = useState('dashboard');
   const [appointmentFilter, setAppointmentFilter] = useState('');
   const [appointmentsDropdownOpen, setAppointmentsDropdownOpen] = useState(false);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const [dashboardStats, setDashboardStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [pendingCount, setPendingCount] = useState(0);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  // Mock hospital data - in real app, this would come from user context or API
-  const hospitalData = {
-    name: user?.name || 'Apollo Hospitals Mumbai',
-    logo: 'https://picsum.photos/seed/hospital1/100/100', // In real app, this would be the actual hospital logo
-    location: 'Mumbai, India',
-    type: 'Multi-Specialty Hospital',
-    adminName: user?.name || 'Dr. Rajesh Kumar', // Hospital admin name
-    adminRole: 'Hospital Administrator'
-  };
+  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [hospitalInfo, setHospitalInfo]     = useState<any>(null);
+  const [chartData, setChartData]           = useState<any>(null);
+  const [todaySchedule, setTodaySchedule]   = useState<any[]>([]);
+  const [recentReports, setRecentReports]   = useState<any[]>([]);
+  const [loading, setLoading]               = useState(true);
+  const [chartLoading, setChartLoading]     = useState(true);
+  const [pendingCount, setPendingCount]     = useState(0);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setProfileDropdownOpen(false);
-      }
-    };
-    
     const handleNavigatePage = (e: Event) => {
       const page = (e as CustomEvent).detail;
       if (page) setActivePage(page);
     };
     
-    document.addEventListener('mousedown', handleClickOutside);
     window.addEventListener('navigateHospitalPage', handleNavigatePage);
     
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
       window.removeEventListener('navigateHospitalPage', handleNavigatePage);
     };
   }, []);
@@ -266,29 +251,59 @@ const HospitalDashboard: React.FC = () => {
 
   useEffect(() => {
     if (activePage === 'dashboard') {
-      fetchDashboardStats();
+      fetchDashboard();
+      fetchChartData(selectedPeriod);
     }
   }, [activePage]);
 
-  const fetchDashboardStats = async () => {
+  useEffect(() => {
+    if (activePage === 'dashboard') {
+      fetchChartData(selectedPeriod);
+    }
+  }, [selectedPeriod]);
+
+  const fetchDashboard = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/hospital-dashboard/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+      const base = 'http://localhost:5000/api/hospital-dashboard';
 
-      if (response.ok) {
-        const data = await response.json();
-        setDashboardStats(data.data);
-      }
+      const [statsRes, infoRes, scheduleRes, reportsRes] = await Promise.all([
+        fetch(`${base}/stats`,          { headers }),
+        fetch(`${base}/hospital-info`,  { headers }),
+        fetch(`${base}/today-schedule`, { headers }),
+        fetch(`${base}/recent-reports`, { headers }),
+      ]);
+
+      if (statsRes.ok)    { const d = await statsRes.json();    setDashboardStats(d.data); }
+      if (infoRes.ok)     { const d = await infoRes.json();     setHospitalInfo(d.data); }
+      if (scheduleRes.ok) { const d = await scheduleRes.json(); setTodaySchedule(d.data?.schedule || []); }
+      if (reportsRes.ok)  { const d = await reportsRes.json();  setRecentReports(d.data?.reports || []); }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchChartData = async (period: string) => {
+    try {
+      setChartLoading(true);
+      const token = localStorage.getItem('token');
+      const apiPeriod = period === 'Week' ? 'week' : period === 'Month' ? 'month' : 'year';
+      const res = await fetch(
+        `http://localhost:5000/api/hospital-dashboard/chart-data?period=${apiPeriod}`,
+        { headers: { 'Authorization': `Bearer ${token}` } }
+      );
+      if (res.ok) {
+        const d = await res.json();
+        setChartData(d.data);
+      }
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+    } finally {
+      setChartLoading(false);
     }
   };
   
@@ -302,16 +317,6 @@ const HospitalDashboard: React.FC = () => {
     { icon: ActivityIcon, label: 'Activity', active: activePage === 'activity', page: 'activity' },
     { icon: BarChart3, label: 'Statistic', active: activePage === 'statistic', page: 'statistic' },
     { icon: HelpCircle, label: 'Help & Center', active: activePage === 'help', page: 'help' },
-  ];
-
-  const appointments = [
-    { time: '09:00', title: 'Dentist meeting', duration: '09:00am - 10:00am' },
-    { time: '11:00', title: 'Procedures', duration: '11:00am - 12:00pm' }
-  ];
-
-  const reports = [
-    { title: 'A Dental Division in room 123...', time: '1 minute ago', type: 'View report' },
-    { title: 'A Dental Division in room 123...', time: '1 minute ago', type: 'View report' }
   ];
 
   const StatCard = ({ icon: Icon, title, value, change, changeType, color }: any) => (
@@ -335,26 +340,8 @@ const HospitalDashboard: React.FC = () => {
   const currentYear = new Date().getFullYear();
   const PERIODS = ['Week', 'Month', `Year-${currentYear}`];
 
-  const CHART_DATA: Record<string, { labels: string[]; newPatients: number[]; returning: number[] }> = {
-    Week: {
-      labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      newPatients: [12, 19, 14, 22, 18, 9, 7],
-      returning:   [8,  14, 10, 16, 12, 6, 4],
-    },
-    Month: {
-      labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
-      newPatients: [55, 72, 63, 80],
-      returning:   [38, 50, 44, 58],
-    },
-    [`Year-${currentYear}`]: {
-      labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-      newPatients: [30, 45, 38, 60, 55, 72, 65, 80, 75, 90, 85, 95],
-      returning:   [20, 30, 25, 40, 35, 50, 45, 55, 50, 60, 58, 65],
-    },
-  };
-
   const PatientChart = () => {
-    const d = CHART_DATA[selectedPeriod] || CHART_DATA[`Year-${currentYear}`];
+    const d = chartData || { labels: [], newPatients: [], returning: [] };
     const data = {
       labels: d.labels,
       datasets: [
@@ -396,6 +383,20 @@ const HospitalDashboard: React.FC = () => {
         y: { grid: { color: '#f1f5f9' }, ticks: { font: { size: 11 } }, beginAtZero: true },
       },
     };
+    if (chartLoading) {
+      return (
+        <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+          Loading chart...
+        </div>
+      );
+    }
+    if (!d.labels.length) {
+      return (
+        <div className="h-64 flex items-center justify-center text-gray-400 text-sm">
+          No appointment data for this period
+        </div>
+      );
+    }
     return <div className="h-64"><Line data={data} options={options} /></div>;
   };
 
@@ -574,12 +575,19 @@ const HospitalDashboard: React.FC = () => {
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">Welcome back, {hospitalData.adminName} 👋</h1>
-                    <p className="text-gray-600 text-sm">Here's the latest update for {hospitalData.name}</p>
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                      Welcome back, {hospitalInfo?.admin_name || user?.name || 'Admin'} 👋
+                    </h1>
+                    <p className="text-gray-600 text-sm">
+                      Here's the latest update for {hospitalInfo?.name || 'your hospital'}
+                      {hospitalInfo?.city ? ` · ${hospitalInfo.city}${hospitalInfo.state ? `, ${hospitalInfo.state}` : ''}` : ''}
+                    </p>
                   </div>
                   <div className="bg-white rounded-lg px-3 py-2 border border-gray-200 flex items-center gap-2 self-start sm:self-auto">
                     <Calendar className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">Monday, 4th September</span>
+                    <span className="text-sm font-medium">
+                      {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -651,157 +659,244 @@ const HospitalDashboard: React.FC = () => {
               {/* Today's Schedule */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Today 4th Sep 2023</h3>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreHorizontal className="w-5 h-5" />
+                  <h3 className="font-semibold text-gray-900">
+                    Today – {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </h3>
+                  <button
+                    onClick={() => setActivePage('appointments')}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    View all →
                   </button>
                 </div>
-                
-                <div className="space-y-4">
-                  {appointments.map((apt, index) => (
-                    <div key={index} className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Clock className="w-5 h-5 text-gray-600" />
+
+                {loading ? (
+                  <div className="text-sm text-gray-400 py-4 text-center">Loading...</div>
+                ) : todaySchedule.length === 0 ? (
+                  <div className="text-sm text-gray-400 py-4 text-center">No appointments scheduled for today</div>
+                ) : (
+                  <div className="space-y-4">
+                    {todaySchedule.slice(0, 4).map((apt) => (
+                      <div key={apt.id} className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                          apt.status === 'confirmed' ? 'bg-emerald-100' : 'bg-amber-50'
+                        }`}>
+                          <Clock className={`w-5 h-5 ${apt.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-500'}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 text-sm truncate">{apt.title}</div>
+                          <div className="text-xs text-gray-500">{apt.duration}</div>
+                        </div>
+                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                          apt.status === 'confirmed'
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'bg-amber-100 text-amber-700'
+                        }`}>
+                          {apt.status}
+                        </span>
                       </div>
-                      <div className="flex-1">
-                        <div className="font-medium text-gray-900">{apt.title}</div>
-                        <div className="text-sm text-gray-500">{apt.duration}</div>
-                      </div>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Reports */}
+              {/* Recent Reports */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Reports</h3>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreHorizontal className="w-5 h-5" />
+                  <h3 className="font-semibold text-gray-900">Recent Reports</h3>
+                  <button
+                    onClick={() => setActivePage('report')}
+                    className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    View all →
                   </button>
                 </div>
-                
-                <div className="space-y-4">
-                  {reports.map((report, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                        <FileText className="w-4 h-4 text-teal-600" />
+
+                {loading ? (
+                  <div className="text-sm text-gray-400 py-4 text-center">Loading...</div>
+                ) : recentReports.length === 0 ? (
+                  <div className="text-sm text-gray-400 py-4 text-center">No reports yet</div>
+                ) : (
+                  <div className="space-y-4">
+                    {recentReports.slice(0, 3).map((report) => (
+                      <div key={report.id} className="flex items-start gap-3">
+                        <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <FileText className="w-4 h-4 text-teal-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">{report.title}</div>
+                          <div className="text-xs text-gray-500 truncate">{report.patient_name}</div>
+                          <div className="text-xs text-gray-400">
+                            {report.created_at
+                              ? new Date(report.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })
+                              : ''}
+                          </div>
+                        </div>
+                        {report.file_url && (
+                          <a
+                            href={report.file_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-teal-600 text-xs font-medium hover:text-teal-700 flex-shrink-0"
+                          >
+                            View →
+                          </a>
+                        )}
                       </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900 mb-1">{report.title}</div>
-                        <div className="text-xs text-gray-500">{report.time}</div>
-                      </div>
-                      <button className="text-teal-600 text-xs font-medium hover:text-teal-700">
-                        {report.type} →
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
           {/* Bottom Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-4 md:mt-6">
-            {/* Balance */}
+            {/* Balance / Revenue */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Balance</h3>
-                <button className="text-gray-400 hover:text-gray-600">
+                <h3 className="font-semibold text-gray-900">Revenue</h3>
+                <button
+                  onClick={() => setActivePage('payments')}
+                  className="text-gray-400 hover:text-gray-600"
+                  title="View payments"
+                >
                   <Eye className="w-4 h-4" />
                 </button>
               </div>
-              
-              <div className="flex items-center justify-center mb-4">
-                <CircularProgress percentage={89} color="#10b981" />
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Total Revenue</span>
-                  <span className="font-semibold">$8,135,450</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Total Transaction Revenue</span>
-                  <span className="font-semibold">$7,999,000</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Net Revenue</span>
-                  <span className="font-semibold text-green-600">$136,450</span>
-                </div>
-              </div>
+
+              {(() => {
+                const totalRev   = Number(dashboardStats?.total_revenue || 0);
+                const avgFee     = Number(dashboardStats?.avg_consultation_fee || 0);
+                const totalAppts = dashboardStats?.total_appointments || 0;
+                const completedPct = totalAppts > 0
+                  ? Math.round((dashboardStats?.completed_appointments / totalAppts) * 100)
+                  : 0;
+                return (
+                  <>
+                    <div className="flex items-center justify-center mb-4">
+                      <CircularProgress percentage={completedPct} color="#10b981" />
+                    </div>
+                    <p className="text-xs text-center text-gray-400 mb-4">Completed appointments</p>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total Revenue</span>
+                        <span className="font-semibold">
+                          {loading ? '...' : `₹${totalRev.toLocaleString('en-IN')}`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Avg. Consultation Fee</span>
+                        <span className="font-semibold">
+                          {loading ? '...' : `₹${Math.round(avgFee).toLocaleString('en-IN')}`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Completed Appointments</span>
+                        <span className="font-semibold text-green-600">
+                          {loading ? '...' : dashboardStats?.completed_appointments || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
 
-            {/* Room Occupancy */}
+            {/* Appointment Status Breakdown */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Room occupancy</h3>
-                <button className="text-gray-400 hover:text-gray-600">
+                <h3 className="font-semibold text-gray-900">Appointment Status</h3>
+                <button
+                  onClick={() => setActivePage('appointments')}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-gray-900 mb-1">52</div>
-                <div className="text-sm text-gray-500">ADT</div>
+                <div className="text-3xl font-bold text-gray-900 mb-1">
+                  {loading ? '...' : dashboardStats?.total_appointments || 0}
+                </div>
+                <div className="text-sm text-gray-500">Total Appointments</div>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">General room</span>
+                    <div className="w-3 h-3 bg-amber-400 rounded-full" />
+                    <span className="text-sm text-gray-600">Pending</span>
                   </div>
-                  <span className="font-semibold">124</span>
+                  <span className="font-semibold">{loading ? '...' : dashboardStats?.pending_appointments || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">Private room</span>
+                    <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                    <span className="text-sm text-gray-600">Confirmed</span>
                   </div>
-                  <span className="font-semibold">52</span>
+                  <span className="font-semibold">{loading ? '...' : dashboardStats?.confirmed_appointments || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full" />
+                    <span className="text-sm text-gray-600">Completed</span>
+                  </div>
+                  <span className="font-semibold">{loading ? '...' : dashboardStats?.completed_appointments || 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-red-400 rounded-full" />
+                    <span className="text-sm text-gray-600">Cancelled</span>
+                  </div>
+                  <span className="font-semibold">{loading ? '...' : dashboardStats?.cancelled_appointments || 0}</span>
                 </div>
               </div>
             </div>
 
-            {/* Reports Summary */}
+            {/* Team / Employees Summary */}
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Reports</h3>
-                <button className="text-gray-400 hover:text-gray-600">
+                <h3 className="font-semibold text-gray-900">Staff & Patients</h3>
+                <button
+                  onClick={() => setActivePage('employee')}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   <MoreHorizontal className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-teal-600" />
+                <div className="flex items-center gap-4 p-3 bg-emerald-50 rounded-xl">
+                  <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <UserCheck className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900 mb-1">A Dental Division in room 123...</div>
-                    <div className="text-xs text-gray-500">1 minute ago</div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {loading ? '...' : dashboardStats?.total_employees || 0}
+                    </div>
+                    <div className="text-xs text-gray-500">Active Employees</div>
                   </div>
-                  <button className="text-teal-600 text-xs font-medium hover:text-teal-700">
-                    View report →
-                  </button>
                 </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-teal-600" />
+
+                <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-xl">
+                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900 mb-1">A Dental Division in room 123...</div>
-                    <div className="text-xs text-gray-500">1 minute ago</div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-900">
+                      {loading ? '...' : dashboardStats?.total_patients || 0}
+                    </div>
+                    <div className="text-xs text-gray-500">Total Patients Seen</div>
                   </div>
-                  <button className="text-teal-600 text-xs font-medium hover:text-teal-700">
-                    View report →
-                  </button>
                 </div>
+
+                <button
+                  onClick={() => setActivePage('employee')}
+                  className="w-full text-center text-sm text-emerald-600 hover:text-emerald-700 font-medium pt-1"
+                >
+                  Manage employees →
+                </button>
               </div>
             </div>
           </div>
