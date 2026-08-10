@@ -64,6 +64,13 @@ const authenticateToken = async (req, res, next) => {
             await prisma.hospitals.update({ where: { id: matched.id }, data: { admin_id: user.id } });
           }
         }
+        // Fallback: match hospital by hospital email field
+        if (!hospital) {
+          hospital = await prisma.hospitals.findFirst({
+            where: { email: user.email },
+            select: { id: true }
+          });
+        }
         req.user.hospital_id = hospital ? hospital.id : null;
       }
     }
@@ -98,6 +105,16 @@ const authorizeHospitalAdmin = async (req, res, next) => {
       const hospital = await prisma.hospitals.findFirst({
         where: { admin_id: req.user.id },
         select: { id: true }
+      });
+      if (hospital) req.user.hospital_id = hospital.id;
+    }
+
+    // Last-resort: assign first available hospital for unlinked demo admin accounts
+    if (!req.user.hospital_id) {
+      const hospital = await prisma.hospitals.findFirst({
+        where: { status: 'active' },
+        select: { id: true },
+        orderBy: { id: 'asc' }
       });
       if (hospital) req.user.hospital_id = hospital.id;
     }

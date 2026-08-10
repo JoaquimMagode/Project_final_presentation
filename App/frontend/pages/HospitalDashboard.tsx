@@ -239,7 +239,7 @@ const HospitalDashboard: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
+  const fetchPendingCount = () => {
     const token = localStorage.getItem('token');
     fetch('http://localhost:5000/api/hospital-dashboard/appointments?status=pending', {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -247,19 +247,22 @@ const HospitalDashboard: React.FC = () => {
       .then(r => r.json())
       .then(data => setPendingCount(data?.data?.appointments?.length || 0))
       .catch(() => {});
+  };
+
+  useEffect(() => {
+    fetchPendingCount();
   }, []);
 
   useEffect(() => {
     if (activePage === 'dashboard') {
+      fetchPendingCount();
       fetchDashboard();
       fetchChartData(selectedPeriod);
     }
   }, [activePage]);
 
   useEffect(() => {
-    if (activePage === 'dashboard') {
-      fetchChartData(selectedPeriod);
-    }
+    if (activePage === 'dashboard') fetchChartData(selectedPeriod);
   }, [selectedPeriod]);
 
   const fetchDashboard = async () => {
