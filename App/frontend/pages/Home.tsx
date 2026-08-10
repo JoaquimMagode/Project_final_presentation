@@ -117,9 +117,8 @@ const Home: React.FC = () => {
             {/* Left — copy + search */}
             <div className="space-y-8 pb-12 lg:pb-16">
               {/* pill badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-full text-xs font-semibold text-emerald-700">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Trusted by 10,000+ patients across 30+ countries
+              <div className="inline-flex items-center gap-2 py-1.5 bg-emerald-50 rounded-full text-xs font-semibold text-emerald-700">
+                Trusted by 10,000+ patients across 30+ africans & Asians countries
               </div>
 
               {/* headline */}
@@ -204,7 +203,7 @@ const Home: React.FC = () => {
               <div className="absolute left-0 top-10 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-10 space-y-3 w-52">
                 {STATS.slice(0, 2).map(s => (
                   <div key={s.label} className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center text-black justify-center flex-shrink-0">
                       {s.icon}
                     </div>
                     <div>
@@ -235,14 +234,19 @@ const Home: React.FC = () => {
       <section className="bg-slate-900 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-y md:divide-y-0 md:divide-x divide-slate-700">
-            {STATS.map(s => (
-              <div key={s.label} className="flex items-center gap-3 py-4 md:py-0 md:px-6 first:pt-0 last:pb-0 md:first:pl-0">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                  {s.icon}
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white leading-none">{s.value}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{s.label}</p>
+            {STATS.map((s) => (
+              <div
+                key={s.label}
+                className="flex items-center justify-center gap-3 py-4 md:py-0 md:px-6
+                          first:pt-0 last:pb-0 md:first:pl-0"
+              >
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-white leading-none">
+                    {s.value}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {s.label}
+                  </p>
                 </div>
               </div>
             ))}
