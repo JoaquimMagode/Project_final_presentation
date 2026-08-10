@@ -23,6 +23,7 @@ const PatientProfile: React.FC = () => {
     lastName: '',
     email: '',
     phone: '',
+    patientId: null as number | null,
     dateOfBirth: '',
     gender: '',
     bloodType: '',
@@ -52,23 +53,47 @@ const PatientProfile: React.FC = () => {
 
       if (profileRes.success) {
         const patient = profileRes.data.patient;
+
+        // Backend now flattens users.name/email/phone onto the root patient object.
+        // Fall back to the nested shape in case an older backend is running.
+        const name  = patient.name  ?? patient.users?.name  ?? '';
+        const email = patient.email ?? patient.users?.email ?? '';
+        const phone = patient.phone ?? patient.users?.phone ?? '';
+
+        // medical_history arrives as a parsed array (backend runs parseHistory) or
+        // possibly a raw JSON string on older responses — normalise to a plain string
+        // for display / editing in the textarea.
+        let medications = '';
+        if (Array.isArray(patient.medical_history)) {
+          medications = patient.medical_history.join(', ');
+        } else if (typeof patient.medical_history === 'string') {
+          // Try to parse as JSON array, otherwise use as-is
+          try {
+            const parsed = JSON.parse(patient.medical_history);
+            medications = Array.isArray(parsed) ? parsed.join(', ') : parsed;
+          } catch {
+            medications = patient.medical_history;
+          }
+        }
+
         setProfileData({
-          firstName: patient.name?.split(' ')[0] || '',
-          lastName: patient.name?.split(' ').slice(1).join(' ') || '',
-          email: patient.email || '',
-          phone: patient.phone || '',
+          firstName: name.split(' ')[0] || '',
+          lastName:  name.split(' ').slice(1).join(' ') || '',
+          email,
+          phone,
+          patientId:  patient.id ?? null,
           dateOfBirth: patient.date_of_birth ? patient.date_of_birth.split('T')[0] : '',
-          gender: patient.gender || '',
-          bloodType: patient.blood_group || '',
-          address: patient.address || '',
-          city: patient.city || '',
-          state: patient.state || '',
+          gender:       patient.gender || '',
+          bloodType:    patient.blood_group || '',
+          address:      patient.address || '',
+          city:         patient.city || '',
+          state:        patient.state || '',
           emergencyContact: patient.emergency_contact_name || patient.emergency_contact || '',
-          emergencyPhone: patient.emergency_contact_phone || '',
-          allergies: patient.allergies || '',
-          medications: patient.medical_history || '',
+          emergencyPhone:   patient.emergency_contact_phone || '',
+          allergies:        patient.allergies || '',
+          medications,
           insuranceProvider: patient.insurance_provider || '',
-          policyNumber: patient.insurance_policy_number || '',
+          policyNumber:      patient.insurance_policy_number || '',
           memberSince: patient.created_at || ''
         });
       }
@@ -122,11 +147,12 @@ const PatientProfile: React.FC = () => {
       
       // Update user basic info
       await authAPI.updateProfile({
-        name: `${profileData.firstName} ${profileData.lastName}`,
+        name: `${profileData.firstName} ${profileData.lastName}`.trim(),
         phone: profileData.phone
       });
 
-      // Update patient profile
+      // medical_history is edited as a plain string in the textarea;
+      // send it as a string — the backend stores it via JSON.stringify.
       await patientsAPI.updatePatientProfile({
         date_of_birth: profileData.dateOfBirth,
         gender: profileData.gender,
@@ -143,6 +169,8 @@ const PatientProfile: React.FC = () => {
       });
 
       setIsEditing(false);
+      // Re-fetch so displayed data always matches the DB
+      await fetchPatientData();
     } catch (err: any) {
       setError(err.message || 'Failed to save profile');
     } finally {
@@ -206,11 +234,22 @@ const PatientProfile: React.FC = () => {
               <h1 className="text-2xl font-bold text-gray-900">
                 {profileData.firstName} {profileData.lastName}
               </h1>
-              <p className="text-gray-600">Patient ID: PT-2024-001</p>
-              <p className="text-sm text-gray-500">Member since {new Date(profileData.memberSince).toLocaleDateString()}</p>
+              <p className="text-gray-600">
+                Patient ID: {profileData.patientId
+                  ? `PT-${String(profileData.patientId).padStart(6, '0')}`
+                  : '—'}
+              </p>
+              <p className="text-sm text-gray-500">
+                Member since{' '}
+                {profileData.memberSince
+                  ? new Date(profileData.memberSince).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : '—'}
+              </p>
               <div className="flex items-center gap-4 mt-2">
                 <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active Patient</span>
-                <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Insurance Verified</span>
+                {profileData.insuranceProvider && (
+                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Insurance Verified</span>
+                )}
               </div>
             </div>
           </div>
@@ -333,7 +372,11 @@ const PatientProfile: React.FC = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       ) : (
-                        <p className="text-gray-900">{new Date(profileData.dateOfBirth).toLocaleDateString()}</p>
+                        <p className="text-gray-900">
+                          {profileData.dateOfBirth
+                            ? new Date(profileData.dateOfBirth).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                            : '—'}
+                        </p>
                       )}
                     </div>
                     <div>

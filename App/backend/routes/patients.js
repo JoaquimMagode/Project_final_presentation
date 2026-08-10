@@ -10,6 +10,20 @@ const parseHistory = (p) => {
   return p;
 };
 
+// Flattens the nested `users` relation fields onto the patient object so the
+// frontend can read patient.name, patient.email, patient.phone directly.
+const flattenUserFields = (patient) => {
+  if (!patient) return patient;
+  const { users, ...rest } = patient;
+  return {
+    ...rest,
+    name:   users?.name  ?? null,
+    email:  users?.email ?? null,
+    phone:  users?.phone ?? null,
+    status: users?.status ?? null,
+  };
+};
+
 // Ensures a patients row exists for the given user_id, creating one if missing.
 // This recovers accounts where the users row was created without a matching patients row
 // (e.g. seeded data, partially failed registration, or direct DB inserts).
@@ -27,10 +41,15 @@ router.get('/profile', authenticateToken, authorize('patient'), async (req, res)
     const basePatient = await ensurePatientRow(req.user.id);
     const patient = await prisma.patients.findUnique({
       where: { id: basePatient.id },
-      include: { users: { select: { name: true, email: true, phone: true, status: true } } },
+      include: { users: { select: { name: true, email: true, phone: true, status: true, created_at: true } } },
     });
     if (!patient) return res.status(404).json({ success: false, message: 'Patient profile not found' });
-    res.json({ success: true, data: { patient: parseHistory(patient) } });
+    // Use the user's created_at as member-since date if the patient row doesn't have one
+    const flat = flattenUserFields(parseHistory(patient));
+    if (!flat.created_at && patient.users?.created_at) {
+      flat.created_at = patient.users.created_at;
+    }
+    res.json({ success: true, data: { patient: flat } });
   } catch (error) {
     console.error('Get patient profile error:', error);
     res.status(500).json({ success: false, message: 'Failed to get patient profile' });

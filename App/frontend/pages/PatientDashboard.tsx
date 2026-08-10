@@ -217,10 +217,13 @@ const PatientDashboard: React.FC = () => {
   const [appointmentCount, setAppointmentCount] = useState(0);
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
   const [stats, setStats] = useState({ pending: 0, confirmed: 0, completed: 0 });
+  const [patientProfile, setPatientProfile] = useState<any>(null);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch('http://localhost:5000/api/appointments', {
+
+    // Fetch appointments
+    fetch('http://localhost:5000/api/patients/appointments', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
       .then(r => r.json())
@@ -234,9 +237,19 @@ const PatientDashboard: React.FC = () => {
         setUpcomingAppointments(all.filter((a: any) => ['pending', 'confirmed'].includes(a.status)).slice(0, 3));
       })
       .catch(() => {});
+
+    // Fetch patient profile so we have the real DB record (id, member since, etc.)
+    fetch('http://localhost:5000/api/patients/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data?.success) setPatientProfile(data.data.patient);
+      })
+      .catch(() => {});
   }, []);
 
-  const firstName = user?.name?.split(' ')[0] ?? 'Patient';
+  const firstName = (patientProfile?.name ?? user?.name)?.split(' ')[0] ?? 'Patient';
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -345,7 +358,11 @@ const PatientDashboard: React.FC = () => {
               <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-6 text-white">
                 <p className="text-emerald-100 text-sm mb-1">Welcome back 👋</p>
                 <h1 className="text-2xl font-bold">{firstName}</h1>
-                <p className="text-emerald-100 text-sm mt-1">Here's your health overview</p>
+                <p className="text-emerald-100 text-sm mt-1">
+                  {patientProfile?.email || user?.name ? (
+                    <>Patient ID: <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span></>
+                  ) : 'Here\'s your health overview'}
+                </p>
               </div>
 
               {/* Stats Strip */}
