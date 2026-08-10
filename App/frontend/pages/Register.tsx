@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
-import { ShieldCheck, Eye, EyeOff, AlertCircle, Home, User, Building2, ArrowRight, ArrowLeft, CheckCircle } from 'lucide-react';
+import { ShieldCheck, Eye, EyeOff, AlertCircle, Home, User, Building2, ArrowRight, ArrowLeft, CheckCircle, HeartPulse } from 'lucide-react';
 import { authAPI } from '../services/api';
 
 const INDIA_STATES: Record<string, string[]> = {
