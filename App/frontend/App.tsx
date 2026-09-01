@@ -86,7 +86,6 @@ const NavLink: React.FC<{ to: string; children: React.ReactNode; onClick?: () =>
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isMenuOpen, setIsMenuOpen]       = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen]   = useState(false);
   const [searchQuery, setSearchQuery]     = useState('');
   const [scrolled, setScrolled]           = useState(false);
   const { lang, setLang } = useLang();
@@ -94,7 +93,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const location  = useLocation();
   const navigate  = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const searchRef   = useRef<HTMLInputElement>(null);
 
   const isDashboardPage   = ['/superadmin', '/hospital', '/patient'].some(p => location.pathname.startsWith(p));
   const hideHeaderFooter  = ['/login', '/register', '/patient-registration', '/hospital', '/patient'].includes(location.pathname)
@@ -116,11 +114,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
-
-  /* focus search input when opened */
-  useEffect(() => {
-    if (isSearchOpen && searchRef.current) searchRef.current.focus();
-  }, [isSearchOpen]);
 
   /* close menu on route change */
   useEffect(() => { setIsMenuOpen(false); }, [location.pathname]);
@@ -145,7 +138,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     e.preventDefault();
     if (searchQuery.trim()) navigate(`/hospitals?search=${encodeURIComponent(searchQuery.trim())}`);
     setSearchQuery('');
-    setIsSearchOpen(false);
   };
 
   const dashPath = user
@@ -173,6 +165,23 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                   IMAP <span className="text-emerald-600">Solution</span>
                 </span>
               </Link>
+
+              {/* Header search */}
+              <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-xs mx-4">
+                <div className="relative w-full">
+                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Search hospitals..."
+                    aria-label="Search hospitals"
+                    className="w-full pl-8 pr-3 py-1 text-xs bg-white border border-slate-200 rounded-full
+                               text-slate-700 placeholder-slate-400 outline-none
+                               focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
+                  />
+                </div>
+              </form>
 
               {/* Right cluster */}
               <div className="flex items-center gap-3 text-xs text-slate-500">
@@ -266,71 +275,37 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
 
           {/* ─ Main nav bar ─ */}
+          {!isDashboardPage && (
           <div className="bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
               {/* Desktop nav links */}
-              {!isDashboardPage && (
-                <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
-                  {mainNavLinks.map(l => (
-                    <NavLink key={l.path} to={l.path}>{l.label}</NavLink>
-                  ))}
-                </nav>
-              )}
+              <nav className="hidden md:flex items-center gap-6" aria-label="Main navigation">
+                {mainNavLinks.map(l => (
+                  <NavLink key={l.path} to={l.path}>{l.label}</NavLink>
+                ))}
+              </nav>
 
               {/* Right actions */}
               <div className="flex items-center gap-2 ml-auto">
 
-                {/* Search bar */}
-                {isSearchOpen ? (
-                  <form onSubmit={handleSearch} className="flex items-center gap-1.5 animate-in">
-                    <input
-                      ref={searchRef}
-                      type="text"
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Search hospitals..."
-                      className="w-48 px-3 py-1.5 text-sm border border-slate-200 rounded-lg bg-slate-50
-                                 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
-                    />
-                    <button type="submit" className="p-1.5 text-slate-500 hover:text-emerald-600 transition-colors">
-                      <MagnifyingGlassIcon className="w-4 h-4" />
-                    </button>
-                    <button type="button" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors">
-                      <XMarkIcon className="w-4 h-4" />
-                    </button>
-                  </form>
-                ) : (
-                  <button
-                    onClick={() => setIsSearchOpen(true)}
-                    className="hidden md:flex p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors"
-                    aria-label="Open search"
-                  >
-                    <MagnifyingGlassIcon className="w-4 h-4" />
-                  </button>
-                )}
-
-                {/* CTA buttons — desktop only, not on dashboard */}
-                {!isDashboardPage && (
-                  <>
-                    <Link
-                      to="/hospitals"
-                      className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold
-                                 rounded-lg hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md"
-                    >
-                      <MagnifyingGlassIcon className="w-3.5 h-3.5" />
-                      Find Hospitals
-                    </Link>
-                    <Link
-                      to="/contact"
-                      className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-sm font-semibold
-                                 rounded-lg hover:bg-slate-700 transition-colors"
-                    >
-                      <PhoneArrowUpRightIcon className="w-3.5 h-3.5" />
-                      Support
-                    </Link>
-                  </>
-                )}
+                {/* CTA buttons — desktop only */}
+                <Link
+                  to="/hospitals"
+                  className="hidden md:inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 text-white text-sm font-semibold
+                             rounded-lg hover:bg-emerald-700 transition-colors shadow-sm hover:shadow-md"
+                >
+                  <MagnifyingGlassIcon className="w-3.5 h-3.5" />
+                  Find Hospitals
+                </Link>
+                <Link
+                  to="/contact"
+                  className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white text-sm font-semibold
+                             rounded-lg hover:bg-slate-700 transition-colors"
+                >
+                  <PhoneArrowUpRightIcon className="w-3.5 h-3.5" />
+                  Support
+                </Link>
 
                 {/* Hamburger — mobile */}
                 <button
@@ -344,6 +319,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               </div>
             </div>
           </div>
+          )}
         </header>
       )}
 
@@ -418,7 +394,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
       {!hideHeaderFooter && (
         <nav
           className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-slate-100
-                     flex justify-around items-center px-2 py-1 safe-area-pb"
+                     flex justify-around items-center px-2 py-0.5 safe-area-pb"
           style={{ boxShadow: '0 -4px 20px rgb(0 0 0 / .06)' }}
           aria-label="Mobile navigation"
         >
@@ -428,7 +404,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all
+                className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all
                   ${active ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-700'}`}
               >
                 <span className={`transition-transform duration-150 ${active ? 'scale-110' : ''}`}>
@@ -441,7 +417,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           {user ? (
             <Link
               to={dashPath}
-              className={`flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-all
                 ${isDashboardPage ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-700'}`}
             >
               <span className={`w-5 h-5 rounded-full bg-current/10 flex items-center justify-center text-[9px] font-black transition-transform duration-150 ${isDashboardPage ? 'scale-110' : ''}`}>
@@ -450,7 +426,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <span className="text-[9px] font-bold uppercase tracking-wider">Me</span>
             </Link>
           ) : (
-            <Link to="/register" className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-slate-400 hover:text-slate-700">
+            <Link to="/register" className="flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl text-slate-400 hover:text-slate-700">
               <UserIcon className="w-5 h-5" />
               <span className="text-[9px] font-bold uppercase tracking-wider">Join</span>
             </Link>

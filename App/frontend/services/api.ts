@@ -336,6 +336,19 @@ export const documentsAPI = {
     URL.revokeObjectURL(url);
   },
 
+  // Fetch the raw file bytes with auth and return an in-memory object URL.
+  // Used for in-app viewing (PDF / image) without leaking the token in the URL.
+  // Caller is responsible for URL.revokeObjectURL when done.
+  fetchFileBlobUrl: async (id: number): Promise<{ url: string; type: string }> => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE_URL}/medical-documents/${id}/file?inline=true`, {
+      headers: { ...(token && { Authorization: `Bearer ${token}` }) },
+    });
+    if (!response.ok) throw new Error('Failed to load document');
+    const blob = await response.blob();
+    return { url: URL.createObjectURL(blob), type: blob.type };
+  },
+
   deleteDocument: async (id: number) =>
     apiRequest(`/medical-documents/${id}`, { method: 'DELETE' }),
 

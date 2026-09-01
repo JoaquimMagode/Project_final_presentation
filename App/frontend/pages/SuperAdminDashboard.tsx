@@ -4,7 +4,7 @@ import {
   Cog6ToothIcon, BellIcon, UserIcon, MagnifyingGlassIcon, CheckCircleIcon,
   XCircleIcon, PencilIcon, NoSymbolIcon, EyeIcon,
   CheckIcon, XMarkIcon, MapPinIcon, BeakerIcon, ShieldCheckIcon,
-  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon, Squares2X2Icon
+  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon, Squares2X2Icon, Bars3Icon
 } from '@heroicons/react/24/outline';
 
 const SuperAdminDashboard: React.FC = () => {
@@ -213,25 +213,23 @@ const SuperAdminDashboard: React.FC = () => {
 
       {/* Sidebar */}
       <div className={`
-        fixed md:relative z-40 md:z-auto h-full
+        fixed md:relative z-40 md:z-auto h-[95vh]
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
         ${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg border-r border-slate-200 transition-all duration-300
       `}>
-        <div className="p-4 md:p-6 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-600 p-2 rounded-lg text-white flex-shrink-0">
-              <HeartIcon className="w-6 h-6" />
-            </div>
-            {sidebarOpen && (
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">IMAP Solution</h1>
-                <p className="text-sm text-slate-600">Super Admin Panel</p>
-              </div>
-            )}
-          </div>
+        {/* Sidebar toggle */}
+        <div className={`flex items-center h-16 px-3 border-b border-slate-200 ${sidebarOpen ? 'justify-end' : 'justify-center'}`}>
+          <button
+            onClick={() => setSidebarOpen(o => !o)}
+            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+            aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+            title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          >
+            <Bars3Icon className="w-5 h-5" />
+          </button>
         </div>
-        
-        <nav className="mt-6">
+
+        <nav className="mt-4">
           {sidebarItems.map(item => {
             const IconComponent = item.icon;
             return (

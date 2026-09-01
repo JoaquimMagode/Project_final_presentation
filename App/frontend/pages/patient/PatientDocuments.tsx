@@ -533,46 +533,135 @@ const DeleteConfirm: React.FC<{ doc: MedDoc; onCancel: () => void; onConfirm: ()
 
 // ─── View Modal ───────────────────────────────────────────────────────────────
 const ViewModal: React.FC<{ doc: MedDoc; onClose: () => void }> = ({ doc, onClose }) => {
-  const src = documentsAPI.getFileUrl(doc.id, true);
   const isImg = doc.mimetype?.startsWith('image/');
   const isPdf = doc.mimetype === 'application/pdf';
 
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [imgZoom, setImgZoom] = useState(false);
+
+  // Securely fetch the file bytes (with auth header) and view as a blob URL.
+  useEffect(() => {
+    let active = true;
+    let createdUrl: string | null = null;
+    setLoadState('loading');
+    documentsAPI.fetchFileBlobUrl(doc.id)
+      .then(({ url }) => {
+        if (!active) { URL.revokeObjectURL(url); return; }
+        createdUrl = url;
+        setBlobUrl(url);
+        setLoadState('ready');
+      })
+      .catch(() => { if (active) setLoadState('error'); });
+    return () => {
+      active = false;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [doc.id]);
+
+  // Close on Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  // For PDFs, append viewer params so the browser shows a readable, fit-to-width view with its toolbar.
+  const pdfSrc = blobUrl ? `${blobUrl}#toolbar=1&navpanes=0&view=FitH` : '';
+
+  const handleDownload = async () => {
+    try { await documentsAPI.downloadDocument(doc.id, doc.original_name); } catch { /* ignore */ }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[100]" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-2 sm:p-4 z-[100]" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-5xl h-[95vh] flex flex-col shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-shrink-0">
-          <div className="min-w-0">
-            <p className="font-bold text-gray-900 text-sm truncate">{doc.title}</p>
-            <p className="text-xs text-gray-400 truncate">{doc.original_name} · {fmtSize(doc.file_size ?? 0)}</p>
+          <div className="min-w-0 flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isPdf ? 'bg-red-50 text-red-600' : isImg ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'}`}>
+              {isImg ? <Image className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+            </div>
+            <div className="min-w-0">
+              <p className="font-bold text-gray-900 text-sm truncate">{doc.title}</p>
+              <p className="text-xs text-gray-400 truncate">{doc.original_name} · {fmtSize(doc.file_size ?? 0)}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 ml-4 flex-shrink-0">
-            <a href={documentsAPI.getFileUrl(doc.id)} download={doc.original_name}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-100 font-medium">
+            {isImg && loadState === 'ready' && (
+              <button onClick={() => setImgZoom(z => !z)}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-100 font-medium">
+                <Search className="w-3.5 h-3.5" /> {imgZoom ? 'Fit' : 'Actual size'}
+              </button>
+            )}
+            {blobUrl && (
+              <a href={blobUrl} target="_blank" rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-100 font-medium">
+                <ExternalLink className="w-3.5 h-3.5" /> Open in tab
+              </a>
+            )}
+            <button onClick={handleDownload}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-xs hover:bg-emerald-700 font-medium">
               <Download className="w-3.5 h-3.5" /> Download
-            </a>
-            <a href={src} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-100 font-medium">
-              <ExternalLink className="w-3.5 h-3.5" /> Open
-            </a>
-            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
+            </button>
+            <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg" aria-label="Close viewer">
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
           </div>
         </div>
-        <div className="flex-1 overflow-hidden bg-gray-50 min-h-0">
-          {isPdf ? (
-            <iframe src={src} className="w-full h-full" title={doc.title} />
-          ) : isImg ? (
-            <div className="w-full h-full flex items-center justify-center p-4 overflow-auto">
-              <img src={src} alt={doc.title} className="max-w-full max-h-full object-contain rounded-lg" />
+
+        {/* Body */}
+        <div className="flex-1 overflow-hidden bg-gray-100 min-h-0">
+          {/* Loading */}
+          {loadState === 'loading' && (
+            <div className="flex flex-col items-center justify-center h-full gap-3">
+              <div className="w-8 h-8 border-2 border-gray-200 border-t-emerald-600 rounded-full animate-spin" />
+              <p className="text-gray-500 text-sm">Loading document…</p>
             </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-4">
-              <FileText className="w-16 h-16 text-gray-300" />
-              <p className="text-gray-500 text-sm">Preview not available for this file type.</p>
-              <a href={documentsAPI.getFileUrl(doc.id)} download={doc.original_name}
+          )}
+
+          {/* Error */}
+          {loadState === 'error' && (
+            <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-2xl flex items-center justify-center">
+                <AlertCircle className="w-7 h-7 text-red-500" />
+              </div>
+              <div>
+                <p className="text-gray-800 font-semibold text-sm">Couldn't load this document</p>
+                <p className="text-gray-500 text-xs mt-1">You can try downloading it instead.</p>
+              </div>
+              <button onClick={handleDownload}
                 className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">
-                <Download className="w-4 h-4" /> Download to view
-              </a>
+                <Download className="w-4 h-4" /> Download
+              </button>
             </div>
+          )}
+
+          {/* Ready */}
+          {loadState === 'ready' && blobUrl && (
+            <>
+              {isPdf ? (
+                <iframe src={pdfSrc} className="w-full h-full border-0" title={doc.title} />
+              ) : isImg ? (
+                <div className="w-full h-full overflow-auto p-4 flex items-center justify-center">
+                  <img
+                    src={blobUrl}
+                    alt={doc.title}
+                    className={imgZoom ? 'max-w-none' : 'max-w-full max-h-full object-contain rounded-lg shadow-sm'}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
+                  <FileText className="w-16 h-16 text-gray-300" />
+                  <p className="text-gray-500 text-sm">Preview isn't available for this file type.</p>
+                  <button onClick={handleDownload}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700">
+                    <Download className="w-4 h-4" /> Download to view
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
