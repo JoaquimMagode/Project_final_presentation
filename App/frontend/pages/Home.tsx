@@ -97,7 +97,7 @@ const Home: React.FC = () => {
     else if (searchMode === 'procedure' && procedure) navigate(`/hospitals?procedure=${procedure}`);
   };
 
-  const selectCls = `w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-700
+  const selectCls = `w-full px-4 py-3 bg-white border border-slate-200 rounded-sm text-sm text-slate-700
     focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all
     appearance-none cursor-pointer`;
 
@@ -117,7 +117,7 @@ const Home: React.FC = () => {
             {/* Left — copy + search */}
             <div className="space-y-8 pb-12 lg:pb-16">
               {/* pill badge */}
-              <div className="inline-flex items-center gap-2 py-1.5 bg-emerald-50 rounded-full text-xs font-semibold text-emerald-700">
+              <div className="inline-flex items-center gap-2 py-1.5 bg-emerald-50 rounded-sm text-xs font-semibold text-emerald-700">
                 Trusted by 10,000+ patients across 30+ africans & Asians countries
               </div>
 
@@ -134,15 +134,15 @@ const Home: React.FC = () => {
               </div>
 
               {/* search widget */}
-              <div className="bg-white rounded-2xl shadow-lg border border-slate-100 p-5 space-y-4">
+              <div className="bg-white rounded-sm shadow-lg border border-slate-100 p-5 space-y-4">
                 {/* mode toggle */}
-                <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                <div className="flex gap-1 bg-slate-100 p-1 rounded-sm">
                   {(['destination', 'procedure'] as const).map(mode => (
                     <button
                       key={mode}
                       type="button"
                       onClick={() => setSearchMode(mode)}
-                      className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-150
+                      className={`flex-1 py-2 px-4 rounded-sm text-sm font-semibold transition-all duration-150
                         ${searchMode === mode
                           ? 'bg-white text-slate-900 shadow-sm'
                           : 'text-slate-500 hover:text-slate-700'}`}
@@ -172,7 +172,7 @@ const Home: React.FC = () => {
                   </div>
                   <button
                     type="submit"
-                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl
+                    className="px-5 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-sm
                                transition-colors shadow-sm hover:shadow-md flex items-center gap-2 whitespace-nowrap text-sm"
                   >
                     Find Hospitals <ArrowRight className="w-4 h-4" />
@@ -188,10 +188,10 @@ const Home: React.FC = () => {
 
               {/* CTA pair */}
               <div className="flex flex-wrap gap-3">
-                <Link to="/register" className="btn-primary">
+                <Link to="/register" className="btn-primary !rounded-sm">
                   Get Started Free <ArrowRight className="w-4 h-4" />
                 </Link>
-                <Link to="/about" className="btn-secondary">
+                <Link to="/about" className="btn-secondary !rounded-sm">
                   How It Works
                 </Link>
               </div>
@@ -200,10 +200,10 @@ const Home: React.FC = () => {
             {/* Right — doctor image */}
             <div className="relative hidden lg:flex justify-end items-end h-[560px]">
               {/* floating stats card */}
-              <div className="absolute left-0 top-10 bg-white rounded-2xl shadow-xl border border-slate-100 p-4 z-10 space-y-3 w-52">
+              <div className="absolute left-0 top-10 bg-white rounded-sm shadow-xl border border-slate-100 p-4 z-10 space-y-3 w-52">
                 {STATS.slice(0, 2).map(s => (
                   <div key={s.label} className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center text-black justify-center flex-shrink-0">
+                    <div className="w-9 h-9 rounded-sm bg-emerald-50 text-emerald-600 flex items-center text-black justify-center flex-shrink-0">
                       {s.icon}
                     </div>
                     <div>
@@ -214,7 +214,7 @@ const Home: React.FC = () => {
                 ))}
               </div>
               {/* floating response badge */}
-              <div className="absolute right-4 top-16 bg-white rounded-xl shadow-lg border border-slate-100 px-4 py-2.5 z-10 flex items-center gap-2">
+              <div className="absolute right-4 top-16 bg-white rounded-sm shadow-lg border border-slate-100 px-4 py-2.5 z-10 flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <p className="text-xs font-semibold text-slate-700">Response in &lt; 2 hrs</p>
               </div>
@@ -276,7 +276,7 @@ const Home: React.FC = () => {
                 key={s.label}
                 to={s.path}
                 className="group flex items-center gap-3 p-4 bg-slate-50 hover:bg-emerald-50 border border-slate-100
-                           hover:border-emerald-200 rounded-xl transition-all duration-150 hover:shadow-sm"
+                           hover:border-emerald-200 rounded-sm transition-all duration-150 hover:shadow-sm"
               >
                 <span className="text-2xl leading-none">{s.icon}</span>
                 <span className="text-sm font-semibold text-slate-700 group-hover:text-emerald-700 transition-colors">
@@ -303,12 +303,12 @@ const Home: React.FC = () => {
             {(t.steps || HOW_STEPS).map((step: any, i: number) => {
               const s = HOW_STEPS[i];
               return (
-                <div key={i} className="relative bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                <div key={i} className="relative bg-white rounded-sm p-6 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
                   {/* connector line */}
                   {i < 3 && (
                     <div className="hidden lg:block absolute top-8 -right-3 w-6 h-0.5 bg-slate-200 z-10" />
                   )}
-                  <div className={`w-12 h-12 rounded-2xl ${s.color} flex items-center justify-center mb-4`}>
+                  <div className={`w-12 h-12 rounded-sm ${s.color} flex items-center justify-center mb-4`}>
                     {s.icon}
                   </div>
                   <span className="text-xs font-black text-slate-300 tracking-widest">{s.num}</span>
@@ -353,8 +353,8 @@ const Home: React.FC = () => {
                 path: '/services',
               },
             ].map(card => (
-              <div key={card.title} className="group bg-white border border-slate-100 rounded-2xl p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
-                <div className={`w-12 h-12 rounded-2xl ${card.color} flex items-center justify-center mb-4`}>
+              <div key={card.title} className="group bg-white border border-slate-100 rounded-sm p-6 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5">
+                <div className={`w-12 h-12 rounded-sm ${card.color} flex items-center justify-center mb-4`}>
                   {card.icon}
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">{card.title}</h3>
@@ -402,7 +402,7 @@ const Home: React.FC = () => {
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-4"
+                className="bg-white rounded-sm border border-slate-100 p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col gap-4"
               >
                 {/* stars */}
                 <div className="flex gap-0.5">
@@ -445,7 +445,7 @@ const Home: React.FC = () => {
       ═══════════════════════════════════════ */}
       <section className="py-16 bg-slate-900">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs font-semibold text-emerald-400">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-sm text-xs font-semibold text-emerald-400">
             <Clock className="w-3.5 h-3.5" /> Average response under 2 hours
           </div>
           <h2 className="text-4xl font-bold text-white leading-tight">
@@ -456,10 +456,10 @@ const Home: React.FC = () => {
             Join thousands of patients who found trusted, affordable care in India — without middlemen, without stress.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Link to="/register" className="btn-primary text-base px-6 py-3">
+            <Link to="/register" className="btn-primary !rounded-sm text-base px-6 py-3">
               Create Free Account <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link to="/hospitals" className="px-6 py-3 rounded-xl border border-slate-600 text-slate-300 hover:border-slate-400 hover:text-white font-semibold text-sm transition-colors">
+            <Link to="/hospitals" className="px-6 py-3 rounded-sm border border-slate-600 text-slate-300 hover:border-slate-400 hover:text-white font-semibold text-sm transition-colors">
               Browse Hospitals
             </Link>
           </div>

@@ -58,15 +58,15 @@ const HospitalCombobox: React.FC<{ hospitals: Hospital[]; value: string; onChang
         onFocus={() => { setOpen(true); if (selected) setQuery(''); }}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="Type or select a hospital..."
-        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
       />
       {open && filteredList.length > 0 && (
         <ul className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
           {filteredList.map(h => (
             <li key={h.id}
               onMouseDown={() => { onChange(h.id.toString()); setQuery(''); setOpen(false); }}
-              className={`px-3 py-2 text-sm cursor-pointer hover:bg-blue-50 hover:text-blue-700 ${
-                value === h.id.toString() ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+              className={`px-3 py-2 text-sm cursor-pointer hover:bg-emerald-50 hover:text-emerald-700 ${
+                value === h.id.toString() ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-gray-700'
               }`}>
               {h.name} <span className="text-gray-400">— {h.city}</span>
             </li>
@@ -84,7 +84,7 @@ const HospitalCombobox: React.FC<{ hospitals: Hospital[]; value: string; onChang
 
 const STATUS_CONFIG = {
   pending:   { color: 'bg-amber-50 text-amber-700 border-amber-200',      icon: Clock },
-  confirmed: { color: 'bg-blue-50 text-blue-700 border-blue-200',         icon: CheckCircle },
+  confirmed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
   completed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle },
   cancelled: { color: 'bg-red-50 text-red-700 border-red-200',            icon: XCircle },
   no_show:   { color: 'bg-gray-100 text-gray-600 border-gray-200',        icon: XCircle },
@@ -265,47 +265,51 @@ const AppointmentRequests: React.FC = () => {
     cancelled: allAppointments.filter(a => a.status === 'cancelled').length,
   };
 
-  const AppointmentCard = ({ appointment, showActions = true }: { appointment: Appointment; showActions?: boolean }) => (
-    <div className="px-6 py-4 hover:bg-gray-50/60 transition-colors">
-      <div className="flex items-start gap-4">
-        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-          <Building2 className="w-5 h-5 text-blue-600" />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-900 text-sm">{appointment.hospital_name}</span>
-            {getStatusBadge(appointment.status)}
-            <span className="text-xs text-gray-400 capitalize bg-gray-100 px-2 py-0.5 rounded-full">{appointment.type}</span>
+  const AppointmentCard = ({ appointment, showActions = true }: { appointment: Appointment; showActions?: boolean }) => {
+    const aptDate = new Date(appointment.appointment_date);
+    return (
+      <div className="px-6 py-4 hover:bg-gray-50/60 transition-colors">
+        <div className="flex items-start gap-4">
+          {/* Date chip */}
+          <div className="w-14 h-14 rounded-xl bg-emerald-50 border border-emerald-100 flex flex-col items-center justify-center flex-shrink-0 leading-none">
+            <span className="text-lg font-bold text-emerald-700">{isNaN(aptDate.getTime()) ? '—' : aptDate.toLocaleDateString('en-IN', { day: 'numeric' })}</span>
+            <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mt-0.5">{isNaN(aptDate.getTime()) ? '' : aptDate.toLocaleDateString('en-IN', { month: 'short' })}</span>
           </div>
-          <p className="text-sm text-gray-500 truncate mb-2">{appointment.reason}</p>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
-            <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" />{formatDate(appointment.appointment_date)}</span>
-            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{formatTime(appointment.appointment_time)}</span>
-            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{appointment.hospital_city}</span>
-            {appointment.consultation_fee && (
-              <span className="flex items-center gap-1 font-medium text-gray-600"><DollarSign className="w-3.5 h-3.5" />{formatCurrency(appointment.consultation_fee)}</span>
+
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className="font-semibold text-gray-900 text-sm">{appointment.hospital_name}</span>
+              {getStatusBadge(appointment.status)}
+              <span className="text-xs text-gray-400 capitalize bg-gray-100 px-2 py-0.5 rounded-full">{appointment.type.replace('_', ' ')}</span>
+            </div>
+            <p className="text-sm text-gray-500 truncate mb-2">{appointment.reason}</p>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-gray-400">
+              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" />{formatTime(appointment.appointment_time)}</span>
+              <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{appointment.hospital_city}</span>
+              {appointment.consultation_fee && (
+                <span className="flex items-center gap-1 font-semibold text-gray-600"><DollarSign className="w-3.5 h-3.5" />{formatCurrency(appointment.consultation_fee)}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {showActions && appointment.status === 'pending' && (
+              <button onClick={() => handleCancel(appointment.id)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Cancel appointment">
+                <Trash2 className="w-4 h-4" />
+              </button>
             )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {showActions && appointment.status === 'pending' && (
-            <button onClick={() => handleCancel(appointment.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Cancel appointment">
-              <Trash2 className="w-4 h-4" />
+            <button
+              onClick={() => setSelectedAppointment(appointment)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors"
+              title="View details"
+            >
+              <Eye className="w-4 h-4" /> View
             </button>
-          )}
-          <button
-            onClick={() => setSelectedAppointment(appointment)}
-            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="View details"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const pendingQuotes = quotes.filter(q => q.status === 'pending').length;
 
@@ -318,7 +322,7 @@ const AppointmentRequests: React.FC = () => {
           <p className="text-sm text-gray-500 mt-0.5">Manage your appointments and medical history</p>
         </div>
         <button onClick={() => setShowBookingModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors">
           <Plus className="w-4 h-4" /> Book Appointment
         </button>
       </div>
@@ -337,13 +341,13 @@ const AppointmentRequests: React.FC = () => {
       {/* Stats Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Pending',   value: stats.pending,   color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-100' },
-          { label: 'Confirmed', value: stats.confirmed, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
-          { label: 'Completed', value: stats.completed, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-          { label: 'Cancelled', value: stats.cancelled, color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-100' },
-        ].map(({ label, value, color, bg, border }) => (
-          <div key={label} className={`${bg} border ${border} rounded-xl p-4 text-center`}>
-            <p className={`text-2xl font-black ${color}`}>{value}</p>
+          { label: 'Pending',   value: stats.pending },
+          { label: 'Confirmed', value: stats.confirmed },
+          { label: 'Completed', value: stats.completed },
+          { label: 'Cancelled', value: stats.cancelled },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-white border border-gray-100 rounded-xl p-4 text-center shadow-sm">
+            <p className="text-2xl font-black text-black">{value}</p>
             <p className="text-xs text-gray-500 mt-0.5">{label}</p>
           </div>
         ))}
@@ -360,7 +364,7 @@ const AppointmentRequests: React.FC = () => {
           ] as const).map(({ key, label, icon: Icon, badge }) => (
             <button key={key} onClick={() => setActiveTab(key)}
               className={`py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-1.5 ${
-                activeTab === key ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+                activeTab === key ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}>
               {Icon && <Icon className="w-4 h-4" />}
               {label}
@@ -378,12 +382,12 @@ const AppointmentRequests: React.FC = () => {
               <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input type="text" placeholder="Search by hospital, city or reason..."
                 value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
             </div>
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-400" />
               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="confirmed">Confirmed</option>
@@ -406,7 +410,7 @@ const AppointmentRequests: React.FC = () => {
               <div className="text-center py-16">
                 <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-400 text-sm">No current appointments</p>
-                <button onClick={() => setShowBookingModal(true)} className="mt-3 text-blue-600 text-sm font-medium hover:underline">
+                <button onClick={() => setShowBookingModal(true)} className="mt-3 text-emerald-600 text-sm font-medium hover:underline">
                   Book your first appointment
                 </button>
               </div>
@@ -443,52 +447,66 @@ const AppointmentRequests: React.FC = () => {
           <div className="p-6">
             {quotes.length === 0 ? (
               <div className="text-center py-16">
-                <Send className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                <p className="text-gray-400 text-sm">No quotes received yet</p>
+                <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-gray-50 flex items-center justify-center">
+                  <Send className="w-7 h-7 text-gray-300" />
+                </div>
+                <p className="text-sm font-medium text-gray-600 mb-1">No quotes received yet</p>
+                <p className="text-xs text-gray-400">When a hospital sends you a price quote, it'll appear here.</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-50">
-                {quotes.map(quote => (
-                  <div key={quote.id} className="py-4 first:pt-0 last:pb-0">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <DollarSign className="w-5 h-5 text-teal-600" />
-                      </div>
+              <div className="flex flex-col gap-3">
+                {quotes.map(quote => {
+                  const statusCfg =
+                    quote.status === 'pending'  ? { badge: 'bg-amber-50 text-amber-700 border-amber-200',   icon: Clock } :
+                    quote.status === 'accepted' ? { badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle } :
+                                                  { badge: 'bg-red-50 text-red-600 border-red-200',          icon: XCircle };
+                  const StatusIcon = statusCfg.icon;
+                  return (
+                    <div key={quote.id} className="border border-gray-100 rounded-xl px-4 py-3 hover:border-gray-200 hover:shadow-sm transition-all duration-200 flex items-center gap-4">
+                      {/* Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <span className="font-semibold text-gray-900 text-sm">{quote.hospitalName}</span>
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${
-                            quote.status === 'pending'  ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                            quote.status === 'accepted' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                            'bg-red-50 text-red-600 border-red-200'
-                          }`}>{quote.status}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 text-sm truncate">{quote.hospitalName}</span>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border flex-shrink-0 capitalize ${statusCfg.badge}`}>
+                            <StatusIcon className="w-2.5 h-2.5" />{quote.status}
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-500 mb-1">{quote.reason}</p>
-                        <p className="text-xs text-gray-400 mb-2">{formatDate(quote.appointmentDate)} · {quote.appointmentTime}</p>
-                        {quote.notes && <p className="text-xs text-gray-400 italic mb-2">{quote.notes}</p>}
-                        <p className="text-lg font-black text-emerald-600">{quote.currency} {quote.amount.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500 truncate">{quote.reason}</p>
+                        <p className="text-[11px] text-gray-400 flex items-center gap-1 mt-0.5">
+                          <Calendar className="w-3 h-3" />{formatDate(quote.appointmentDate)}
+                          {quote.appointmentTime && <><span className="mx-0.5">·</span><Clock className="w-3 h-3" />{quote.appointmentTime}</>}
+                        </p>
                       </div>
-                      <div className="flex flex-col gap-2 flex-shrink-0">
+
+                      {/* Amount */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-lg font-black text-gray-900 leading-tight whitespace-nowrap">
+                          {quote.currency} {quote.amount.toLocaleString()}
+                        </p>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 flex-shrink-0">
                         <button onClick={() => setViewingQuote(quote)}
-                          className="px-3 py-1.5 bg-teal-50 text-teal-700 border border-teal-200 text-xs font-semibold rounded-lg hover:bg-teal-100 flex items-center gap-1">
-                          <Eye className="w-3.5 h-3.5" /> View PDF
+                          className="p-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors" title="View PDF">
+                          <Eye className="w-4 h-4" />
                         </button>
                         {quote.status === 'pending' && (
                           <>
-                            <button onClick={() => handleAcceptQuote(quote.id)}
-                              className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold rounded-lg hover:bg-emerald-100 flex items-center gap-1">
-                              <CheckCircle className="w-3.5 h-3.5" /> Accept
-                            </button>
                             <button onClick={() => handleDeclineQuote(quote.id)}
-                              className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-200 text-xs font-semibold rounded-lg hover:bg-red-100 flex items-center gap-1">
-                              <XCircle className="w-3.5 h-3.5" /> Decline
+                              className="p-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors" title="Decline">
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                            <button onClick={() => handleAcceptQuote(quote.id)}
+                              className="px-3 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-lg hover:bg-emerald-700 flex items-center gap-1.5 transition-colors shadow-sm" title="Accept">
+                              <CheckCircle className="w-3.5 h-3.5" /> Accept
                             </button>
                           </>
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -504,8 +522,8 @@ const AppointmentRequests: React.FC = () => {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-blue-600" />
+                <div className="w-10 h-10 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-black" />
                 </div>
                 <div>
                   <h2 className="text-base font-bold text-gray-900">{selectedAppointment.hospital_name}</h2>
@@ -565,11 +583,11 @@ const AppointmentRequests: React.FC = () => {
 
               {/* Notes */}
               {selectedAppointment.notes && (
-                <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                  <p className="text-xs text-blue-400 flex items-center gap-1 mb-1">
+                <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+                  <p className="text-xs text-emerald-500 flex items-center gap-1 mb-1">
                     <AlertCircle className="w-3 h-3" /> Additional Notes
                   </p>
-                  <p className="text-sm text-blue-800">{selectedAppointment.notes}</p>
+                  <p className="text-sm text-emerald-800">{selectedAppointment.notes}</p>
                 </div>
               )}
 
@@ -638,12 +656,12 @@ const AppointmentRequests: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Date *</label>
                   <input type="date" value={bookingForm.date} onChange={e => setBookingForm({ ...bookingForm, date: e.target.value })}
                     min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Time *</label>
                   <select value={bookingForm.time} onChange={e => setBookingForm({ ...bookingForm, time: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="">Select time</option>
                     {['09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30'].map(t => (
                       <option key={t} value={t}>{new Date(`1970-01-01T${t}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</option>
@@ -655,7 +673,7 @@ const AppointmentRequests: React.FC = () => {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Appointment Type</label>
                 <select value={bookingForm.type} onChange={e => setBookingForm({ ...bookingForm, type: e.target.value as any })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
                   <option value="consultation">Consultation</option>
                   <option value="procedure">Procedure</option>
                   <option value="follow_up">Follow-up</option>
@@ -667,14 +685,14 @@ const AppointmentRequests: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason for Visit *</label>
                 <textarea value={bookingForm.reason} onChange={e => setBookingForm({ ...bookingForm, reason: e.target.value })}
                   rows={3} placeholder="Describe your symptoms or reason for the appointment"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Additional Notes (Optional)</label>
                 <textarea value={bookingForm.notes} onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
                   rows={2} placeholder="Any additional information for the hospital"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
               </div>
 
               {/* ── Attach Medical Documents ── */}
@@ -685,7 +703,7 @@ const AppointmentRequests: React.FC = () => {
                     <span className="text-xs text-gray-400 font-normal">(optional)</span>
                   </label>
                   {selectedDocIds.length > 0 && (
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">
+                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
                       {selectedDocIds.length} selected
                     </span>
                   )}
@@ -693,7 +711,7 @@ const AppointmentRequests: React.FC = () => {
 
                 {!showDocPicker ? (
                   <button type="button" onClick={() => setShowDocPicker(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
                     <Paperclip className="w-4 h-4" />
                     {myDocs.length === 0 ? 'No documents uploaded yet' : 'Select documents to share with hospital'}
                   </button>
@@ -717,12 +735,12 @@ const AppointmentRequests: React.FC = () => {
                           const checked = selectedDocIds.includes(doc.id);
                           return (
                             <label key={doc.id} className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors
-                              ${checked ? 'bg-blue-50' : 'hover:bg-gray-50'}`}>
+                              ${checked ? 'bg-emerald-50' : 'hover:bg-gray-50'}`}>
                               <input type="checkbox" checked={checked}
                                 onChange={() => setSelectedDocIds(ids =>
                                   checked ? ids.filter(i => i !== doc.id) : [...ids, doc.id]
                                 )}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold text-gray-900 truncate">{doc.title}</p>
                                 <p className="text-xs text-gray-400 truncate">{doc.category.replace(/_/g, ' ')} · {doc.original_name}</p>
@@ -741,7 +759,7 @@ const AppointmentRequests: React.FC = () => {
                 )}
 
                 {selectedDocIds.length > 0 && (
-                  <p className="mt-1.5 text-xs text-blue-600 flex items-center gap-1">
+                  <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1">
                     <Paperclip className="w-3 h-3" />
                     {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} will be shared with the hospital when the appointment is booked
                   </p>
@@ -755,7 +773,7 @@ const AppointmentRequests: React.FC = () => {
                 Cancel
               </button>
               <button onClick={handleBookingSubmit} disabled={loading}
-                className="flex-1 px-4 py-2.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-semibold">
+                className="flex-1 px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-semibold">
                 {loading ? 'Booking...' : 'Book Appointment'}
               </button>
             </div>

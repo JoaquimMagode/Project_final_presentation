@@ -32,10 +32,10 @@ const NAV = [
 ];
 
 const QUICK_ACTIONS = [
-  { page: 'appointments' as Page,   icon: CalendarIcon,      label: 'My Appointments',    desc: 'View or book appointments',   color: 'bg-blue-50 text-blue-600' },
-  { page: 'find-hospitals' as Page, icon: BuildingOfficeIcon, label: 'Find Hospitals',     desc: 'Search & book hospitals',     color: 'bg-emerald-50 text-emerald-600' },
-  { page: 'documents' as Page,      icon: FolderOpenIcon,    label: 'My Documents',       desc: 'Upload & share health records', color: 'bg-violet-50 text-violet-600' },
-  { page: 'billing' as Page,        icon: ArrowUpTrayIcon,   label: 'Records & Billing',  desc: 'View billing history',        color: 'bg-orange-50 text-orange-600' },
+  { page: 'appointments' as Page,   icon: CalendarIcon,      label: 'My Appointments',    desc: 'View or book appointments' },
+  { page: 'find-hospitals' as Page, icon: BuildingOfficeIcon, label: 'Find Hospitals',     desc: 'Search & book hospitals' },
+  { page: 'documents' as Page,      icon: FolderOpenIcon,    label: 'My Documents',       desc: 'Upload & share health records' },
+  { page: 'billing' as Page,        icon: ArrowUpTrayIcon,   label: 'Records & Billing',  desc: 'View billing history' },
 ];
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
@@ -373,30 +373,32 @@ const PatientDashboard: React.FC = () => {
             <div className="space-y-6">
 
               {/* Greeting */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-2xl p-6 md:p-7 text-white shadow-sm">
-                {/* soft decorative accents (same palette, purely tonal) */}
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full pointer-events-none" />
-                <div className="absolute -bottom-12 right-16 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />
-                <div className="relative">
-                  <p className="text-emerald-50/90 text-sm mb-1">Welcome back 👋</p>
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{firstName}</h1>
-                  <p className="text-emerald-50/90 text-sm mt-1.5">
-                    {patientProfile?.email || user?.name ? (
-                      <>Patient ID: <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span></>
-                    ) : 'Here\'s your health overview'}
-                  </p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-2xl px-5 py-4 md:px-6 md:py-5 text-white shadow-sm">
+                {/* soft decorative accent (same palette, purely tonal) */}
+                <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full pointer-events-none" />
+                <div className="relative flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <p className="text-emerald-50/90 text-xs">Welcome back 👋</p>
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">{firstName}</h1>
+                  </div>
+                  {(patientProfile?.email || user?.name) && (
+                    <span className="flex-shrink-0 inline-flex items-center gap-1.5 bg-white/15 rounded-lg px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
+                      Patient ID
+                      <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span>
+                    </span>
+                  )}
                 </div>
               </div>
 
               {/* Stats Strip */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Pending',   value: stats.pending,   color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-100' },
-                  { label: 'Confirmed', value: stats.confirmed, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
-                  { label: 'Completed', value: stats.completed, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-                ].map(({ label, value, color, bg, border }) => (
-                  <div key={label} className={`${bg} border ${border} rounded-2xl p-4 text-center transition-transform hover:-translate-y-0.5`}>
-                    <p className={`text-2xl md:text-3xl font-extrabold tracking-tight ${color}`}>{value}</p>
+                  { label: 'Pending',   value: stats.pending },
+                  { label: 'Confirmed', value: stats.confirmed },
+                  { label: 'Completed', value: stats.completed },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 text-center transition-transform hover:-translate-y-0.5">
+                    <p className="text-2xl md:text-3xl font-extrabold tracking-tight text-black">{value}</p>
                     <p className="text-xs font-medium text-gray-500 mt-1">{label}</p>
                   </div>
                 ))}
@@ -406,14 +408,14 @@ const PatientDashboard: React.FC = () => {
               <section>
                 <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc, color }) => (
+                  {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc }) => (
                     <button
                       key={page}
                       onClick={() => setActivePage(page)}
                       className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 text-left flex flex-col gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
-                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${color}`}>
-                        <Icon className="w-5 h-5" />
+                      <div className="w-11 h-11 flex items-center justify-center transition-transform group-hover:scale-105">
+                        <Icon className="w-6 h-6 text-black" />
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900 text-sm">{label}</p>
@@ -455,26 +457,39 @@ const PatientDashboard: React.FC = () => {
                     {upcomingAppointments.map((apt: any, i: number) => {
                       const cfg = STATUS_CONFIG[apt.status] || STATUS_CONFIG.pending;
                       const Icon = cfg.icon;
+                      const aptDate = new Date(apt.appointment_date);
                       return (
-                        <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 flex items-center gap-4">
-                          <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                            <BuildingOffice2Icon className="w-5 h-5 text-emerald-600" />
+                        <button
+                          key={i}
+                          onClick={() => setActivePage('appointments')}
+                          className="group w-full text-left bg-white rounded-2xl p-4 border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all duration-200 flex items-center gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                        >
+                          {/* Date chip */}
+                          <div className="w-14 h-14 rounded-xl bg-emerald-50 border border-emerald-100 flex flex-col items-center justify-center flex-shrink-0 leading-none">
+                            <span className="text-lg font-bold text-emerald-700">{aptDate.toLocaleDateString('en-IN', { day: 'numeric' })}</span>
+                            <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mt-0.5">{aptDate.toLocaleDateString('en-IN', { month: 'short' })}</span>
                           </div>
+
+                          {/* Details */}
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital_name}</p>
-                            <p className="text-xs text-gray-500 truncate">{apt.reason}</p>
-                            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
-                              <MapPinIcon className="w-3 h-3" />{apt.hospital_city}
-                              <span className="mx-1">·</span>
-                              <ClockIcon className="w-3 h-3" />
-                              {new Date(apt.appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                            </p>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital_name}</p>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border flex-shrink-0 ${cfg.color}`}>
+                                <Icon className="w-2.5 h-2.5" />
+                                {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 truncate mb-1">{apt.reason}</p>
+                            <div className="flex items-center gap-3 text-xs text-gray-400">
+                              <span className="flex items-center gap-1"><MapPinIcon className="w-3 h-3" />{apt.hospital_city}</span>
+                              {apt.appointment_time && (
+                                <span className="flex items-center gap-1"><ClockIcon className="w-3 h-3" />{apt.appointment_time}</span>
+                              )}
+                            </div>
                           </div>
-                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border flex-shrink-0 ${cfg.color}`}>
-                            <Icon className="w-3 h-3" />
-                            {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
-                          </span>
-                        </div>
+
+                          <ChevronRightIcon className="w-5 h-5 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+                        </button>
                       );
                     })}
                   </div>
@@ -486,8 +501,8 @@ const PatientDashboard: React.FC = () => {
                 onClick={() => setActivePage('help')}
                 className="group w-full bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 flex items-center gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
               >
-                <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
-                  <PhoneIcon className="w-5 h-5 text-emerald-600" />
+                <div className="w-11 h-11 flex items-center justify-center transition-transform group-hover:scale-105">
+                  <PhoneIcon className="w-6 h-6 text-black" />
                 </div>
                 <div className="text-left">
                   <p className="font-semibold text-gray-900 text-sm">Need Help?</p>

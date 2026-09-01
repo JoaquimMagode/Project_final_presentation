@@ -243,7 +243,7 @@ const MedicalReports: React.FC = () => {
         {filteredReports.map((report) => (
           <div key={report.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
-              <div className={`p-2 rounded-lg ${getTypeColor(report.type)}`}>
+              <div className="p-2 text-black">
                 {getTypeIcon(report.type)}
               </div>
               <div className="flex items-center gap-2">

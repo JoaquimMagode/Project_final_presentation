@@ -3,16 +3,9 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import {
   Mail, Lock, Eye, EyeOff, AlertCircle, ArrowRight,
-  HeartPulse, Home, ShieldCheck, Users, Building2, Globe2,
+  HeartPulse, Home, ShieldCheck,
 } from 'lucide-react';
 import { authAPI } from '../services/api';
-
-/* ─── Left panel stat tiles ─── */
-const STATS = [
-  { value: '50+',  label: 'Verified Hospitals', icon: <Building2 className="w-4 h-4" /> },
-  { value: '10K+', label: 'Patients Helped',    icon: <Users className="w-4 h-4" />     },
-  { value: '30+',  label: 'Countries',          icon: <Globe2 className="w-4 h-4" />    },
-];
 
 const Login: React.FC = () => {
   const { login }   = useAuth();
@@ -63,7 +56,7 @@ const Login: React.FC = () => {
     }
   };
 
-  const inputBase = `w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm
+  const inputBase = `w-full bg-slate-50 border border-slate-200 rounded-sm px-3 py-2.5 text-sm
     text-slate-900 placeholder-slate-400 outline-none transition-all
     focus:ring-2 focus:ring-emerald-400 focus:border-transparent focus:bg-white`;
 
@@ -91,7 +84,7 @@ const Login: React.FC = () => {
         {/* Center content */}
         <div className="relative space-y-8">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs font-semibold text-emerald-400">
+            <div className="inline-flex items-center gap-2 text-xs font-semibold text-emerald-400">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Trusted by patients across Africa
             </div>
@@ -104,19 +97,8 @@ const Login: React.FC = () => {
             </p>
           </div>
 
-          {/* Stat tiles */}
-          <div className="grid grid-cols-3 gap-3">
-            {STATS.map(s => (
-              <div key={s.label} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-4 text-center space-y-1">
-                <div className="flex justify-center text-emerald-400">{s.icon}</div>
-                <p className="text-xl font-black text-white">{s.value}</p>
-                <p className="text-[10px] text-slate-500 font-medium leading-tight">{s.label}</p>
-              </div>
-            ))}
-          </div>
-
           {/* Testimonial snippet */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+          <div className="bg-white/5 border border-white/10 rounded-sm p-4">
             <p className="text-sm text-slate-300 leading-relaxed italic">
               "IMAP connected me directly to Apollo Hospital. No stress, no agents — just care."
             </p>
@@ -215,7 +197,7 @@ const Login: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-sm
                            flex items-center justify-center gap-2 transition-all shadow-sm hover:shadow-md
                            disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >

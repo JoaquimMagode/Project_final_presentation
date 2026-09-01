@@ -422,8 +422,8 @@ const DocCard: React.FC<DocCardProps> = ({ doc, onDelete, onShare, onView, onDow
       {/* Top row */}
       <div className="flex items-start justify-between gap-2">
         <div className={`flex items-center gap-2.5 min-w-0`}>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border ${cat.color}`}>
-            <CatIcon className="w-5 h-5" />
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+            <CatIcon className="w-5 h-5 text-black" />
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-gray-900 truncate leading-tight">{doc.title}</p>
@@ -771,13 +771,13 @@ const PatientDocuments: React.FC = () => {
       {/* Stats strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: total, color: 'text-gray-800', bg: 'bg-gray-50', border: 'border-gray-100' },
-          { label: 'Private', value: totalPrivate, color: 'text-blue-700', bg: 'bg-blue-50', border: 'border-blue-100' },
-          { label: 'Shared', value: totalShared, color: 'text-emerald-700', bg: 'bg-emerald-50', border: 'border-emerald-100' },
-          { label: 'Categories', value: catCounts.filter(c => c.count > 0).length, color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-100' },
+          { label: 'Total', value: total },
+          { label: 'Private', value: totalPrivate },
+          { label: 'Shared', value: totalShared },
+          { label: 'Categories', value: catCounts.filter(c => c.count > 0).length },
         ].map(s => (
-          <div key={s.label} className={`${s.bg} border ${s.border} rounded-xl p-3 text-center`}>
-            <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+          <div key={s.label} className="bg-white border border-gray-100 rounded-xl p-3 text-center shadow-sm">
+            <p className="text-2xl font-black text-black">{s.value}</p>
             <p className="text-xs text-gray-500">{s.label}</p>
           </div>
         ))}

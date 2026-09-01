@@ -28,17 +28,17 @@ const Billing: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Total Records</p>
-          <p className="text-3xl font-bold text-gray-900">{records.length}</p>
+          <p className="text-3xl font-bold text-black">{records.length}</p>
         </div>
-        <div className="bg-amber-50 border border-amber-100 rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-amber-700">Outstanding</p>
-          <p className="text-3xl font-bold text-amber-700">
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+          <p className="text-sm text-gray-500">Outstanding</p>
+          <p className="text-3xl font-bold text-black">
             {records[0]?.currency ?? 'INR'} {totalUnpaid.toLocaleString()}
           </p>
         </div>
-        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-5 shadow-sm">
-          <p className="text-sm text-emerald-700">Paid</p>
-          <p className="text-3xl font-bold text-emerald-700">
+        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+          <p className="text-sm text-gray-500">Paid</p>
+          <p className="text-3xl font-bold text-black">
             {records[0]?.currency ?? 'INR'} {totalPaid.toLocaleString()}
           </p>
         </div>

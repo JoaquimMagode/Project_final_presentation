@@ -70,7 +70,6 @@ const PatientHelp: React.FC = () => {
       description: 'Get instant help from our support team',
       icon: MessageCircle,
       action: 'Start Chat',
-      color: 'bg-blue-500',
       available: true
     },
     {
@@ -78,7 +77,6 @@ const PatientHelp: React.FC = () => {
       description: 'Speak directly with our support team',
       icon: Phone,
       action: 'Call Now',
-      color: 'bg-green-500',
       available: true
     },
     {
@@ -86,7 +84,6 @@ const PatientHelp: React.FC = () => {
       description: 'Watch step-by-step guides',
       icon: Video,
       action: 'Watch Videos',
-      color: 'bg-purple-500',
       available: true
     },
     {
@@ -94,7 +91,6 @@ const PatientHelp: React.FC = () => {
       description: 'Send us a detailed message',
       icon: Mail,
       action: 'Send Email',
-      color: 'bg-orange-500',
       available: true
     }
   ];
@@ -142,8 +138,8 @@ const PatientHelp: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {quickActions.map((action, index) => (
           <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer">
-            <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mb-4`}>
-              <action.icon className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 flex items-center justify-center mb-4">
+              <action.icon className="w-6 h-6 text-black" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">{action.title}</h3>
             <p className="text-sm text-gray-600 mb-4">{action.description}</p>
@@ -266,15 +262,15 @@ const PatientHelp: React.FC = () => {
           </div>
 
           {/* Contact Information */}
-          <div className="mt-8 bg-blue-50 rounded-lg p-6">
+          <div className="mt-8 bg-white border border-gray-100 shadow-sm rounded-lg p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Still need help?</h3>
             <p className="text-gray-600 mb-4">
               Can't find what you're looking for? Our support team is here to help you.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Phone className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <Phone className="w-4 h-4 text-black" />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-900">Call Us</div>
@@ -282,8 +278,8 @@ const PatientHelp: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Mail className="w-4 h-4 text-green-600" />
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <Mail className="w-4 h-4 text-black" />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-900">Email Us</div>
@@ -291,8 +287,8 @@ const PatientHelp: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <MessageCircle className="w-4 h-4 text-purple-600" />
+                <div className="w-8 h-8 flex items-center justify-center">
+                  <MessageCircle className="w-4 h-4 text-black" />
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-900">Live Chat</div>
