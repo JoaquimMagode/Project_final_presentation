@@ -73,29 +73,25 @@ const Report: React.FC = () => {
       title: 'Total Reports Generated',
       value: '156',
       change: '+12%',
-      icon: FileText,
-      color: 'bg-blue-100 text-blue-600'
+      icon: FileText
     },
     {
       title: 'This Month',
       value: '24',
       change: '+8%',
-      icon: Calendar,
-      color: 'bg-green-100 text-green-600'
+      icon: Calendar
     },
     {
       title: 'Most Downloaded',
       value: 'Revenue',
       change: '45%',
-      icon: TrendingUp,
-      color: 'bg-purple-100 text-purple-600'
+      icon: TrendingUp
     },
     {
       title: 'Avg. Generation Time',
       value: '2.3s',
       change: '-15%',
-      icon: BarChart3,
-      color: 'bg-orange-100 text-orange-600'
+      icon: BarChart3
     }
   ];
 
@@ -144,8 +140,8 @@ const Report: React.FC = () => {
                     {stat.change} from last month
                   </p>
                 </div>
-                <div className={`p-3 rounded-lg ${stat.color}`}>
-                  <Icon className="w-6 h-6" />
+                <div className="p-3">
+                  <Icon className="w-6 h-6 text-black" />
                 </div>
               </div>
             </div>
@@ -301,8 +297,8 @@ const Report: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                <div className="p-2">
+                  <BarChart3 className="w-5 h-5 text-black" />
                 </div>
                 <h4 className="font-medium text-gray-900">Monthly Summary</h4>
               </div>
@@ -312,8 +308,8 @@ const Report: React.FC = () => {
             
             <div className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-green-600" />
+                <div className="p-2">
+                  <DollarSign className="w-5 h-5 text-black" />
                 </div>
                 <h4 className="font-medium text-gray-900">Financial Report</h4>
               </div>
@@ -323,8 +319,8 @@ const Report: React.FC = () => {
             
             <div className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600" />
+                <div className="p-2">
+                  <Users className="w-5 h-5 text-black" />
                 </div>
                 <h4 className="font-medium text-gray-900">Patient Report</h4>
               </div>

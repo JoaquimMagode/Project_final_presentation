@@ -459,8 +459,8 @@ const Employee: React.FC = () => {
               filterRole === value ? 'border-teal-500' : 'border-gray-100'
             }`}
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${color}`}>
-              <Icon className="w-5 h-5" />
+            <div className="w-10 h-10 flex items-center justify-center mb-3">
+              <Icon className="w-5 h-5 text-black" />
             </div>
             <p className="text-2xl font-bold text-gray-900">{count}</p>
             <p className="text-sm font-semibold text-gray-700 mt-0.5">{label}</p>

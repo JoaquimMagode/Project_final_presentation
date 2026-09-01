@@ -299,3 +299,33 @@ img {
 
 /* ── Tooltips (title attr enhancement is via CSS content) ── */
 /* ── End of global styles ── */
+
+/* ============================================================
+   Bootstrap "border-radius-sm" (0.25rem) — scoped override
+   Applies a consistent small radius to all inputs, sections,
+   cards, and buttons inside the Patient & Hospital dashboards.
+   Wrapper class: .dash-bootstrap-radius
+   Fully-round elements (rounded-full: avatars, dots, pills,
+   badges, spinners, toggles) are intentionally preserved.
+   ============================================================ */
+.dash-bootstrap-radius :where(
+  .rounded,
+  .rounded-sm,
+  .rounded-md,
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  .rounded-3xl
+) {
+  border-radius: 0.25rem !important; /* Bootstrap $border-radius-sm */
+}
+
+/* Inputs, selects, textareas and buttons regardless of utility class */
+.dash-bootstrap-radius :where(input, select, textarea, button):not(.rounded-full) {
+  border-radius: 0.25rem !important;
+}
+
+/* Keep genuinely circular elements circular */
+.dash-bootstrap-radius :where(.rounded-full) {
+  border-radius: 9999px !important;
+}

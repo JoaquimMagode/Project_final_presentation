@@ -54,16 +54,7 @@ const ActivityPage: React.FC = () => {
     }
   };
 
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'appointment':
-        return 'bg-blue-100 text-blue-600';
-      case 'payment':
-        return 'bg-green-100 text-green-600';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  };
+  const getActivityColor = (_type: string) => 'text-black';
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -148,8 +139,8 @@ const ActivityPage: React.FC = () => {
               <p className="text-sm text-gray-600">Total Activities</p>
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
             </div>
-            <div className="p-3 bg-gray-100 rounded-lg">
-              <Activity className="w-6 h-6 text-gray-600" />
+            <div className="p-3">
+              <Activity className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -160,8 +151,8 @@ const ActivityPage: React.FC = () => {
               <p className="text-sm text-gray-600">Today's Activities</p>
               <p className="text-2xl font-bold text-gray-900">{stats.today}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Clock className="w-6 h-6 text-blue-600" />
+            <div className="p-3">
+              <Clock className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -172,8 +163,8 @@ const ActivityPage: React.FC = () => {
               <p className="text-sm text-gray-600">Appointments</p>
               <p className="text-2xl font-bold text-gray-900">{stats.appointments}</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600" />
+            <div className="p-3">
+              <Calendar className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -184,8 +175,8 @@ const ActivityPage: React.FC = () => {
               <p className="text-sm text-gray-600">Payments</p>
               <p className="text-2xl font-bold text-gray-900">{stats.payments}</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <CreditCard className="w-6 h-6 text-green-600" />
+            <div className="p-3">
+              <CreditCard className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -212,7 +203,7 @@ const ActivityPage: React.FC = () => {
                 
                 return (
                   <div key={`${activity.type}-${activity.reference_id}-${index}`} className="flex items-start gap-4">
-                    <div className={`p-2 rounded-lg ${colorClass}`}>
+                    <div className={`p-2 ${colorClass}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">

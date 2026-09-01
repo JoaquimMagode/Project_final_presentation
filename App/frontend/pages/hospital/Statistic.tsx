@@ -152,8 +152,8 @@ const Statistic: React.FC = () => {
                 +15.3% from last period
               </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-3">
+              <DollarSign className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -168,8 +168,8 @@ const Statistic: React.FC = () => {
                 +8.2% from last period
               </p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-600" />
+            <div className="p-3">
+              <Calendar className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -184,8 +184,8 @@ const Statistic: React.FC = () => {
                 +12.1% from last period
               </p>
             </div>
-            <div className="p-3 bg-teal-100 rounded-lg">
-              <Users className="w-6 h-6 text-teal-600" />
+            <div className="p-3">
+              <Users className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -202,8 +202,8 @@ const Statistic: React.FC = () => {
                 +5.7% from last period
               </p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <BarChart3 className="w-6 h-6 text-purple-600" />
+            <div className="p-3">
+              <BarChart3 className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>

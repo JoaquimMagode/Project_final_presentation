@@ -323,21 +323,21 @@ const HospitalDashboard: React.FC = () => {
     { icon: QuestionMarkCircleIcon, label: 'Help & Center', active: activePage === 'help', page: 'help' },
   ];
 
-  const StatCard = ({ icon: Icon, title, value, change, changeType, color }: any) => (
+  const StatCard = ({ icon: Icon, title, value, change, changeType }: any) => (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-xl ${color}`}>
-          <Icon className="w-6 h-6 text-white" />
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">{title}</p>
+          <p className="text-2xl font-bold text-gray-900">{value}</p>
+          <p className={`text-xs flex items-center gap-1 mt-1 ${changeType === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+            {changeType === 'up' ? <ArrowTrendingUpIcon className="w-3 h-3" /> : <ArrowTrendingDownIcon className="w-3 h-3" />}
+            {change} from last week
+          </p>
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900">{value}</div>
-          <div className={`text-sm flex items-center gap-1 ${changeType === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-            {changeType === 'up' ? <ArrowTrendingUpIcon className="w-4 h-4" /> : <ArrowTrendingDownIcon className="w-4 h-4" />}
-            {change}
-          </div>
+        <div className="p-3">
+          <Icon className="w-6 h-6 text-black" />
         </div>
       </div>
-      <div className="text-gray-600 text-sm font-medium">{title}</div>
     </div>
   );
 
@@ -444,7 +444,7 @@ const HospitalDashboard: React.FC = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="dash-bootstrap-radius flex h-screen bg-gray-50">
       {/* Mobile overlay */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setMobileSidebarOpen(false)} />
@@ -493,10 +493,10 @@ const HospitalDashboard: React.FC = () => {
                       setActivePage(item.page);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ${
                     item.active
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   } ${!sidebarOpen ? 'justify-center' : ''}`}
                 >
                   <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -582,17 +582,17 @@ const HospitalDashboard: React.FC = () => {
               <div className="mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <h1 className="text-xl md:text-2xl font-bold text-gray-900 mb-1">
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 mb-1">
                       Welcome back, {hospitalInfo?.admin_name || user?.name || 'Admin'} 👋
                     </h1>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-500 text-sm">
                       Here's the latest update for {hospitalInfo?.name || 'your hospital'}
                       {hospitalInfo?.city ? ` · ${hospitalInfo.city}${hospitalInfo.state ? `, ${hospitalInfo.state}` : ''}` : ''}
                     </p>
                   </div>
-                  <div className="bg-white rounded-lg px-3 py-2 border border-gray-200 flex items-center gap-2 self-start sm:self-auto">
-                    <CalendarIcon className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium">
+                  <div className="bg-white rounded-xl px-3.5 py-2 border border-gray-200 flex items-center gap-2 self-start sm:self-auto shadow-sm">
+                    <CalendarIcon className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-medium text-gray-700">
                       {new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
                     </span>
                   </div>
@@ -604,52 +604,48 @@ const HospitalDashboard: React.FC = () => {
             <StatCard
               icon={CalendarIcon}
               title="Appointments"
-            value={loading ? "..." : (dashboardStats?.total_appointments || "0")}
-              change="4.8% from last week"
+              value={loading ? "..." : (dashboardStats?.total_appointments || "0")}
+              change="4.8%"
               changeType="up"
-              color="bg-blue-500"
             />
             <StatCard
               icon={PhoneIcon}
               title="Total Patients"
-            value={loading ? "..." : (dashboardStats?.total_patients || "0")}
-              change="6.0% from last week"
+              value={loading ? "..." : (dashboardStats?.total_patients || "0")}
+              change="6.0%"
               changeType="up"
-              color="bg-green-500"
             />
             <StatCard
               icon={UsersIcon}
               title="Completed"
-            value={loading ? "..." : (dashboardStats?.completed_appointments || "0")}
-              change="2.5% from last week"
+              value={loading ? "..." : (dashboardStats?.completed_appointments || "0")}
+              change="2.5%"
               changeType="up"
-              color="bg-teal-500"
             />
             <StatCard
               icon={CurrencyDollarIcon}
               title="Total Revenue"
-            value={loading ? "..." : `₹${(dashboardStats?.total_revenue || 0).toLocaleString()}`}
-              change="2.1% from last week"
+              value={loading ? "..." : `₹${(dashboardStats?.total_revenue || 0).toLocaleString()}`}
+              change="2.1%"
               changeType="up"
-              color="bg-blue-400"
             />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Patient Statistics Chart */}
-            <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Patient statistics</h3>
+                <h3 className="text-base md:text-lg font-semibold tracking-tight text-gray-900">Patient statistics</h3>
                 <div className="flex items-center gap-4">
                   <div className="flex gap-2">
                     {PERIODS.map((period) => (
                       <button
                         key={period}
                         onClick={() => setSelectedPeriod(period)}
-                        className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                        className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
                           selectedPeriod === period
-                            ? 'bg-gray-900 text-white'
-                            : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-gray-900 text-white shadow-sm'
+                            : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                       >
                         {period}
@@ -664,9 +660,9 @@ const HospitalDashboard: React.FC = () => {
             {/* Right Column */}
             <div className="space-y-6">
               {/* Today's Schedule */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">
+                  <h3 className="font-semibold tracking-tight text-gray-900">
                     Today – {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </h3>
                   <button
@@ -684,11 +680,9 @@ const HospitalDashboard: React.FC = () => {
                 ) : (
                   <div className="space-y-4">
                     {todaySchedule.slice(0, 4).map((apt) => (
-                      <div key={apt.id} className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                          apt.status === 'confirmed' ? 'bg-emerald-100' : 'bg-amber-50'
-                        }`}>
-                          <ClockIcon className={`w-5 h-5 ${apt.status === 'confirmed' ? 'text-emerald-600' : 'text-amber-500'}`} />
+                      <div key={apt.id} className="flex items-center gap-3 -mx-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors">
+                        <div className="w-12 h-12 flex items-center justify-center flex-shrink-0">
+                          <ClockIcon className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-gray-900 text-sm truncate">{apt.title}</div>
@@ -708,9 +702,9 @@ const HospitalDashboard: React.FC = () => {
               </div>
 
               {/* Recent Reports */}
-              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">Recent Reports</h3>
+                  <h3 className="font-semibold tracking-tight text-gray-900">Recent Reports</h3>
                   <button
                     onClick={() => setActivePage('report')}
                     className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
@@ -726,9 +720,9 @@ const HospitalDashboard: React.FC = () => {
                 ) : (
                   <div className="space-y-4">
                     {recentReports.slice(0, 3).map((report) => (
-                      <div key={report.id} className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <DocumentTextIcon className="w-4 h-4 text-teal-600" />
+                      <div key={report.id} className="flex items-start gap-3 -mx-2 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors">
+                        <div className="w-9 h-9 flex items-center justify-center flex-shrink-0">
+                          <DocumentTextIcon className="w-5 h-5 text-emerald-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium text-gray-900 truncate">{report.title}</div>
@@ -760,9 +754,9 @@ const HospitalDashboard: React.FC = () => {
           {/* Bottom Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-4 md:mt-6">
             {/* Balance / Revenue */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Revenue</h3>
+                <h3 className="font-semibold tracking-tight text-gray-900">Revenue</h3>
                 <button
                   onClick={() => setActivePage('payments')}
                   className="text-gray-400 hover:text-gray-600"
@@ -811,9 +805,9 @@ const HospitalDashboard: React.FC = () => {
             </div>
 
             {/* Appointment Status Breakdown */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Appointment Status</h3>
+                <h3 className="font-semibold tracking-tight text-gray-900">Appointment Status</h3>
                 <button
                   onClick={() => setActivePage('appointments')}
                   className="text-gray-400 hover:text-gray-600"
@@ -829,42 +823,42 @@ const HospitalDashboard: React.FC = () => {
                 <div className="text-sm text-gray-500">Total Appointments</div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-amber-400 rounded-full" />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between -mx-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 bg-amber-400 rounded-full" />
                     <span className="text-sm text-gray-600">Pending</span>
                   </div>
-                  <span className="font-semibold">{loading ? '...' : dashboardStats?.pending_appointments || 0}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '...' : dashboardStats?.pending_appointments || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full" />
+                <div className="flex items-center justify-between -mx-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 bg-blue-500 rounded-full" />
                     <span className="text-sm text-gray-600">Confirmed</span>
                   </div>
-                  <span className="font-semibold">{loading ? '...' : dashboardStats?.confirmed_appointments || 0}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '...' : dashboardStats?.confirmed_appointments || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <div className="flex items-center justify-between -mx-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full" />
                     <span className="text-sm text-gray-600">Completed</span>
                   </div>
-                  <span className="font-semibold">{loading ? '...' : dashboardStats?.completed_appointments || 0}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '...' : dashboardStats?.completed_appointments || 0}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-400 rounded-full" />
+                <div className="flex items-center justify-between -mx-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 bg-red-400 rounded-full" />
                     <span className="text-sm text-gray-600">Cancelled</span>
                   </div>
-                  <span className="font-semibold">{loading ? '...' : dashboardStats?.cancelled_appointments || 0}</span>
+                  <span className="font-semibold text-gray-900">{loading ? '...' : dashboardStats?.cancelled_appointments || 0}</span>
                 </div>
               </div>
             </div>
 
             {/* Team / Employees Summary */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-gray-900">Staff & Patients</h3>
+                <h3 className="font-semibold tracking-tight text-gray-900">Staff & Patients</h3>
                 <button
                   onClick={() => setActivePage('employee')}
                   className="text-gray-400 hover:text-gray-600"
@@ -875,8 +869,8 @@ const HospitalDashboard: React.FC = () => {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-4 p-3 bg-emerald-50 rounded-xl">
-                  <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <UserPlusIcon className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                    <UserPlusIcon className="w-6 h-6 text-emerald-600" />
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">
@@ -887,8 +881,8 @@ const HospitalDashboard: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-4 p-3 bg-blue-50 rounded-xl">
-                  <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <UsersIcon className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                    <UsersIcon className="w-6 h-6 text-emerald-600" />
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-gray-900">

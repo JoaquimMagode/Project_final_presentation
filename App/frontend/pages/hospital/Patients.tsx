@@ -176,16 +176,16 @@ const Patients: React.FC = () => {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Total Patients', value: total, icon: Users, color: 'bg-blue-100 text-blue-600' },
-          { label: 'Active Patients', value: patients.filter(p => p.total_appointments > 0).length, icon: Users, color: 'bg-teal-100 text-teal-600' },
-          { label: 'Total Revenue', value: fmtCurrency(patients.reduce((s, p) => s + (p.total_paid || 0), 0)), icon: DollarSign, color: 'bg-yellow-100 text-yellow-600' },
-        ].map(({ label, value, icon: Icon, color }) => (
+          { label: 'Total Patients', value: total, icon: Users },
+          { label: 'Active Patients', value: patients.filter(p => p.total_appointments > 0).length, icon: Users },
+          { label: 'Total Revenue', value: fmtCurrency(patients.reduce((s, p) => s + (p.total_paid || 0), 0)), icon: DollarSign },
+        ].map(({ label, value, icon: Icon }) => (
           <div key={label} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">{label}</p>
               <p className="text-2xl font-bold text-gray-900">{value}</p>
             </div>
-            <div className={`p-3 rounded-lg ${color}`}><Icon className="w-6 h-6" /></div>
+            <div className="p-3"><Icon className="w-6 h-6 text-black" /></div>
           </div>
         ))}
       </div>
@@ -335,12 +335,12 @@ const Patients: React.FC = () => {
                     {/* Summary Stats */}
                     <div className="grid grid-cols-3 gap-4">
                       {[
-                        { label: 'Appointments', value: selectedPatient.total_appointments, icon: Calendar, color: 'bg-blue-50 text-blue-600' },
-                        { label: 'Last Visit', value: fmt(selectedPatient.last_visit), icon: Calendar, color: 'bg-green-50 text-green-600' },
-                        { label: 'Total Paid', value: fmtCurrency(selectedPatient.total_paid), icon: CreditCard, color: 'bg-yellow-50 text-yellow-600' },
-                      ].map(({ label, value, icon: Icon, color }) => (
-                        <div key={label} className={`rounded-xl p-4 ${color.split(' ')[0]}`}>
-                          <Icon className={`w-5 h-5 mb-1 ${color.split(' ')[1]}`} />
+                        { label: 'Appointments', value: selectedPatient.total_appointments, icon: Calendar },
+                        { label: 'Last Visit', value: fmt(selectedPatient.last_visit), icon: Calendar },
+                        { label: 'Total Paid', value: fmtCurrency(selectedPatient.total_paid), icon: CreditCard },
+                      ].map(({ label, value, icon: Icon }) => (
+                        <div key={label} className="rounded-xl p-4 bg-white border border-gray-100">
+                          <Icon className="w-5 h-5 mb-1 text-black" />
                           <p className="text-xs text-gray-500">{label}</p>
                           <p className="font-bold text-gray-900 text-sm">{value}</p>
                         </div>

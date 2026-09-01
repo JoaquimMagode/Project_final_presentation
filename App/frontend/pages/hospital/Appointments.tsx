@@ -197,14 +197,14 @@ const Appointments: React.FC<{ initialFilter?: string }> = ({ initialFilter = ''
       {/* Stats Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: 'Total',     value: stats.total,     color: 'text-gray-700',    bg: 'bg-white',        border: 'border-gray-100' },
-          { label: 'Pending',   value: stats.pending,   color: 'text-amber-600',   bg: 'bg-amber-50',     border: 'border-amber-100' },
-          { label: 'Confirmed', value: stats.confirmed, color: 'text-blue-600',    bg: 'bg-blue-50',      border: 'border-blue-100' },
-          { label: 'Completed', value: stats.completed, color: 'text-emerald-600', bg: 'bg-emerald-50',   border: 'border-emerald-100' },
-          { label: 'Cancelled', value: stats.cancelled, color: 'text-red-500',     bg: 'bg-red-50',       border: 'border-red-100' },
-        ].map(({ label, value, color, bg, border }) => (
-          <div key={label} className={`${bg} border ${border} rounded-xl p-4 text-center`}>
-            <p className={`text-2xl font-black ${color}`}>{value}</p>
+          { label: 'Total',     value: stats.total },
+          { label: 'Pending',   value: stats.pending },
+          { label: 'Confirmed', value: stats.confirmed },
+          { label: 'Completed', value: stats.completed },
+          { label: 'Cancelled', value: stats.cancelled },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-white border border-gray-100 rounded-xl p-4 text-center shadow-sm">
+            <p className="text-2xl font-black text-black">{value}</p>
             <p className="text-xs text-gray-500 mt-0.5">{label}</p>
           </div>
         ))}

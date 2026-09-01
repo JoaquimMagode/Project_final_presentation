@@ -152,8 +152,8 @@ const Payments: React.FC = () => {
                 +12.5% from last month
               </p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="p-3">
+              <DollarSign className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -165,8 +165,8 @@ const Payments: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.netRevenue)}</p>
               <p className="text-xs text-gray-500 mt-1">After commission</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+            <div className="p-3">
+              <TrendingUp className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -178,8 +178,8 @@ const Payments: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{stats.completed}</p>
               <p className="text-xs text-gray-500 mt-1">Out of {stats.total} total</p>
             </div>
-            <div className="p-3 bg-teal-100 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-teal-600" />
+            <div className="p-3">
+              <CheckCircle className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>
@@ -191,8 +191,8 @@ const Payments: React.FC = () => {
               <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.averageAmount)}</p>
               <p className="text-xs text-gray-500 mt-1">Per transaction</p>
             </div>
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <CreditCard className="w-6 h-6 text-yellow-600" />
+            <div className="p-3">
+              <CreditCard className="w-6 h-6 text-black" />
             </div>
           </div>
         </div>

@@ -267,7 +267,7 @@ const PatientDashboard: React.FC = () => {
   const firstName = (patientProfile?.name ?? user?.name)?.split(' ')[0] ?? 'Patient';
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="dash-bootstrap-radius flex h-screen bg-gray-50">
 
       {/* ── Sidebar ── */}
       <aside className={`hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex-shrink-0`}>
@@ -300,8 +300,8 @@ const PatientDashboard: React.FC = () => {
             <div key={page} className="relative group mb-1">
               <button
                 onClick={() => setActivePage(page)}
-                className={`flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-colors w-full text-left
-                  ${activePage === page ? 'bg-emerald-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-100'}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 w-full text-left
+                  ${activePage === page ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
                   ${!sidebarOpen ? 'justify-center' : ''}`}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
@@ -373,14 +373,19 @@ const PatientDashboard: React.FC = () => {
             <div className="space-y-6">
 
               {/* Greeting */}
-              <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-6 text-white">
-                <p className="text-emerald-100 text-sm mb-1">Welcome back 👋</p>
-                <h1 className="text-2xl font-bold">{firstName}</h1>
-                <p className="text-emerald-100 text-sm mt-1">
-                  {patientProfile?.email || user?.name ? (
-                    <>Patient ID: <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span></>
-                  ) : 'Here\'s your health overview'}
-                </p>
+              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-2xl p-6 md:p-7 text-white shadow-sm">
+                {/* soft decorative accents (same palette, purely tonal) */}
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full pointer-events-none" />
+                <div className="absolute -bottom-12 right-16 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />
+                <div className="relative">
+                  <p className="text-emerald-50/90 text-sm mb-1">Welcome back 👋</p>
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{firstName}</h1>
+                  <p className="text-emerald-50/90 text-sm mt-1.5">
+                    {patientProfile?.email || user?.name ? (
+                      <>Patient ID: <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span></>
+                    ) : 'Here\'s your health overview'}
+                  </p>
+                </div>
               </div>
 
               {/* Stats Strip */}
@@ -390,24 +395,24 @@ const PatientDashboard: React.FC = () => {
                   { label: 'Confirmed', value: stats.confirmed, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-100' },
                   { label: 'Completed', value: stats.completed, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
                 ].map(({ label, value, color, bg, border }) => (
-                  <div key={label} className={`${bg} border ${border} rounded-xl p-4 text-center`}>
-                    <p className={`text-2xl font-black ${color}`}>{value}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                  <div key={label} className={`${bg} border ${border} rounded-2xl p-4 text-center transition-transform hover:-translate-y-0.5`}>
+                    <p className={`text-2xl md:text-3xl font-extrabold tracking-tight ${color}`}>{value}</p>
+                    <p className="text-xs font-medium text-gray-500 mt-1">{label}</p>
                   </div>
                 ))}
               </div>
 
               {/* Quick Actions */}
               <section>
-                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Quick Actions</h2>
+                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc, color }) => (
                     <button
                       key={page}
                       onClick={() => setActivePage(page)}
-                      className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow text-left flex flex-col gap-3"
+                      className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 text-left flex flex-col gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
                     >
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+                      <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${color}`}>
                         <Icon className="w-5 h-5" />
                       </div>
                       <div>
@@ -422,19 +427,22 @@ const PatientDashboard: React.FC = () => {
               {/* Upcoming Appointments */}
               <section>
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Upcoming Appointments</h2>
+                  <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Upcoming Appointments</h2>
                   <button
                     onClick={() => setActivePage('appointments')}
-                    className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:underline"
+                    className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:gap-1.5 hover:text-emerald-700 transition-all"
                   >
                     See all <ChevronRightIcon className="w-4 h-4" />
                   </button>
                 </div>
 
                 {upcomingAppointments.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-8 text-center border border-dashed border-gray-200">
-                    <CalendarIcon className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                    <p className="text-sm text-gray-400 mb-3">No upcoming appointments</p>
+                  <div className="bg-white rounded-2xl p-10 text-center border border-dashed border-gray-200">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <CalendarIcon className="w-7 h-7 text-emerald-400" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">No upcoming appointments</p>
+                    <p className="text-xs text-gray-400 mb-4">Book a visit and it'll show up here.</p>
                     <button
                       onClick={() => setActivePage('appointments')}
                       className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
@@ -448,7 +456,7 @@ const PatientDashboard: React.FC = () => {
                       const cfg = STATUS_CONFIG[apt.status] || STATUS_CONFIG.pending;
                       const Icon = cfg.icon;
                       return (
-                        <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                        <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 flex items-center gap-4">
                           <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
                             <BuildingOffice2Icon className="w-5 h-5 text-emerald-600" />
                           </div>
@@ -476,16 +484,16 @@ const PatientDashboard: React.FC = () => {
               {/* Need Help */}
               <button
                 onClick={() => setActivePage('help')}
-                className="w-full bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex items-center gap-4"
+                className="group w-full bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 flex items-center gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
               >
-                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                  <PhoneIcon className="w-5 h-5 text-gray-600" />
+                <div className="w-11 h-11 bg-emerald-50 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105">
+                  <PhoneIcon className="w-5 h-5 text-emerald-600" />
                 </div>
                 <div className="text-left">
                   <p className="font-semibold text-gray-900 text-sm">Need Help?</p>
                   <p className="text-xs text-gray-400">Contact our support team anytime</p>
                 </div>
-                <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto" />
+                <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto transition-transform group-hover:translate-x-0.5" />
               </button>
 
             </div>
