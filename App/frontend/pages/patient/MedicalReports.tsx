@@ -192,7 +192,7 @@ const MedicalReports: React.FC = () => {
         </div>
         <button
           onClick={() => setShowUploadModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+          className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors flex items-center gap-2"
         >
           <Upload className="w-4 h-4" />
           Upload Report
@@ -202,7 +202,7 @@ const MedicalReports: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {reportTypes.slice(0, 4).map((type) => (
-          <div key={type.value} className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+          <div key={type.value} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
             <div className="text-2xl font-bold text-gray-900">{type.count}</div>
             <div className="text-sm text-gray-600">{type.label}</div>
           </div>
@@ -210,7 +210,7 @@ const MedicalReports: React.FC = () => {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg p-4 mb-6 shadow-sm border border-gray-100">
+      <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm border border-gray-200">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
             <Search className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
@@ -219,14 +219,14 @@ const MedicalReports: React.FC = () => {
               placeholder="Search reports..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <div className="flex gap-2">
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
               {reportTypes.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -241,7 +241,7 @@ const MedicalReports: React.FC = () => {
       {/* Reports Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredReports.map((report) => (
-          <div key={report.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+          <div key={report.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
             <div className="flex items-start justify-between mb-4">
               <div className="p-2 text-black">
                 {getTypeIcon(report.type)}
@@ -273,7 +273,7 @@ const MedicalReports: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 pt-4 border-t border-gray-200">
-              <button className="flex-1 px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+              <button className="flex-1 px-3 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">
                 <Eye className="w-4 h-4" />
                 View
               </button>
@@ -299,7 +299,7 @@ const MedicalReports: React.FC = () => {
       {/* Upload Modal */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-gray-900">Upload Medical Report</h3>
@@ -316,7 +316,7 @@ const MedicalReports: React.FC = () => {
               {/* File Upload Area */}
               <div
                 className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                  dragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
+                  dragActive ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300'
                 }`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -340,7 +340,7 @@ const MedicalReports: React.FC = () => {
                 />
                 <label
                   htmlFor="file-upload"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors cursor-pointer"
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors cursor-pointer"
                 >
                   Choose Files
                 </label>
@@ -380,13 +380,13 @@ const MedicalReports: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Report Title</label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Enter report title"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Report Type</label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <option value="">Select type</option>
                     <option value="lab">Lab Results</option>
                     <option value="imaging">Imaging</option>
@@ -400,7 +400,7 @@ const MedicalReports: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Doctor Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       placeholder="Doctor's name"
                     />
                   </div>
@@ -408,7 +408,7 @@ const MedicalReports: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
                     <input
                       type="date"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     />
                   </div>
                 </div>
@@ -416,7 +416,7 @@ const MedicalReports: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                   <textarea
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     placeholder="Brief description of the report"
                   />
                 </div>
@@ -433,7 +433,7 @@ const MedicalReports: React.FC = () => {
               <button
                 onClick={handleUpload}
                 disabled={uploadFiles.length === 0}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 Upload Reports
               </button>

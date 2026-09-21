@@ -418,7 +418,7 @@ const DocCard: React.FC<DocCardProps> = ({ doc, onDelete, onShare, onView, onDow
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col gap-3">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-4 flex flex-col gap-3">
       {/* Top row */}
       <div className="flex items-start justify-between gap-2">
         <div className={`flex items-center gap-2.5 min-w-0`}>
@@ -776,7 +776,7 @@ const PatientDocuments: React.FC = () => {
           { label: 'Shared', value: totalShared },
           { label: 'Categories', value: catCounts.filter(c => c.count > 0).length },
         ].map(s => (
-          <div key={s.label} className="bg-white border border-gray-100 rounded-xl p-3 text-center shadow-sm">
+          <div key={s.label} className="bg-white border border-gray-200 rounded-2xl p-3 text-center shadow-sm">
             <p className="text-2xl font-black text-black">{s.value}</p>
             <p className="text-xs text-gray-500">{s.label}</p>
           </div>
@@ -804,7 +804,7 @@ const PatientDocuments: React.FC = () => {
       </div>
 
       {/* Search + Filters bar */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 flex flex-col sm:flex-row gap-3">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3 flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
           <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}

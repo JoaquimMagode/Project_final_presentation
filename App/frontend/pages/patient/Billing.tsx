@@ -26,17 +26,17 @@ const Billing: React.FC = () => {
 
       {/* Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Total Records</p>
           <p className="text-3xl font-bold text-black">{records.length}</p>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Outstanding</p>
           <p className="text-3xl font-bold text-black">
             {records[0]?.currency ?? 'INR'} {totalUnpaid.toLocaleString()}
           </p>
         </div>
-        <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+        <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
           <p className="text-sm text-gray-500">Paid</p>
           <p className="text-3xl font-bold text-black">
             {records[0]?.currency ?? 'INR'} {totalPaid.toLocaleString()}
@@ -56,7 +56,7 @@ const Billing: React.FC = () => {
       ) : (
         <div className="space-y-4">
           {records.map(record => (
-            <div key={record.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+            <div key={record.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-2">

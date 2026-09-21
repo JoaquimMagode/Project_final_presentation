@@ -129,7 +129,7 @@ const PatientHelp: React.FC = () => {
             placeholder="Search for help articles..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-lg"
           />
         </div>
       </div>
@@ -137,13 +137,13 @@ const PatientHelp: React.FC = () => {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {quickActions.map((action, index) => (
-          <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer">
+          <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
             <div className="w-12 h-12 flex items-center justify-center mb-4">
               <action.icon className="w-6 h-6 text-black" />
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">{action.title}</h3>
             <p className="text-sm text-gray-600 mb-4">{action.description}</p>
-            <button className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center gap-1">
+            <button className="text-emerald-600 font-medium text-sm hover:text-emerald-700 flex items-center gap-1">
               {action.action}
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -160,7 +160,7 @@ const PatientHelp: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         {/* Categories Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
             <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
             <div className="space-y-2">
               {categories.map((category) => (
@@ -169,7 +169,7 @@ const PatientHelp: React.FC = () => {
                   onClick={() => setSelectedCategory(category.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
                     selectedCategory === category.id
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                       : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -181,7 +181,7 @@ const PatientHelp: React.FC = () => {
           </div>
 
           {/* Support Hours */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Support Hours</h3>
             <div className="space-y-3">
               {supportHours.map((schedule, index) => (
@@ -208,10 +208,10 @@ const PatientHelp: React.FC = () => {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Popular Questions</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {popularFaqs.map((faq) => (
-                  <div key={faq.id} className="bg-white rounded-lg shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer">
+                  <div key={faq.id} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer">
                     <h3 className="font-semibold text-gray-900 mb-2">{faq.question}</h3>
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">{faq.answer}</p>
-                    <button className="text-blue-600 text-sm font-medium hover:text-blue-700 flex items-center gap-1">
+                    <button className="text-emerald-600 text-sm font-medium hover:text-emerald-700 flex items-center gap-1">
                       Read More
                       <ChevronRight className="w-4 h-4" />
                     </button>
@@ -235,7 +235,7 @@ const PatientHelp: React.FC = () => {
                 </div>
               ) : (
                 filteredFaqs.map((faq) => (
-                  <div key={faq.id} className="bg-white rounded-lg shadow-sm border border-gray-100">
+                  <div key={faq.id} className="bg-white rounded-2xl shadow-sm border border-gray-200">
                     <button
                       onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
                       className="w-full flex items-center justify-between p-6 text-left hover:bg-gray-50 transition-colors"
@@ -262,7 +262,7 @@ const PatientHelp: React.FC = () => {
           </div>
 
           {/* Contact Information */}
-          <div className="mt-8 bg-white border border-gray-100 shadow-sm rounded-lg p-6">
+          <div className="mt-8 bg-white border border-gray-200 shadow-sm rounded-2xl p-6">
             <h3 className="font-semibold text-gray-900 mb-4">Still need help?</h3>
             <p className="text-gray-600 mb-4">
               Can't find what you're looking for? Our support team is here to help you.

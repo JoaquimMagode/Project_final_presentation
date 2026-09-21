@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Squares2X2Icon, CalendarIcon, DocumentTextIcon,
-  QuestionMarkCircleIcon, PhoneIcon, ArrowUpTrayIcon, ChevronRightIcon,
-  CheckCircleIcon, ClockIcon, ExclamationCircleIcon, CreditCardIcon,
+  QuestionMarkCircleIcon, ClockIcon, CreditCardIcon,
   BuildingOffice2Icon, MapPinIcon, MagnifyingGlassIcon,
   BellIcon, GlobeAltIcon, ChevronDownIcon, ArrowRightOnRectangleIcon,
-  UserIcon, ExclamationTriangleIcon, BuildingOfficeIcon, FolderOpenIcon
+  UserIcon, ExclamationTriangleIcon, FolderOpenIcon,
+  PlusIcon
 } from '@heroicons/react/24/outline';
 import { useAuth, useLang } from '../App';
 import { LANGUAGES } from '../constants';
@@ -31,25 +31,196 @@ const NAV = [
   { page: 'help' as Page,            icon: QuestionMarkCircleIcon, label: 'Help' },
 ];
 
-const QUICK_ACTIONS = [
-  { page: 'appointments' as Page,   icon: CalendarIcon,      label: 'My Appointments',    desc: 'View or book appointments' },
-  { page: 'find-hospitals' as Page, icon: BuildingOfficeIcon, label: 'Find Hospitals',     desc: 'Search & book hospitals' },
-  { page: 'documents' as Page,      icon: FolderOpenIcon,    label: 'My Documents',       desc: 'Upload & share health records' },
-  { page: 'billing' as Page,        icon: ArrowUpTrayIcon,   label: 'Records & Billing',  desc: 'View billing history' },
-];
-
-const STATUS_CONFIG: Record<string, { color: string; icon: React.FC<any> }> = {
-  confirmed: { color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircleIcon },
-  pending:   { color: 'bg-amber-50 text-amber-700 border-amber-200',       icon: ClockIcon },
-  cancelled: { color: 'bg-red-50 text-red-600 border-red-200',             icon: ExclamationCircleIcon },
-  completed: { color: 'bg-blue-50 text-blue-700 border-blue-200',          icon: CheckCircleIcon },
-};
-
 const MOCK_NOTIFICATIONS = [
   { id: 1, title: 'Appointment confirmed', desc: 'Your appointment at Apollo Mumbai is confirmed', time: '5 min ago', unread: true },
   { id: 2, title: 'Report ready', desc: 'Your lab results are now available', time: '1 hr ago', unread: true },
   { id: 3, title: 'Reminder', desc: 'Appointment tomorrow at 10:00 AM', time: '3 hr ago', unread: false },
 ];
+
+type QueueTag = 'Accepted' | 'In Queue';
+
+const TAG_STYLES: Record<QueueTag, string> = {
+  Accepted:   'bg-emerald-50 text-emerald-600',
+  'In Queue': 'bg-amber-50 text-amber-600',
+};
+
+interface QueueCardData {
+  id: string;
+  tag: QueueTag;
+  patientName: string;
+  hospital: string;
+  city: string;
+  reason: string;
+  date: string;
+  time: string;
+}
+
+/* ─── Top featured stat card (highlighted) ─── */
+const FeaturedStatCard: React.FC<{
+  icon?: React.FC<any>; title: string; value: string; trend?: string; caption: string;
+}> = ({ title, value, trend, caption }) => (
+  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-5 relative overflow-hidden shadow-sm">
+    <div className="mb-4">
+      <span className="font-semibold text-gray-900 text-sm">{title}</span>
+    </div>
+    <div className="flex items-end gap-2 mb-3">
+      <span className="text-3xl font-extrabold tracking-tight text-gray-900">{value}</span>
+      {trend && (
+        <span className="text-xs font-semibold text-emerald-600 mb-1">{trend}</span>
+      )}
+    </div>
+    <p className="text-xs text-gray-500">{caption}</p>
+    <div className="flex items-end gap-1.5 h-10 mt-3">
+      {[40, 65, 45, 80, 55, 70].map((h, i) => (
+        <div key={i} className="flex-1 rounded-t bg-emerald-400/70" style={{ height: `${h}%` }} />
+      ))}
+    </div>
+  </div>
+);
+
+/* ─── Standard top stat card ─── */
+const StatCard: React.FC<{
+  icon?: React.FC<any>; title: string; value: string; trend?: string;
+  rows?: { icon?: React.FC<any>; label: string; value: string; color?: string }[];
+  caption?: string; showBar?: boolean;
+}> = ({ title, value, trend, rows, caption, showBar }) => (
+  <div className="rounded-2xl bg-white border border-gray-200 p-5 shadow-sm">
+    <div className="mb-4">
+      <span className="font-semibold text-gray-900 text-sm">{title}</span>
+    </div>
+
+    {rows ? (
+      <>
+        {value && (
+          <div className="flex items-end gap-2 mb-3">
+            <span className="text-3xl font-extrabold tracking-tight text-gray-900">{value}</span>
+            <span className="text-xs font-medium text-gray-400 mb-1">total</span>
+            {trend && <span className="text-xs font-semibold text-emerald-500 mb-1">{trend}</span>}
+          </div>
+        )}
+        <div className="space-y-2 border-t border-gray-100 pt-3">
+          {rows.map((r, i) => (
+            <div key={i} className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">{r.label}</span>
+              <span className="text-sm font-semibold text-gray-900">{r.value}</span>
+            </div>
+          ))}
+        </div>
+      </>
+    ) : (
+      <>
+        <div className="flex items-end gap-2 mb-2">
+          <span className="text-3xl font-extrabold tracking-tight text-gray-900">{value}</span>
+          {trend && <span className="text-xs font-semibold text-emerald-500 mb-1">{trend}</span>}
+        </div>
+        {caption && <p className="text-xs text-gray-500">{caption}</p>}
+        {showBar && (
+          <div className="mt-3 h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div className="h-full w-2/3 rounded-full bg-emerald-500" />
+          </div>
+        )}
+      </>
+    )}
+  </div>
+);
+
+/* ─── Appointment card (Accepted / In Queue) — real data ─── */
+const PatientQueueCard: React.FC<{ p: QueueCardData; onClick?: () => void }> = ({ p, onClick }) => (
+  <button
+    onClick={onClick}
+    className="w-full text-left rounded-2xl bg-white border border-gray-200 shadow-sm p-5 hover:border-emerald-200 hover:shadow-md transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+  >
+    <div className="flex items-center justify-between mb-4">
+      <span className="flex items-center gap-2 text-emerald-600 font-semibold text-sm">
+        <DocumentTextIcon className="w-4 h-4" />
+        {p.id}
+      </span>
+      <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${TAG_STYLES[p.tag]}`}>{p.tag}</span>
+    </div>
+
+    <div className="flex items-center gap-3 mb-4">
+      <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-semibold flex-shrink-0">
+        {p.patientName.charAt(0).toUpperCase()}
+      </div>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-0.5 flex-1 min-w-0">
+        <div className="min-w-0">
+          <p className="text-[11px] text-gray-400">Patient Name</p>
+          <p className="text-sm font-semibold text-gray-900 truncate">{p.patientName}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] text-gray-400">Schedule Date</p>
+          <p className="text-sm font-semibold text-gray-900 truncate">{p.date}</p>
+        </div>
+      </div>
+    </div>
+
+    <div className="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-gray-100 pt-3">
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-400 flex items-center gap-1"><BuildingOffice2Icon className="w-3 h-3" /> Hospital</p>
+        <p className="text-sm text-gray-700 truncate">{p.hospital}</p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-400 flex items-center gap-1"><MapPinIcon className="w-3 h-3" /> City</p>
+        <p className="text-sm text-gray-700 truncate">{p.city}</p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-400">Reason</p>
+        <p className="text-sm text-gray-700 truncate">{p.reason}</p>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] text-gray-400 flex items-center gap-1"><ClockIcon className="w-3 h-3" /> Schedule Time</p>
+        <p className="text-sm text-gray-700 truncate">{p.time}</p>
+      </div>
+    </div>
+  </button>
+);
+
+// ── Profile completion helper ─────────────────────────────────────────────────
+const PROFILE_FIELDS = [
+  'date_of_birth', 'gender', 'blood_group', 'address', 'city', 'state', 'country',
+  'emergency_contact_name', 'emergency_contact_phone', 'insurance_provider',
+];
+
+const getProfileCompletion = (profile: any): number => {
+  if (!profile) return 0;
+  const filled = PROFILE_FIELDS.filter(f => {
+    const v = profile[f];
+    return v !== null && v !== undefined && String(v).trim() !== '';
+  }).length;
+  return Math.round((filled / PROFILE_FIELDS.length) * 100);
+};
+
+// ── Avatar with white border + black progress ring ────────────────────────────
+const AvatarRing: React.FC<{ initial: string; percent: number; size?: number }> = ({ initial, percent, size = 40 }) => {
+  const stroke = 3;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const offset = c - (Math.min(100, Math.max(0, percent)) / 100) * c;
+  const complete = percent >= 100;
+  return (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }} title={`Registration ${percent}% complete`}>
+      <svg width={size} height={size} className="absolute inset-0 -rotate-90">
+        {/* track */}
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
+        {/* progress */}
+        <circle
+          cx={size / 2} cy={size / 2} r={r} fill="none"
+          stroke={complete ? '#10b981' : '#111827'}
+          strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={offset}
+          className="transition-[stroke-dashoffset] duration-500"
+        />
+      </svg>
+      {/* white ring gap + avatar */}
+      <div
+        className="absolute rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold ring-2 ring-white"
+        style={{ inset: stroke + 1 }}
+      >
+        {initial}
+      </div>
+    </div>
+  );
+};
 
 // ── Patient Dashboard Header ──────────────────────────────────────────────────
 const PatientHeader: React.FC<{
@@ -58,7 +229,8 @@ const PatientHeader: React.FC<{
   navigate: (path: string) => void;
   appointmentCount: number;
   setActivePage: (page: Page) => void;
-}> = ({ user, logout, navigate, appointmentCount, setActivePage }) => {
+  profileCompletion: number;
+}> = ({ user, logout, navigate, appointmentCount, setActivePage, profileCompletion }) => {
   const { lang, setLang } = useLang();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
@@ -161,16 +333,10 @@ const PatientHeader: React.FC<{
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); }}
-            className="flex items-center gap-2.5 pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+            className="flex items-center pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+            aria-label="Open profile menu"
           >
-            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-              {(user?.name || 'P').charAt(0).toUpperCase()}
-            </div>
-            <div className="leading-tight text-left">
-              <div className="text-sm font-semibold text-gray-900">{user?.name || 'Patient'}</div>
-              <div className="text-xs text-gray-500">Patient</div>
-            </div>
-            <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+            <AvatarRing initial={(user?.name || 'P').charAt(0).toUpperCase()} percent={profileCompletion} />
           </button>
 
           {profileOpen && (
@@ -184,6 +350,29 @@ const PatientHeader: React.FC<{
                     <div className="text-sm font-bold text-gray-900 truncate max-w-[130px]">{user?.name || 'Patient'}</div>
                     <div className="text-xs text-gray-500">Patient</div>
                   </div>
+                </div>
+                {/* Registration progress */}
+                <div className="mt-2.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-medium text-gray-500">
+                      {profileCompletion >= 100 ? 'Registration complete' : 'Complete your registration'}
+                    </span>
+                    <span className="text-[11px] font-semibold text-gray-900">{profileCompletion}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${profileCompletion >= 100 ? 'bg-emerald-500' : 'bg-gray-900'}`}
+                      style={{ width: `${profileCompletion}%` }}
+                    />
+                  </div>
+                  {profileCompletion < 100 && (
+                    <button
+                      onClick={() => { setActivePage('settings'); setProfileOpen(false); }}
+                      className="mt-2 text-[11px] font-semibold text-emerald-600 hover:text-emerald-700"
+                    >
+                      Finish registration →
+                    </button>
+                  )}
                 </div>
               </div>
               <button
@@ -230,41 +419,82 @@ const PatientDashboard: React.FC = () => {
   const [activePage, setActivePage] = useState<Page>('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [appointmentCount, setAppointmentCount] = useState(0);
-  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
-  const [stats, setStats] = useState({ pending: 0, confirmed: 0, completed: 0 });
+  const [allAppointments, setAllAppointments] = useState<any[]>([]);
+  const [stats, setStats] = useState({ pending: 0, confirmed: 0, completed: 0, cancelled: 0, total: 0 });
   const [patientProfile, setPatientProfile] = useState<any>(null);
+  const [hospitalCount, setHospitalCount] = useState<number | null>(null);
+  const [documentCount, setDocumentCount] = useState<number | null>(null);
+  const [queueTab, setQueueTab] = useState<'Accepted' | 'In Queue'>('In Queue');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    const authHeaders = { 'Authorization': `Bearer ${token}` };
 
-    // Fetch appointments
-    fetch('http://localhost:5000/api/patients/appointments', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    // Fetch the patient's appointments (real data)
+    fetch('http://localhost:5000/api/patients/appointments', { headers: authHeaders })
       .then(r => r.json())
       .then(data => {
         const all = data?.data?.appointments || [];
         const pending   = all.filter((a: any) => a.status === 'pending').length;
         const confirmed = all.filter((a: any) => a.status === 'confirmed').length;
         const completed = all.filter((a: any) => a.status === 'completed').length;
+        const cancelled = all.filter((a: any) => a.status === 'cancelled').length;
         setAppointmentCount(pending);
-        setStats({ pending, confirmed, completed });
-        setUpcomingAppointments(all.filter((a: any) => ['pending', 'confirmed'].includes(a.status)).slice(0, 3));
+        setStats({ pending, confirmed, completed, cancelled, total: all.length });
+        setAllAppointments(all);
       })
       .catch(() => {});
 
     // Fetch patient profile so we have the real DB record (id, member since, etc.)
-    fetch('http://localhost:5000/api/patients/profile', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    fetch('http://localhost:5000/api/patients/profile', { headers: authHeaders })
       .then(r => r.json())
       .then(data => {
         if (data?.success) setPatientProfile(data.data.patient);
       })
       .catch(() => {});
+
+    // Total active hospitals on the platform (public endpoint, real count)
+    fetch('http://localhost:5000/api/hospitals?limit=1')
+      .then(r => r.json())
+      .then(data => {
+        const total = data?.data?.pagination?.total;
+        if (typeof total === 'number') setHospitalCount(total);
+      })
+      .catch(() => {});
+
+    // Patient's uploaded documents count (real data)
+    fetch('http://localhost:5000/api/patients/documents', { headers: authHeaders })
+      .then(r => r.json())
+      .then(data => {
+        const docs = data?.data?.documents;
+        if (Array.isArray(docs)) setDocumentCount(docs.length);
+      })
+      .catch(() => {});
   }, []);
 
   const firstName = (patientProfile?.name ?? user?.name)?.split(' ')[0] ?? 'Patient';
+  const profileCompletion = getProfileCompletion(patientProfile);
+
+  // Real derived counts
+  const now = new Date();
+  const upcomingCount = allAppointments.filter(
+    (a: any) => ['pending', 'confirmed'].includes(a.status) && new Date(a.appointment_date) >= new Date(now.toDateString())
+  ).length;
+
+  // Patient cards derived from real appointments:
+  //  • "In Queue"  = pending  (awaiting hospital confirmation)
+  //  • "Accepted"  = confirmed (hospital accepted)
+  const queueStatus = queueTab === 'Accepted' ? 'confirmed' : 'pending';
+  const queueAppointments = allAppointments.filter((a: any) => a.status === queueStatus);
+
+  const monthLabel = now.toISOString().slice(0, 7); // YYYY-MM
+
+  const overviewTiles = [
+    { label: 'Pending',   value: stats.pending,   tone: 'text-amber-600 bg-amber-50' },
+    { label: 'Confirmed', value: stats.confirmed, tone: 'text-emerald-600 bg-emerald-50' },
+    { label: 'Completed', value: stats.completed, tone: 'text-blue-600 bg-blue-50' },
+    { label: 'Cancelled', value: stats.cancelled, tone: 'text-rose-600 bg-rose-50' },
+  ];
 
   return (
     <div className="dash-bootstrap-radius flex h-screen bg-gray-50">
@@ -341,6 +571,7 @@ const PatientDashboard: React.FC = () => {
           navigate={navigate}
           appointmentCount={appointmentCount}
           setActivePage={setActivePage}
+          profileCompletion={profileCompletion}
         />
 
         {/* Content */}
@@ -368,148 +599,147 @@ const PatientDashboard: React.FC = () => {
             ))}
           </nav>
 
-          {/* ── Dashboard Home ── */}
+          {/* ── Dashboard Home (Medicare-style clone) ── */}
           {activePage === 'dashboard' && (
             <div className="space-y-6">
 
-              {/* Greeting */}
-              <div className="relative overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-500 rounded-2xl px-5 py-4 md:px-6 md:py-5 text-white shadow-sm">
-                {/* soft decorative accent (same palette, purely tonal) */}
-                <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full pointer-events-none" />
-                <div className="relative flex items-center justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="text-emerald-50/90 text-xs">Welcome back 👋</p>
-                    <h1 className="text-xl md:text-2xl font-bold tracking-tight truncate">{firstName}</h1>
-                  </div>
-                  {(patientProfile?.email || user?.name) && (
-                    <span className="flex-shrink-0 inline-flex items-center gap-1.5 bg-white/15 rounded-lg px-3 py-1.5 text-xs font-medium backdrop-blur-sm">
-                      Patient ID
-                      <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span>
-                    </span>
-                  )}
+              {/* Page heading (matches reference layout) */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">
+                    Welcome back, {firstName} 👋
+                  </h1>
+                  <p className="text-sm text-gray-500 mt-0.5">Here's your health overview for today.</p>
                 </div>
+                {(patientProfile?.email || user?.name) && (
+                  <span className="flex-shrink-0 inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg px-3 py-1.5 text-xs font-medium">
+                    Patient ID
+                    <span className="font-semibold">PT-{String(patientProfile?.id ?? '').padStart(6, '0')}</span>
+                  </span>
+                )}
               </div>
 
-              {/* Stats Strip */}
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Pending',   value: stats.pending },
-                  { label: 'Confirmed', value: stats.confirmed },
-                  { label: 'Completed', value: stats.completed },
-                ].map(({ label, value }) => (
-                  <div key={label} className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 text-center transition-transform hover:-translate-y-0.5">
-                    <p className="text-2xl md:text-3xl font-extrabold tracking-tight text-black">{value}</p>
-                    <p className="text-xs font-medium text-gray-500 mt-1">{label}</p>
-                  </div>
-                ))}
+              {/* ── Top stat cards row (real patient + hospital data) ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                <FeaturedStatCard
+                  title="Hospitals"
+                  value={hospitalCount != null ? String(hospitalCount) : '—'}
+                  caption="Active hospitals available to book"
+                />
+                <StatCard
+                  title="My Appointments"
+                  value={String(stats.total)}
+                  rows={[
+                    { label: 'Pending',   value: String(stats.pending) },
+                    { label: 'Confirmed', value: String(stats.confirmed) },
+                  ]}
+                />
+                <StatCard
+                  title="Upcoming"
+                  value={String(upcomingCount)}
+                  caption="Pending & confirmed visits ahead"
+                />
+                <StatCard
+                  title="My Documents"
+                  value={documentCount != null ? String(documentCount) : '—'}
+                  caption="Health records you've uploaded"
+                />
               </div>
 
-              {/* Quick Actions */}
-              <section>
-                <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Quick Actions</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {QUICK_ACTIONS.map(({ page, icon: Icon, label, desc }) => (
+              {/* ── Patient Overview ── */}
+              <section className="rounded-2xl bg-white border border-gray-200 shadow-sm p-5 md:p-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                  <h2 className="text-base font-bold text-gray-900">Appointments Overview</h2>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-600">
+                      <CalendarIcon className="w-4 h-4 text-gray-400" />
+                      {monthLabel}
+                    </div>
                     <button
-                      key={page}
-                      onClick={() => setActivePage(page)}
-                      className="group bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 text-left flex flex-col gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+                      onClick={() => setActivePage('appointments')}
+                      className="flex items-center gap-1.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg px-3 py-1.5 hover:bg-emerald-700 transition-colors"
                     >
-                      <div className="w-11 h-11 flex items-center justify-center transition-transform group-hover:scale-105">
-                        <Icon className="w-6 h-6 text-black" />
+                      <PlusIcon className="w-4 h-4" /> Book New
+                    </button>
+                  </div>
+                </div>
+
+                {/* Overview tiles (real appointment status counts) */}
+                <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+                  {overviewTiles.map(t => (
+                    <div key={t.label} className="rounded-xl border border-gray-200 p-4 shadow-sm">
+                      <p className="text-xs text-gray-400 mb-2">{t.label}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-2xl font-extrabold tracking-tight text-gray-900">{t.value}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${t.tone}`}>
+                          {stats.total > 0 ? Math.round((t.value / stats.total) * 100) : 0}%
+                        </span>
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm">{label}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
-                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Tabs (real counts) */}
+                <div className="flex items-center gap-2 mt-6 mb-4">
+                  {([
+                    { tab: 'Accepted' as const, count: stats.confirmed },
+                    { tab: 'In Queue' as const, count: stats.pending },
+                  ]).map(({ tab, count }) => (
+                    <button
+                      key={tab}
+                      onClick={() => setQueueTab(tab)}
+                      className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-colors
+                        ${queueTab === tab ? 'bg-emerald-500 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      {tab}
+                      <span className={`text-[11px] font-bold rounded-full px-1.5 min-w-[18px] text-center
+                        ${queueTab === tab ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                        {count}
+                      </span>
                     </button>
                   ))}
                 </div>
-              </section>
 
-              {/* Upcoming Appointments */}
-              <section>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Upcoming Appointments</h2>
-                  <button
-                    onClick={() => setActivePage('appointments')}
-                    className="text-emerald-600 text-sm font-medium flex items-center gap-1 hover:gap-1.5 hover:text-emerald-700 transition-all"
-                  >
-                    See all <ChevronRightIcon className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {upcomingAppointments.length === 0 ? (
-                  <div className="bg-white rounded-2xl p-10 text-center border border-dashed border-gray-200">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-emerald-50 flex items-center justify-center">
-                      <CalendarIcon className="w-7 h-7 text-emerald-400" />
+                {/* Patient appointment cards (real data) */}
+                {queueAppointments.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-gray-200 py-10 text-center">
+                    <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-50 flex items-center justify-center">
+                      <CalendarIcon className="w-6 h-6 text-emerald-400" />
                     </div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">No upcoming appointments</p>
-                    <p className="text-xs text-gray-400 mb-4">Book a visit and it'll show up here.</p>
-                    <button
-                      onClick={() => setActivePage('appointments')}
-                      className="px-4 py-2 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors"
-                    >
-                      Book Appointment
-                    </button>
+                    <p className="text-sm font-medium text-gray-600">
+                      {queueTab === 'Accepted' ? 'No confirmed appointments yet' : 'Nothing in the queue'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {queueTab === 'Accepted'
+                        ? 'Confirmed appointments will appear here.'
+                        : 'Appointments awaiting hospital confirmation appear here.'}
+                    </p>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    {upcomingAppointments.map((apt: any, i: number) => {
-                      const cfg = STATUS_CONFIG[apt.status] || STATUS_CONFIG.pending;
-                      const Icon = cfg.icon;
-                      const aptDate = new Date(apt.appointment_date);
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => setActivePage('appointments')}
-                          className="group w-full text-left bg-white rounded-2xl p-4 border border-gray-100 hover:border-emerald-200 hover:shadow-md transition-all duration-200 flex items-center gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-                        >
-                          {/* Date chip */}
-                          <div className="w-14 h-14 rounded-xl bg-emerald-50 border border-emerald-100 flex flex-col items-center justify-center flex-shrink-0 leading-none">
-                            <span className="text-lg font-bold text-emerald-700">{aptDate.toLocaleDateString('en-IN', { day: 'numeric' })}</span>
-                            <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wide mt-0.5">{aptDate.toLocaleDateString('en-IN', { month: 'short' })}</span>
-                          </div>
-
-                          {/* Details */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <p className="font-semibold text-gray-900 text-sm truncate">{apt.hospital_name}</p>
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border flex-shrink-0 ${cfg.color}`}>
-                                <Icon className="w-2.5 h-2.5" />
-                                {apt.status.charAt(0).toUpperCase() + apt.status.slice(1)}
-                              </span>
-                            </div>
-                            <p className="text-xs text-gray-500 truncate mb-1">{apt.reason}</p>
-                            <div className="flex items-center gap-3 text-xs text-gray-400">
-                              <span className="flex items-center gap-1"><MapPinIcon className="w-3 h-3" />{apt.hospital_city}</span>
-                              {apt.appointment_time && (
-                                <span className="flex items-center gap-1"><ClockIcon className="w-3 h-3" />{apt.appointment_time}</span>
-                              )}
-                            </div>
-                          </div>
-
-                          <ChevronRightIcon className="w-5 h-5 text-gray-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-                        </button>
-                      );
-                    })}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {queueAppointments.map((apt: any) => (
+                      <PatientQueueCard
+                        key={apt.id}
+                        p={{
+                          id: `#${String(apt.id).padStart(5, '0')}`,
+                          tag: apt.status === 'confirmed' ? 'Accepted' : 'In Queue',
+                          patientName: patientProfile?.name ?? user?.name ?? 'Patient',
+                          hospital: apt.hospital_name ?? '—',
+                          city: apt.hospital_city ?? '—',
+                          reason: apt.reason ?? '—',
+                          date: apt.appointment_date
+                            ? new Date(apt.appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : '—',
+                          time: apt.appointment_time
+                            ? new Date(apt.appointment_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' })
+                            : '—',
+                        }}
+                        onClick={() => setActivePage('appointments')}
+                      />
+                    ))}
                   </div>
                 )}
               </section>
-
-              {/* Need Help */}
-              <button
-                onClick={() => setActivePage('help')}
-                className="group w-full bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-200 flex items-center gap-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
-              >
-                <div className="w-11 h-11 flex items-center justify-center transition-transform group-hover:scale-105">
-                  <PhoneIcon className="w-6 h-6 text-black" />
-                </div>
-                <div className="text-left">
-                  <p className="font-semibold text-gray-900 text-sm">Need Help?</p>
-                  <p className="text-xs text-gray-400">Contact our support team anytime</p>
-                </div>
-                <ChevronRightIcon className="w-5 h-5 text-gray-400 ml-auto transition-transform group-hover:translate-x-0.5" />
-              </button>
 
             </div>
           )}
