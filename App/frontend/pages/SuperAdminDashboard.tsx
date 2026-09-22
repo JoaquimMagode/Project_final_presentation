@@ -1,13 +1,101 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   BuildingOffice2Icon, PlusIcon, UsersIcon, CurrencyDollarIcon, DocumentTextIcon,
   Cog6ToothIcon, BellIcon, UserIcon, MagnifyingGlassIcon, CheckCircleIcon,
   XCircleIcon, PencilIcon, NoSymbolIcon, EyeIcon,
   CheckIcon, XMarkIcon, MapPinIcon, BeakerIcon, ShieldCheckIcon,
-  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon, Squares2X2Icon, Bars3Icon
+  ClockIcon, HeartIcon, ArrowUpTrayIcon, TagIcon, Squares2X2Icon, Bars3Icon,
+  GlobeAltIcon, ChevronDownIcon, ArrowRightOnRectangleIcon, QuestionMarkCircleIcon
 } from '@heroicons/react/24/outline';
+import { useAuth, useLang } from '../App';
+import { useNavigate } from 'react-router-dom';
+import { LANGUAGES } from '../constants';
+import { Language } from '../types';
+
+// ── Admin Dashboard Header (matches Patient/Hospital) ──────────────────────────
+const AdminHeader: React.FC<{
+  user: { name: string } | null;
+  logout: () => void;
+  navigate: (path: string) => void;
+}> = ({ user, logout, navigate }) => {
+  const { lang, setLang } = useLang();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <header className="hidden md:flex items-center justify-between h-[73px] px-6 bg-white border-b border-gray-100 flex-shrink-0 gap-4">
+      {/* Search */}
+      <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
+        <MagnifyingGlassIcon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+        <input type="text" placeholder="Search hospitals, patients..." className="bg-transparent text-sm outline-none w-full text-gray-700 placeholder-gray-400" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        {/* Language */}
+        <div className="flex items-center gap-1.5 text-gray-600">
+          <GlobeAltIcon className="w-4 h-4" />
+          <select value={lang} onChange={e => setLang(e.target.value as Language)}
+            className="text-sm bg-transparent border-none outline-none cursor-pointer text-gray-700 font-medium">
+            {LANGUAGES.map(l => <option key={l.code} value={l.code}>{l.code}</option>)}
+          </select>
+        </div>
+
+        {/* Notifications */}
+        <button className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <BellIcon className="w-5 h-5 text-gray-600" />
+        </button>
+
+        {/* Profile (icon only) */}
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setProfileOpen(o => !o)}
+            className="flex items-center pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+            aria-label="Open profile menu"
+          >
+            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+              {(user?.name || 'A').charAt(0).toUpperCase()}
+            </div>
+          </button>
+
+          {profileOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-50">
+              <div className="px-4 py-2.5 border-b border-gray-100">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white font-semibold">
+                    {(user?.name || 'A').charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="text-sm font-bold text-gray-900 truncate max-w-[130px]">{user?.name || 'Super Admin'}</div>
+                    <div className="text-xs text-gray-500">Super Admin</div>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => { logout(); navigate('/login'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4 text-gray-500" /> Logout
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 const SuperAdminDashboard: React.FC = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('HOSPITAL_MANAGEMENT');
   const [showAddHospital, setShowAddHospital] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -205,71 +293,99 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="dash-bootstrap-radius flex h-screen bg-gray-50">
       {/* Mobile overlay */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setMobileSidebarOpen(false)} />
       )}
 
       {/* Sidebar */}
-      <div className={`
-        fixed md:relative z-40 md:z-auto h-[95vh]
+      <aside className={`
+        fixed md:relative z-40 md:z-auto h-full
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg border-r border-slate-200 transition-all duration-300
+        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 shadow-[2px_0_8px_-2px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col flex-shrink-0
       `}>
-        {/* Sidebar toggle */}
-        <div className={`flex items-center h-16 px-3 border-b border-slate-200 ${sidebarOpen ? 'justify-end' : 'justify-center'}`}>
+        {/* Logo bar — matches global header height */}
+        <div className={`flex items-center border-b border-gray-100 h-[73px] px-3 flex-shrink-0 ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
+          {sidebarOpen && (
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="bg-emerald-600 p-1.5 rounded-lg flex-shrink-0">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </div>
+              <span className="font-bold text-sm text-gray-900 truncate">IMAP Solution</span>
+            </div>
+          )}
           <button
             onClick={() => setSidebarOpen(o => !o)}
-            className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
             aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
-            title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
           >
-            <Bars3Icon className="w-5 h-5" />
+            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <rect x="2" y="3" width="20" height="18" rx="2" strokeWidth="2"/>
+              <line x1="8" y1="3" x2="8" y2="21" strokeWidth="2"/>
+            </svg>
           </button>
         </div>
 
-        <nav className="mt-4">
-          {sidebarItems.map(item => {
-            const IconComponent = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => { setActiveTab(item.id); setMobileSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 md:px-6 py-3 text-left hover:bg-emerald-50 transition-colors ${
-                  activeTab === item.id ? 'bg-emerald-50 text-emerald-700 border-r-2 border-emerald-600' : 'text-slate-600'
-                }`}
-              >
-                <IconComponent className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
-              </button>
-            );
-          })}
+        {/* Nav items */}
+        <nav className="flex-1 py-4 px-3 overflow-y-auto">
+          <div className="space-y-1">
+            {sidebarItems.map(item => {
+              const IconComponent = item.icon;
+              const active = activeTab === item.id;
+              return (
+                <div key={item.id} className="relative group">
+                  <button
+                    onClick={() => { setActiveTab(item.id); setMobileSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 text-left
+                      ${active ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'}
+                      ${!sidebarOpen ? 'justify-center' : ''}`}
+                  >
+                    <IconComponent className="w-5 h-5 flex-shrink-0" />
+                    {sidebarOpen && <span className="flex-1">{item.label}</span>}
+                  </button>
+                  {!sidebarOpen && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity duration-150 z-50">
+                      {item.label}
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </nav>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile top bar */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-slate-200">
-          <button onClick={() => setMobileSidebarOpen(true)} className="p-2 rounded-lg hover:bg-slate-100">
-            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+        <div className="md:hidden flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100">
+          <button onClick={() => setMobileSidebarOpen(true)} className="p-2 rounded-lg hover:bg-gray-100">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           </button>
-          <span className="font-semibold text-slate-900 text-sm">IMAP Super Admin</span>
+          <span className="font-semibold text-gray-900 text-sm">Super Admin Dashboard</span>
         </div>
+
+        {/* Dashboard Header */}
+        <AdminHeader user={user} logout={logout} navigate={navigate} />
+
         {/* Content Area */}
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pb-20 md:pb-6">
+        <main className="flex-1 overflow-auto pb-20 md:pb-6">
+          <div className="max-w-7xl mx-auto p-4 md:p-6">
           {activeTab === 'HOSPITAL_MANAGEMENT' && (
             <div className="space-y-6">
               {/* Header */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <h1 className="text-2xl font-bold text-slate-900 mb-2">IMAP Solution Admin</h1>
                 <p className="text-lg text-slate-600">Hospital Management Dashboard</p>
               </div>
 
               {/* Stats Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Total Doctors</p>
@@ -278,7 +394,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <BeakerIcon className="w-10 h-10 text-emerald-600" />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Requests</p>
@@ -287,7 +403,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <ClockIcon className="w-10 h-10 text-yellow-600" />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500 mb-1">Confirmed</p>
@@ -299,7 +415,7 @@ const SuperAdminDashboard: React.FC = () => {
               </div>
 
               {/* Navigation Tabs */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
                 <div className="border-b border-slate-200">
                   <nav className="flex space-x-8 px-6">
                     <button className="py-4 px-1 border-b-2 border-emerald-500 text-emerald-600 font-medium text-sm">
@@ -338,7 +454,7 @@ const SuperAdminDashboard: React.FC = () => {
             <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500">Total Hospitals</p>
@@ -347,7 +463,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <BuildingOffice2Icon className="w-8 h-8 text-emerald-600" />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500">Active Hospitals</p>
@@ -356,7 +472,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <CheckCircleIcon className="w-8 h-8 text-green-600" />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500">Total Patients</p>
@@ -365,7 +481,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <UsersIcon className="w-8 h-8 text-blue-600" />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500">Total Revenue</p>
@@ -374,7 +490,7 @@ const SuperAdminDashboard: React.FC = () => {
                     <CurrencyDollarIcon className="w-8 h-8 text-emerald-600" />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-slate-500">Pending Approvals</p>
@@ -386,7 +502,7 @@ const SuperAdminDashboard: React.FC = () => {
               </div>
 
               {/* Recent Hospitals Table */}
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-slate-200">
                   <h3 className="text-lg font-semibold text-slate-900">Recent Hospital Additions</h3>
                 </div>
@@ -437,7 +553,7 @@ const SuperAdminDashboard: React.FC = () => {
 
           {activeTab === 'ADD_HOSPITAL' && (
             <div className="max-w-4xl">
-              <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-slate-900">Add New Hospital to IMAP Solution Network</h3>
                 </div>
@@ -709,7 +825,7 @@ const SuperAdminDashboard: React.FC = () => {
           )}
 
           {activeTab === 'MANAGE_HOSPITALS' && (
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
               <div className="p-6 border-b border-slate-200 flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900">Hospital Network Management</h3>
                 <button
@@ -781,7 +897,7 @@ const SuperAdminDashboard: React.FC = () => {
           )}
 
           {activeTab === 'SETTINGS' && (
-            <div className="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-6">IMAP Solution Platform Settings</h3>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -816,17 +932,18 @@ const SuperAdminDashboard: React.FC = () => {
               </div>
             </div>
           )}
+          </div>
         </main>
       </div>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 flex justify-around py-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 flex justify-around py-2">
         {sidebarItems.slice(0, 5).map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-lg text-xs ${
-              activeTab === item.id ? 'text-emerald-600' : 'text-slate-500'
+              activeTab === item.id ? 'text-emerald-600' : 'text-gray-500'
             }`}
           >
             <item.icon className="w-5 h-5" />

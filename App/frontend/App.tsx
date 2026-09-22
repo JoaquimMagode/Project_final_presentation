@@ -95,9 +95,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isDashboardPage   = ['/superadmin', '/hospital', '/patient'].some(p => location.pathname.startsWith(p));
-  const hideHeaderFooter  = ['/login', '/register', '/patient-registration', '/hospital', '/patient'].includes(location.pathname)
+  const hideHeaderFooter  = ['/login', '/register', '/patient-registration', '/hospital', '/patient', '/superadmin'].includes(location.pathname)
     || location.pathname.startsWith('/hospital/')
-    || location.pathname.startsWith('/patient/');
+    || location.pathname.startsWith('/patient/')
+    || location.pathname.startsWith('/superadmin');
 
   /* scroll shadow */
   useEffect(() => {
