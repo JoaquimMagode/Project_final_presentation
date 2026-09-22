@@ -204,7 +204,7 @@ const PatientSettings: React.FC = () => {
                         type="text"
                         value={accountSettings.firstName}
                         onChange={(e) => handleAccountChange('firstName', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div>
@@ -213,7 +213,7 @@ const PatientSettings: React.FC = () => {
                         type="text"
                         value={accountSettings.lastName}
                         onChange={(e) => handleAccountChange('lastName', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div>
@@ -222,7 +222,7 @@ const PatientSettings: React.FC = () => {
                         type="email"
                         value={accountSettings.email}
                         onChange={(e) => handleAccountChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div>
@@ -231,7 +231,7 @@ const PatientSettings: React.FC = () => {
                         type="tel"
                         value={accountSettings.phone}
                         onChange={(e) => handleAccountChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div>
@@ -240,7 +240,7 @@ const PatientSettings: React.FC = () => {
                         type="date"
                         value={accountSettings.dateOfBirth}
                         onChange={(e) => handleAccountChange('dateOfBirth', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                   </div>
@@ -253,7 +253,7 @@ const PatientSettings: React.FC = () => {
                         <div className="relative">
                           <input
                             type={showPassword ? 'text' : 'password'}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 pr-10"
                           />
                           <button
                             type="button"
@@ -268,14 +268,14 @@ const PatientSettings: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
                         <input
                           type="password"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
                         <input
                           type="password"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                       </div>
                     </div>
@@ -308,7 +308,7 @@ const PatientSettings: React.FC = () => {
                             onChange={() => handleNotificationChange('email')}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
                       
@@ -327,7 +327,7 @@ const PatientSettings: React.FC = () => {
                             onChange={() => handleNotificationChange('push')}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
 
@@ -346,7 +346,7 @@ const PatientSettings: React.FC = () => {
                             onChange={() => handleNotificationChange('sms')}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
                     </div>
@@ -367,7 +367,7 @@ const PatientSettings: React.FC = () => {
                             onChange={() => handleNotificationChange('appointments')}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
 
@@ -383,7 +383,7 @@ const PatientSettings: React.FC = () => {
                             onChange={() => handleNotificationChange('reports')}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
 
@@ -399,7 +399,7 @@ const PatientSettings: React.FC = () => {
                             onChange={() => handleNotificationChange('reminders')}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
                     </div>
@@ -422,7 +422,7 @@ const PatientSettings: React.FC = () => {
                           <div className="font-medium text-gray-900">Two-Factor Authentication</div>
                           <div className="text-sm text-gray-600">Add an extra layer of security to your account</div>
                         </div>
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                        <button className="bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-emerald-700 transition-colors">
                           {privacySettings.twoFactorAuth ? 'Disable' : 'Enable'}
                         </button>
                       </div>
@@ -437,7 +437,7 @@ const PatientSettings: React.FC = () => {
                         <select
                           value={privacySettings.profileVisibility}
                           onChange={(e) => handlePrivacyChange('profileVisibility', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                           <option value="private">Private</option>
                           <option value="doctors-only">Doctors Only</option>
@@ -457,7 +457,7 @@ const PatientSettings: React.FC = () => {
                             onChange={(e) => handlePrivacyChange('shareDataForResearch', e.target.checked)}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
                         </label>
                       </div>
                     </div>
@@ -506,7 +506,7 @@ const PatientSettings: React.FC = () => {
                         <select
                           value={accountSettings.language}
                           onChange={(e) => handleAccountChange('language', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                           <option value="English">English</option>
                           <option value="Spanish">Spanish</option>
@@ -519,7 +519,7 @@ const PatientSettings: React.FC = () => {
                         <select
                           value={accountSettings.timezone}
                           onChange={(e) => handleAccountChange('timezone', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         >
                           <option value="UTC-5">Eastern Time (UTC-5)</option>
                           <option value="UTC-6">Central Time (UTC-6)</option>
@@ -536,19 +536,19 @@ const PatientSettings: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-3">Theme</label>
                       <div className="grid grid-cols-3 gap-4">
                         <div className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                          accountSettings.theme === 'light' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                          accountSettings.theme === 'light' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-400'
                         }`} onClick={() => handleAccountChange('theme', 'light')}>
                           <div className="w-full h-16 bg-white border rounded mb-2"></div>
                           <div className="text-center text-sm font-medium">Light</div>
                         </div>
                         <div className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                          accountSettings.theme === 'dark' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                          accountSettings.theme === 'dark' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-400'
                         }`} onClick={() => handleAccountChange('theme', 'dark')}>
                           <div className="w-full h-16 bg-gray-800 rounded mb-2"></div>
                           <div className="text-center text-sm font-medium">Dark</div>
                         </div>
                         <div className={`border-2 rounded-lg p-4 cursor-pointer transition-colors ${
-                          accountSettings.theme === 'auto' ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
+                          accountSettings.theme === 'auto' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-400'
                         }`} onClick={() => handleAccountChange('theme', 'auto')}>
                           <div className="w-full h-16 bg-gradient-to-r from-white to-gray-800 rounded mb-2"></div>
                           <div className="text-center text-sm font-medium">Auto</div>
@@ -565,7 +565,7 @@ const PatientSettings: React.FC = () => {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-emerald-600 text-white px-6 py-2.5 rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {saving ? (
                   <>

@@ -683,7 +683,7 @@ const HospitalListCard: React.FC<{ hospital: Hospital; onViewDetails: (id: numbe
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewDetails(hospital.id); } }}
-      className="group cursor-pointer bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+      className="group cursor-pointer bg-white rounded-sm border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
     >
       {/* Image / banner */}
       <div className="relative h-36 bg-gradient-to-br from-emerald-500 to-emerald-700 overflow-hidden">
@@ -697,17 +697,11 @@ const HospitalListCard: React.FC<{ hospital: Hospital; onViewDetails: (id: numbe
             <span className="absolute text-5xl font-black text-white/90">{hospital.name.charAt(0)}</span>
           </div>
         )}
-        {/* Accredited badge */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-          {isAccredited ? (
-            <span className="bg-white/95 backdrop-blur text-emerald-700 text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-              <ShieldCheck className="w-3 h-3" /> Accredited
-            </span>
-          ) : (
-            <span className="bg-white/95 backdrop-blur text-gray-500 text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full flex items-center gap-1 shadow-sm">
-              <CheckCircle className="w-3 h-3" /> Verified
-            </span>
-          )}
+        {/* Accredited badge (icon only, no bg) */}
+        <div className="absolute top-3 left-3">
+          <span className="text-white drop-shadow" title={isAccredited ? 'Accredited' : 'Verified'}>
+            <ShieldCheck className="w-5 h-5" />
+          </span>
         </div>
       </div>
 

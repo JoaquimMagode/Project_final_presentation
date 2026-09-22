@@ -2,17 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { hospitalsAPI } from '../services/api';
 import {
-  Search, MapPin, ShieldCheck, Lock, Bed, Phone,
-  Mail, Globe, Award, Stethoscope, SlidersHorizontal,
-  ArrowRight, ChevronRight,
+  Search, MapPin, ShieldCheck, Lock, Award, Stethoscope,
+  SlidersHorizontal, ArrowRight, ChevronRight,
 } from 'lucide-react';
 
 const GUEST_LIMIT = 3;
-
-/* shared input style */
-const selectCls = `w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm text-slate-700
-  focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all
-  appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed`;
 
 const Hospitals: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -105,54 +99,54 @@ const Hospitals: React.FC = () => {
             <p className="text-slate-500 text-lg">Search India's top JCI & NABH-accredited medical facilities</p>
           </div>
 
-          {/* ── Search form ── */}
-          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+          {/* ── Search form (inline, matches Patient dashboard) ── */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Search className="w-4 h-4 text-emerald-600" />
+              <span className="text-sm font-bold text-gray-900">Filter Hospitals</span>
+              {(selectedState || selectedCity || selectedSpec) && (
+                <span className="ml-auto text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  {[selectedState, selectedCity, selectedSpec].filter(Boolean).length} active
+                </span>
+              )}
+            </div>
             <form onSubmit={handleSearch}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
                 {/* State */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> State
-                  </label>
-                  <select value={selectedState} onChange={e => handleStateChange(e.target.value)} className={selectCls}>
-                    <option value="">All States</option>
+                <div className="relative flex-1 min-w-[150px]">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={selectedState} onChange={e => handleStateChange(e.target.value)}
+                    className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm appearance-none bg-white cursor-pointer">
+                    <option value="">All States ({states.length})</option>
                     {states.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
 
                 {/* City */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    <MapPin className="w-3 h-3" /> City
-                  </label>
-                  <select value={selectedCity} onChange={e => handleCityChange(e.target.value)} disabled={!selectedState} className={selectCls}>
-                    <option value="">{selectedState ? 'All Cities' : 'Select state first'}</option>
+                <div className="relative flex-1 min-w-[150px]">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={selectedCity} onChange={e => handleCityChange(e.target.value)} disabled={!selectedState}
+                    className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                    <option value="">{selectedState ? `All Cities (${cities.length})` : 'City'}</option>
                     {cities.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
 
                 {/* Specialization */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide flex items-center gap-1">
-                    <Stethoscope className="w-3 h-3" /> Specialty
-                  </label>
-                  <select value={selectedSpec} onChange={e => setSelectedSpec(e.target.value)} disabled={!selectedState} className={selectCls}>
-                    <option value="">All Specialties</option>
+                <div className="relative flex-1 min-w-[150px]">
+                  <Stethoscope className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <select value={selectedSpec} onChange={e => setSelectedSpec(e.target.value)} disabled={!selectedState}
+                    className="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm appearance-none bg-white disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                    <option value="">{selectedState ? `All Specializations (${specs.length})` : 'Specialization'}</option>
                     {specs.map(sp => <option key={sp} value={sp}>{sp}</option>)}
                   </select>
                 </div>
 
                 {/* Submit */}
-                <div className="flex items-end">
-                  <button
-                    type="submit"
-                    className="w-full h-[46px] bg-emerald-600 hover:bg-emerald-700 text-white font-semibold
-                               rounded-xl transition-colors shadow-sm hover:shadow-md flex items-center
-                               justify-center gap-2 text-sm"
-                  >
-                    <Search className="w-4 h-4" /> Search Hospitals
-                  </button>
-                </div>
+                <button type="submit"
+                  className="bg-emerald-600 text-white font-semibold px-5 py-2.5 rounded-xl hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 text-sm flex-shrink-0">
+                  <Search className="w-4 h-4" /> Search
+                </button>
               </div>
             </form>
           </div>
@@ -167,22 +161,16 @@ const Hospitals: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
             {loading ? (
-              /* skeleton loader */
-              <div className="space-y-4">
-                {[1, 2, 3].map(n => (
-                  <div key={n} className="bg-white rounded-2xl border border-slate-100 p-5 space-y-3">
-                    <div className="flex gap-4">
-                      <div className="skeleton w-16 h-16 rounded-xl" />
-                      <div className="flex-1 space-y-2 pt-1">
-                        <div className="skeleton h-4 w-48 rounded-md" />
-                        <div className="skeleton h-3 w-32 rounded-md" />
-                        <div className="skeleton h-3 w-56 rounded-md" />
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {[80, 100, 70, 90].map(w => (
-                        <div key={w} className={`skeleton h-5 rounded-full`} style={{ width: w }} />
-                      ))}
+              /* skeleton loader — grid */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {[1, 2, 3, 4, 5].map(n => (
+                  <div key={n} className="bg-white rounded-2xl border border-gray-200 overflow-hidden animate-pulse">
+                    <div className="h-36 bg-gray-100" />
+                    <div className="p-5 space-y-2">
+                      <div className="h-4 bg-gray-100 rounded w-2/3" />
+                      <div className="h-3 bg-gray-100 rounded w-1/2" />
+                      <div className="h-3 bg-gray-100 rounded w-full" />
+                      <div className="h-6 bg-gray-100 rounded w-1/3 mt-3" />
                     </div>
                   </div>
                 ))}
@@ -203,116 +191,85 @@ const Hospitals: React.FC = () => {
                   )}
                 </div>
 
-                {/* cards */}
-                <div className="space-y-4">
-                  {visibleHospitals.map(hospital => (
-                    <div
-                      key={hospital.id}
-                      onClick={() => navigate(`/hospital/${hospital.id}`)}
-                      className="group bg-white rounded-2xl border border-slate-100 shadow-sm
-                                 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden"
-                    >
-                      {/* top accent */}
-                      <div className="h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-400" />
-
-                      <div className="p-5 sm:p-6">
-                        <div className="flex items-start gap-4">
-                          {/* Logo */}
+                {/* cards — grid, matches Patient dashboard */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                  {visibleHospitals.map(hospital => {
+                    const loc = [hospital.city, hospital.state].filter(Boolean).join(', ');
+                    const isAccredited = (hospital.accreditations || []).length > 0;
+                    return (
+                      <div
+                        key={hospital.id}
+                        onClick={() => navigate(`/hospital/${hospital.id}`)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/hospital/${hospital.id}`); } }}
+                        className="group cursor-pointer bg-white rounded-sm border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all overflow-hidden flex flex-col focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                      >
+                        {/* Image / banner */}
+                        <div className="relative h-36 bg-gradient-to-br from-emerald-500 to-emerald-700 overflow-hidden">
                           {hospital.logo_url ? (
-                            <img
-                              src={hospital.logo_url}
-                              alt={hospital.name}
-                              className="w-16 h-16 rounded-xl object-cover border border-slate-100 shadow-sm flex-shrink-0"
-                            />
+                            <img src={hospital.logo_url} alt={hospital.name}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                           ) : (
-                            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600
-                                           flex items-center justify-center flex-shrink-0 text-white text-2xl font-black shadow-sm">
-                              {hospital.name.charAt(0)}
+                            <div className="w-full h-full flex items-center justify-center relative">
+                              <MapPin className="w-12 h-12 text-white/40" />
+                              <span className="absolute text-5xl font-black text-white/90">{hospital.name.charAt(0)}</span>
+                            </div>
+                          )}
+                          <div className="absolute top-3 left-3">
+                            <span className="text-white drop-shadow" title={isAccredited ? 'Accredited' : 'Verified'}>
+                              <ShieldCheck className="w-5 h-5" />
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Body */}
+                        <div className="p-5 flex flex-col flex-1">
+                          <h3 className="font-bold text-gray-900 leading-tight line-clamp-1">{hospital.name}</h3>
+                          <p className="text-gray-400 text-xs flex items-center gap-1 mt-1">
+                            <MapPin className="w-3 h-3 flex-shrink-0" /> {loc || 'India'}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-2 line-clamp-2 leading-relaxed min-h-[40px]">
+                            {hospital.description || `${hospital.name} is part of our accredited hospital network${loc ? ` in ${loc}` : ''}.`}
+                          </p>
+
+                          {(hospital.specialties || []).length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-3">
+                              {(hospital.specialties || []).slice(0, 3).map((s: string, i: number) => (
+                                <span key={i} className="bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] font-bold px-2 py-0.5 rounded-md">{s}</span>
+                              ))}
+                              {(hospital.specialties || []).length > 3 && (
+                                <span className="bg-gray-100 text-gray-500 text-[10px] font-bold px-2 py-0.5 rounded-md">+{(hospital.specialties || []).length - 3} more</span>
+                              )}
                             </div>
                           )}
 
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            {/* title row */}
-                            <div className="flex items-start justify-between gap-3 flex-wrap mb-1.5">
-                              <div className="flex items-center gap-2 flex-wrap min-w-0">
-                                <h3 className="text-base font-bold text-slate-900 truncate">{hospital.name}</h3>
-                                {hospital.status === 'active' && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-50 border border-emerald-200 rounded-full text-[11px] font-semibold text-emerald-700">
-                                    <ShieldCheck className="w-3 h-3" /> Verified
-                                  </span>
-                                )}
-                                {hospital.accreditations?.length > 0 && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 rounded-full text-[11px] font-semibold text-blue-700">
-                                    <Award className="w-3 h-3" />{hospital.accreditations[0]}
-                                  </span>
-                                )}
-                              </div>
-                              <button
-                                onClick={e => { e.stopPropagation(); navigate(`/hospital/${hospital.id}`); }}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-emerald-600
-                                           text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap
-                                           flex-shrink-0 group-hover:bg-emerald-600"
-                              >
-                                View Details <ArrowRight className="w-3.5 h-3.5" />
-                              </button>
+                          {isAccredited && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {(hospital.accreditations || []).slice(0, 2).map((a: string, i: number) => (
+                                <span key={i} className="text-[10px] font-semibold text-gray-500 flex items-center gap-1">
+                                  <Award className="w-3 h-3 text-amber-500" /> {a}
+                                </span>
+                              ))}
                             </div>
+                          )}
 
-                            {/* location */}
-                            <div className="flex items-center gap-1 text-slate-500 text-sm mb-2">
-                              <MapPin className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                              <span className="truncate">
-                                {hospital.address || hospital.city}
-                                {hospital.state   ? `, ${hospital.state}`   : ''}
-                                {hospital.country ? `, ${hospital.country}` : ''}
-                              </span>
+                          <div className="mt-auto pt-4 flex items-center justify-between border-t border-gray-100 mt-4">
+                            <div className="flex items-center gap-1.5 text-xs">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                              <span className="font-semibold text-gray-700">Accredited</span>
                             </div>
-
-                            {hospital.description && (
-                              <p className="text-xs text-slate-500 mb-3 line-clamp-2 leading-relaxed">{hospital.description}</p>
-                            )}
-
-                            {/* contact chips */}
-                            <div className="flex flex-wrap gap-2 text-xs text-slate-500 mb-3">
-                              {hospital.phone       && <span className="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full"><Phone  className="w-3 h-3" />{hospital.phone}</span>}
-                              {hospital.email       && <span className="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full"><Mail   className="w-3 h-3" />{hospital.email}</span>}
-                              {hospital.website_url && <span className="flex items-center gap-1 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full text-blue-600"><Globe  className="w-3 h-3" />Website</span>}
-                              {hospital.bed_capacity  && <span className="flex items-center gap-1 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full"><Bed    className="w-3 h-3" />{hospital.bed_capacity} beds</span>}
-                              {hospital.established_year && <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">Est. {hospital.established_year}</span>}
-                            </div>
-
-                            {/* specialties */}
-                            {(hospital.specialties || []).length > 0 && (
-                              <div className="mb-2">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                                  <Stethoscope className="w-3 h-3" /> Specializations
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {(hospital.specialties || []).map((spec: string, i: number) => (
-                                    <span key={i} className="px-2.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-100 text-[11px] font-medium rounded-full">{spec}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* accreditations */}
-                            {(hospital.accreditations || []).length > 1 && (
-                              <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 flex items-center gap-1">
-                                  <Award className="w-3 h-3" /> Accreditations
-                                </p>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {(hospital.accreditations || []).map((acc: string, i: number) => (
-                                    <span key={i} className="px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-100 text-[11px] font-medium rounded-full">{acc}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/hospital/${hospital.id}`); }}
+                              aria-label="View details"
+                              className="flex items-center justify-center p-2 text-emerald-600 hover:text-emerald-700 group-hover:translate-x-0.5 transition-all">
+                              <ArrowRight className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Guest gate */}

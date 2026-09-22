@@ -127,16 +127,12 @@ const DashboardHeader: React.FC<{
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); }}
-            className="flex items-center gap-2.5 pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+            className="flex items-center pl-3 border-l border-gray-200 hover:opacity-80 transition-opacity"
+            aria-label="Open profile menu"
           >
-            <div className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+            <div className="w-9 h-9 rounded-full bg-emerald-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
               {(user?.name || 'A').charAt(0).toUpperCase()}
             </div>
-            <div className="leading-tight text-left">
-              <div className="text-sm font-semibold text-gray-900">{user?.name || 'Admin'}</div>
-              <div className="text-xs text-gray-500">Hospital Admin</div>
-            </div>
-            <ChevronDownIcon className={`w-4 h-4 text-gray-400 transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
           </button>
 
           {profileOpen && (
@@ -324,7 +320,7 @@ const HospitalDashboard: React.FC = () => {
   ];
 
   const StatCard = ({ icon: Icon, title, value, change, changeType }: any) => (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600">{title}</p>
@@ -574,7 +570,8 @@ const HospitalDashboard: React.FC = () => {
         />
 
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6 pb-20 md:pb-6">
+        <main className="flex-1 overflow-auto pb-20 md:pb-6">
+          <div className="max-w-7xl mx-auto p-4 md:p-6">
           {/* Render different pages based on activePage */}
           {activePage === 'dashboard' && (
             <>
@@ -633,7 +630,7 @@ const HospitalDashboard: React.FC = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
             {/* Patient Statistics Chart */}
-            <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-base md:text-lg font-semibold tracking-tight text-gray-900">Patient statistics</h3>
                 <div className="flex items-center gap-4">
@@ -660,7 +657,7 @@ const HospitalDashboard: React.FC = () => {
             {/* Right Column */}
             <div className="space-y-6">
               {/* Today's Schedule */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold tracking-tight text-gray-900">
                     Today – {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
@@ -702,7 +699,7 @@ const HospitalDashboard: React.FC = () => {
               </div>
 
               {/* Recent Reports */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold tracking-tight text-gray-900">Recent Reports</h3>
                   <button
@@ -754,7 +751,7 @@ const HospitalDashboard: React.FC = () => {
           {/* Bottom Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 mt-4 md:mt-6">
             {/* Balance / Revenue */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold tracking-tight text-gray-900">Revenue</h3>
                 <button
@@ -805,7 +802,7 @@ const HospitalDashboard: React.FC = () => {
             </div>
 
             {/* Appointment Status Breakdown */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold tracking-tight text-gray-900">Appointment Status</h3>
                 <button
@@ -856,7 +853,7 @@ const HospitalDashboard: React.FC = () => {
             </div>
 
             {/* Team / Employees Summary */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold tracking-tight text-gray-900">Staff & Patients</h3>
                 <button
@@ -914,6 +911,7 @@ const HospitalDashboard: React.FC = () => {
           {activePage === 'help' && <HelpCenter />}
           {activePage === 'report' && <Report />}
           {activePage === 'profile' && <HospitalProfile />}
+          </div>
         </main>
       </div>
 
