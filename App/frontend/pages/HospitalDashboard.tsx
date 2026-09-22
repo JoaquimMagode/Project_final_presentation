@@ -454,7 +454,7 @@ const HospitalDashboard: React.FC = () => {
       <aside className={`
         fixed md:relative z-40 md:z-auto h-full
         ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
-        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0
+        ${sidebarOpen ? 'w-64' : 'w-16'} bg-white border-r border-gray-100 shadow-[2px_0_8px_-2px_rgba(0,0,0,0.08)] transition-all duration-300 flex flex-col flex-shrink-0
       `}>
         {/* Logo area — matches global header height */}
         <div className={`flex items-center border-b border-gray-100 h-[73px] px-3 flex-shrink-0 ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>

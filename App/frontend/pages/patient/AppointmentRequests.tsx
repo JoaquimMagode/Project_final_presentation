@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import {
   Calendar, Clock, MapPin, Search, Plus, CheckCircle, XCircle,
   AlertCircle, Eye, Edit2, Trash2, Building2, History, FileText,
-  Send, DollarSign, Filter, X, Paperclip, Lock, Unlock, Tag
+  Send, DollarSign, Filter, X, Paperclip, Lock, Unlock, Tag, ArrowLeft
 } from 'lucide-react';
 import { patientsAPI, hospitalsAPI, appointmentsAPI, documentsAPI } from '../../services/api';
 import { quoteStore, Quote } from '../../services/quoteStore';
 import QuotePDF from '../../components/QuotePDF';
+import { CalendarScheduler } from '../../components/ui/CalendarScheduler';
 
 interface MedDoc {
   id: number;
@@ -94,7 +95,7 @@ const AppointmentRequests: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'appointments' | 'history' | 'quotes'>('appointments');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showBookingPage, setShowBookingPage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -204,7 +205,8 @@ const AppointmentRequests: React.FC = () => {
       }
 
       setSuccess(`Appointment booked successfully!${selectedDocIds.length > 0 ? ` ${selectedDocIds.length} document(s) shared with the hospital.` : ''}`);
-      setShowBookingModal(false);
+      setShowBookingPage(false);
+      setShowDocPicker(false);
       setBookingForm({ hospitalId: '', date: '', time: '', type: 'consultation', reason: '', notes: '' });
       setSelectedDocIds([]);
       fetchAppointments();
@@ -313,15 +315,188 @@ const AppointmentRequests: React.FC = () => {
 
   const pendingQuotes = quotes.filter(q => q.status === 'pending').length;
 
+  const closeBookingPage = () => {
+    setShowBookingPage(false);
+    setShowDocPicker(false);
+    setSelectedDocIds([]);
+    setError('');
+  };
+
+  // ── Book Hospital Appointment — full page (not a modal) ──
+  if (showBookingPage) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        {/* Page header with back */}
+        <div className="flex items-center gap-3">
+          <button onClick={closeBookingPage}
+            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors" title="Back to appointments">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Book Hospital Appointment</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Fill in the details to request an appointment</p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm max-w-3xl">
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Select Hospital *</label>
+              <HospitalCombobox
+                hospitals={hospitals}
+                value={bookingForm.hospitalId}
+                onChange={val => setBookingForm({ ...bookingForm, hospitalId: val })}
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center gap-4 mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">Date *</label>
+                <label className="block text-sm font-medium text-gray-700">Time *</label>
+              </div>
+              <CalendarScheduler
+                date={bookingForm.date}
+                time={bookingForm.time}
+                onDateChange={d => setBookingForm({ ...bookingForm, date: d })}
+                onTimeChange={t => setBookingForm({ ...bookingForm, time: t })}
+              />
+              {bookingForm.date && bookingForm.time && (
+                <p className="mt-2 text-xs text-emerald-600 font-medium">
+                  Selected: {new Date(`${bookingForm.date}T${bookingForm.time}`).toLocaleString('en-IN', {
+                    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit', hour12: true,
+                  })}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Appointment Type</label>
+              <select value={bookingForm.type} onChange={e => setBookingForm({ ...bookingForm, type: e.target.value as any })}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="consultation">Consultation</option>
+                <option value="procedure">Procedure</option>
+                <option value="follow_up">Follow-up</option>
+                <option value="telemedicine">Telemedicine</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason for Visit *</label>
+              <textarea value={bookingForm.reason} onChange={e => setBookingForm({ ...bookingForm, reason: e.target.value })}
+                rows={3} placeholder="Describe your symptoms or reason for the appointment"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Additional Notes (Optional)</label>
+              <textarea value={bookingForm.notes} onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
+                rows={2} placeholder="Any additional information for the hospital"
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+
+            {/* ── Attach Medical Documents ── */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                  <Paperclip className="w-4 h-4 text-gray-400" /> Attach Medical Documents
+                  <span className="text-xs text-gray-400 font-normal">(optional)</span>
+                </label>
+                {selectedDocIds.length > 0 && (
+                  <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
+                    {selectedDocIds.length} selected
+                  </span>
+                )}
+              </div>
+
+              {!showDocPicker ? (
+                <button type="button" onClick={() => setShowDocPicker(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
+                  <Paperclip className="w-4 h-4" />
+                  {myDocs.length === 0 ? 'No documents uploaded yet' : 'Select documents to share with hospital'}
+                </button>
+              ) : (
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b border-gray-200">
+                    <span className="text-xs font-semibold text-gray-600">
+                      {myDocs.length} document{myDocs.length !== 1 ? 's' : ''} available
+                    </span>
+                    <button onClick={() => setShowDocPicker(false)} className="text-gray-400 hover:text-gray-600">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {myDocs.length === 0 ? (
+                    <div className="px-3 py-4 text-center text-xs text-gray-400">
+                      Upload documents first from My Medical Documents
+                    </div>
+                  ) : (
+                    <div className="max-h-44 overflow-y-auto divide-y divide-gray-50">
+                      {myDocs.map(doc => {
+                        const checked = selectedDocIds.includes(doc.id);
+                        return (
+                          <label key={doc.id} className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors
+                            ${checked ? 'bg-emerald-50' : 'hover:bg-gray-50'}`}>
+                            <input type="checkbox" checked={checked}
+                              onChange={() => setSelectedDocIds(ids =>
+                                checked ? ids.filter(i => i !== doc.id) : [...ids, doc.id]
+                              )}
+                              className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-gray-900 truncate">{doc.title}</p>
+                              <p className="text-xs text-gray-400 truncate">{doc.category.replace(/_/g, ' ')} · {doc.original_name}</p>
+                            </div>
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold flex-shrink-0
+                              ${doc.privacy_status === 'shared' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                              {doc.privacy_status === 'shared' ? <span className="flex items-center gap-0.5"><Unlock className="w-2.5 h-2.5 inline" /> Shared</span>
+                                : <span className="flex items-center gap-0.5"><Lock className="w-2.5 h-2.5 inline" /> Private</span>}
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedDocIds.length > 0 && (
+                <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1">
+                  <Paperclip className="w-3 h-3" />
+                  {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} will be shared with the hospital when the appointment is booked
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="px-6 pb-6 flex gap-3">
+            <button onClick={closeBookingPage}
+              className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
+              Cancel
+            </button>
+            <button onClick={handleBookingSubmit} disabled={loading}
+              className="flex-1 px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-semibold">
+              {loading ? 'Booking...' : 'Book Appointment'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Hospital Appointments</h1>
           <p className="text-sm text-gray-500 mt-0.5">Manage your appointments and medical history</p>
         </div>
-        <button onClick={() => setShowBookingModal(true)}
+        <button onClick={() => setShowBookingPage(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 transition-colors">
           <Plus className="w-4 h-4" /> Book Appointment
         </button>
@@ -410,7 +585,7 @@ const AppointmentRequests: React.FC = () => {
               <div className="text-center py-16">
                 <Calendar className="w-10 h-10 text-gray-300 mx-auto mb-3" />
                 <p className="text-gray-400 text-sm">No current appointments</p>
-                <button onClick={() => setShowBookingModal(true)} className="mt-3 text-emerald-600 text-sm font-medium hover:underline">
+                <button onClick={() => setShowBookingPage(true)} className="mt-3 text-emerald-600 text-sm font-medium hover:underline">
                   Book your first appointment
                 </button>
               </div>
@@ -630,156 +805,6 @@ const AppointmentRequests: React.FC = () => {
         </div>
       )}
 
-      {/* Booking Modal */}
-      {showBookingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-900">Book Hospital Appointment</h3>
-              <button onClick={() => { setShowBookingModal(false); setSelectedDocIds([]); setShowDocPicker(false); }} className="p-1.5 hover:bg-gray-100 rounded-lg">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Select Hospital *</label>
-                <HospitalCombobox
-                  hospitals={hospitals}
-                  value={bookingForm.hospitalId}
-                  onChange={val => setBookingForm({ ...bookingForm, hospitalId: val })}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Date *</label>
-                  <input type="date" value={bookingForm.date} onChange={e => setBookingForm({ ...bookingForm, date: e.target.value })}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Time *</label>
-                  <select value={bookingForm.time} onChange={e => setBookingForm({ ...bookingForm, time: e.target.value })}
-                    className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="">Select time</option>
-                    {['09:00','09:30','10:00','10:30','11:00','11:30','14:00','14:30','15:00','15:30','16:00','16:30'].map(t => (
-                      <option key={t} value={t}>{new Date(`1970-01-01T${t}`).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Appointment Type</label>
-                <select value={bookingForm.type} onChange={e => setBookingForm({ ...bookingForm, type: e.target.value as any })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                  <option value="consultation">Consultation</option>
-                  <option value="procedure">Procedure</option>
-                  <option value="follow_up">Follow-up</option>
-                  <option value="telemedicine">Telemedicine</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Reason for Visit *</label>
-                <textarea value={bookingForm.reason} onChange={e => setBookingForm({ ...bookingForm, reason: e.target.value })}
-                  rows={3} placeholder="Describe your symptoms or reason for the appointment"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Additional Notes (Optional)</label>
-                <textarea value={bookingForm.notes} onChange={e => setBookingForm({ ...bookingForm, notes: e.target.value })}
-                  rows={2} placeholder="Any additional information for the hospital"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-              </div>
-
-              {/* ── Attach Medical Documents ── */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                    <Paperclip className="w-4 h-4 text-gray-400" /> Attach Medical Documents
-                    <span className="text-xs text-gray-400 font-normal">(optional)</span>
-                  </label>
-                  {selectedDocIds.length > 0 && (
-                    <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">
-                      {selectedDocIds.length} selected
-                    </span>
-                  )}
-                </div>
-
-                {!showDocPicker ? (
-                  <button type="button" onClick={() => setShowDocPicker(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors">
-                    <Paperclip className="w-4 h-4" />
-                    {myDocs.length === 0 ? 'No documents uploaded yet' : 'Select documents to share with hospital'}
-                  </button>
-                ) : (
-                  <div className="border border-gray-200 rounded-xl overflow-hidden">
-                    <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b border-gray-200">
-                      <span className="text-xs font-semibold text-gray-600">
-                        {myDocs.length} document{myDocs.length !== 1 ? 's' : ''} available
-                      </span>
-                      <button onClick={() => setShowDocPicker(false)} className="text-gray-400 hover:text-gray-600">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    {myDocs.length === 0 ? (
-                      <div className="px-3 py-4 text-center text-xs text-gray-400">
-                        Upload documents first from My Medical Documents
-                      </div>
-                    ) : (
-                      <div className="max-h-44 overflow-y-auto divide-y divide-gray-50">
-                        {myDocs.map(doc => {
-                          const checked = selectedDocIds.includes(doc.id);
-                          return (
-                            <label key={doc.id} className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors
-                              ${checked ? 'bg-emerald-50' : 'hover:bg-gray-50'}`}>
-                              <input type="checkbox" checked={checked}
-                                onChange={() => setSelectedDocIds(ids =>
-                                  checked ? ids.filter(i => i !== doc.id) : [...ids, doc.id]
-                                )}
-                                className="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-gray-900 truncate">{doc.title}</p>
-                                <p className="text-xs text-gray-400 truncate">{doc.category.replace(/_/g, ' ')} · {doc.original_name}</p>
-                              </div>
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold flex-shrink-0
-                                ${doc.privacy_status === 'shared' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
-                                {doc.privacy_status === 'shared' ? <span className="flex items-center gap-0.5"><Unlock className="w-2.5 h-2.5 inline" /> Shared</span>
-                                  : <span className="flex items-center gap-0.5"><Lock className="w-2.5 h-2.5 inline" /> Private</span>}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {selectedDocIds.length > 0 && (
-                  <p className="mt-1.5 text-xs text-emerald-600 flex items-center gap-1">
-                    <Paperclip className="w-3 h-3" />
-                    {selectedDocIds.length} document{selectedDocIds.length > 1 ? 's' : ''} will be shared with the hospital when the appointment is booked
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="px-6 pb-6 flex gap-3">
-              <button onClick={() => { setShowBookingModal(false); setSelectedDocIds([]); setShowDocPicker(false); }}
-                className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700 font-medium">
-                Cancel
-              </button>
-              <button onClick={handleBookingSubmit} disabled={loading}
-                className="flex-1 px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 font-semibold">
-                {loading ? 'Booking...' : 'Book Appointment'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

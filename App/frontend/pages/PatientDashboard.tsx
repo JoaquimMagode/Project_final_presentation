@@ -500,7 +500,7 @@ const PatientDashboard: React.FC = () => {
     <div className="dash-bootstrap-radius flex h-screen bg-gray-50">
 
       {/* ── Sidebar ── */}
-      <aside className={`hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-100 transition-all duration-300 flex-shrink-0`}>
+      <aside className={`hidden md:flex flex-col ${sidebarOpen ? 'w-56' : 'w-16'} bg-white border-r border-gray-100 shadow-[2px_0_8px_-2px_rgba(0,0,0,0.08)] transition-all duration-300 flex-shrink-0`}>
         {/* Logo bar */}
         <div className={`flex items-center border-b border-gray-100 h-[73px] px-3 flex-shrink-0 ${sidebarOpen ? 'justify-between' : 'justify-center'}`}>
           {sidebarOpen && (
@@ -601,7 +601,7 @@ const PatientDashboard: React.FC = () => {
 
           {/* ── Dashboard Home (Medicare-style clone) ── */}
           {activePage === 'dashboard' && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-7xl mx-auto">
 
               {/* Page heading (matches reference layout) */}
               <div className="flex flex-wrap items-center justify-between gap-3">

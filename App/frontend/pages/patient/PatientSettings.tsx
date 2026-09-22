@@ -125,9 +125,9 @@ const PatientSettings: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
           <span className="ml-2 text-gray-600">Loading settings...</span>
         </div>
       </div>
@@ -135,7 +135,7 @@ const PatientSettings: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-6">
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
           <AlertCircle className="w-4 h-4" />
@@ -144,27 +144,29 @@ const PatientSettings: React.FC = () => {
       )}
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600">Manage your account preferences and privacy settings</p>
+        <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <Shield className="w-5 h-5 text-emerald-600" /> Settings
+        </h1>
+        <p className="text-sm text-gray-500 mt-0.5">Manage your account preferences and privacy settings</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Settings Navigation */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100 p-4">
-            <nav className="space-y-2">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3">
+            <nav className="space-y-1">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-sm font-medium transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/20'
+                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`}
                 >
-                  <tab.icon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{tab.name}</span>
+                  <tab.icon className="w-4 h-4 flex-shrink-0" />
+                  <span>{tab.name}</span>
                 </button>
               ))}
             </nav>
@@ -173,16 +175,16 @@ const PatientSettings: React.FC = () => {
 
         {/* Settings Content */}
         <div className="lg:col-span-3">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
             {/* Account Settings Tab */}
             {activeTab === 'account' && (
               <div className="p-6">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="relative">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
                       {accountSettings.firstName[0]}{accountSettings.lastName[0]}
                     </div>
-                    <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700">
+                    <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center text-white hover:bg-emerald-700">
                       <Camera className="w-3 h-3" />
                     </button>
                   </div>

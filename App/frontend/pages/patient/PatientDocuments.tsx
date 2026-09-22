@@ -4,7 +4,7 @@ import {
   Filter, Calendar, X, Image, File, Share2, Lock, Unlock,
   AlertCircle, CheckCircle, ChevronDown, Building2, RefreshCw,
   ShieldCheck, Clock, FilePlus, FolderOpen, FileImage, Pill,
-  Stethoscope, BookOpen, Globe, Tag, MoreVertical, ExternalLink,
+  Stethoscope, BookOpen, Globe, Tag, MoreVertical, ExternalLink, ArrowLeft,
 } from 'lucide-react';
 import { documentsAPI, hospitalsAPI } from '../../services/api';
 
@@ -86,7 +86,7 @@ interface UploadModalProps {
   onUploaded: () => void;
   hospitals: Hospital[];
 }
-const UploadModal: React.FC<UploadModalProps> = ({ onClose, onUploaded, hospitals }) => {
+const UploadPage: React.FC<UploadModalProps> = ({ onClose, onUploaded, hospitals }) => {
   const [file, setFile] = useState<File | null>(null);
   const [drag, setDrag] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -141,23 +141,25 @@ const UploadModal: React.FC<UploadModalProps> = ({ onClose, onUploaded, hospital
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100]" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-xl max-h-[95vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
-              <FilePlus className="w-5 h-5 text-emerald-600" />
-            </div>
-            <div>
-              <h3 className="font-bold text-gray-900 text-base">Upload Document</h3>
-              <p className="text-xs text-gray-400">Supports PDF, JPG, PNG, WEBP, DOC, DOCX · Max {MAX_MB} MB</p>
-            </div>
+    <div className="space-y-5 max-w-7xl mx-auto">
+      {/* Page header with back */}
+      <div className="flex items-center gap-3">
+        <button onClick={onClose}
+          className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors" title="Back to documents">
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
+            <FilePlus className="w-5 h-5 text-emerald-600" />
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5 text-gray-500" /></button>
+          <div>
+            <h1 className="font-bold text-gray-900 text-lg">Upload Document</h1>
+            <p className="text-xs text-gray-400">Supports PDF, JPG, PNG, WEBP, DOC, DOCX · Max {MAX_MB} MB</p>
+          </div>
         </div>
+      </div>
 
-        <div className="px-6 py-5 space-y-4">
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm px-6 py-5 space-y-4">
           {/* Drop zone */}
           <div
             className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors
@@ -245,16 +247,15 @@ const UploadModal: React.FC<UploadModalProps> = ({ onClose, onUploaded, hospital
               <AlertCircle className="w-4 h-4 flex-shrink-0" />{err}
             </div>
           )}
-        </div>
 
-        <div className="px-6 pb-6 flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
-          <button onClick={submit} disabled={uploading || !file}
-            className="flex-1 px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 font-semibold flex items-center justify-center gap-2">
-            {uploading ? <><RefreshCw className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Upload</>}
-          </button>
+          <div className="flex gap-3 pt-2">
+            <button onClick={onClose} className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 font-medium">Cancel</button>
+            <button onClick={submit} disabled={uploading || !file}
+              className="flex-1 px-4 py-2.5 text-sm bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 disabled:opacity-50 font-semibold flex items-center justify-center gap-2">
+              {uploading ? <><RefreshCw className="w-4 h-4 animate-spin" /> Uploading…</> : <><Upload className="w-4 h-4" /> Upload</>}
+            </button>
+          </div>
         </div>
-      </div>
     </div>
   );
 };
@@ -752,8 +753,19 @@ const PatientDocuments: React.FC = () => {
 
   const totalPages = Math.ceil(total / LIMIT);
 
+  // Upload takes over the whole content area as its own page
+  if (showUpload) {
+    return (
+      <UploadPage
+        onClose={() => setShowUpload(false)}
+        onUploaded={() => { fetchDocs(); notify('Document uploaded successfully'); }}
+        hospitals={hospitals}
+      />
+    );
+  }
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -882,7 +894,6 @@ const PatientDocuments: React.FC = () => {
       </div>
 
       {/* Modals */}
-      {showUpload && <UploadModal onClose={() => setShowUpload(false)} onUploaded={() => { fetchDocs(); notify('Document uploaded successfully'); }} hospitals={hospitals} />}
       {shareDoc && <ShareModal doc={shareDoc} hospitals={hospitals} onClose={() => setShareDoc(null)} onChanged={() => { fetchDocs(); notify('Sharing updated'); }} />}
       {deleteDoc && <DeleteConfirm doc={deleteDoc} onCancel={() => setDeleteDoc(null)} onConfirm={handleDelete} />}
       {viewDoc && <ViewModal doc={viewDoc} onClose={() => setViewDoc(null)} />}

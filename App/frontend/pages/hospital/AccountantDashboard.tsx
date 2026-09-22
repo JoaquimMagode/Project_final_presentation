@@ -32,7 +32,7 @@ const AccountantDashboard: React.FC = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-56 bg-green-800 flex flex-col">
+      <aside className="w-56 bg-green-800 shadow-[2px_0_8px_-2px_rgba(0,0,0,0.15)] flex flex-col">
         <div className="p-5 border-b border-green-700">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">

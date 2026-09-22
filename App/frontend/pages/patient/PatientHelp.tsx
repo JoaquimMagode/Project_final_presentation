@@ -111,7 +111,7 @@ const PatientHelp: React.FC = () => {
   const popularFaqs = faqs.filter(faq => faq.popular);
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Help & Support</h1>
