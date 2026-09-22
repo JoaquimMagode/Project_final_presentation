@@ -211,7 +211,6 @@ const SuperAdminDashboard: React.FC = () => {
     { id: 'HOSPITAL_MANAGEMENT', label: 'Hospital Management', icon: BeakerIcon },
     { id: 'ADD_HOSPITAL', label: 'Add Hospital', icon: PlusIcon },
     { id: 'MANAGE_HOSPITALS', label: 'Manage Hospitals', icon: BuildingOffice2Icon },
-    { id: 'PATIENTS', label: 'Patient Overview', icon: UsersIcon },
     { id: 'REVENUE', label: 'Revenue & Commissions', icon: CurrencyDollarIcon },
     { id: 'REPORTS', label: 'System Reports', icon: DocumentTextIcon },
     { id: 'SETTINGS', label: 'Platform Settings', icon: Cog6ToothIcon }
