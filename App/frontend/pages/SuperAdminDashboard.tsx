@@ -11,6 +11,9 @@ import { useAuth, useLang } from '../App';
 import { useNavigate } from 'react-router-dom';
 import { LANGUAGES } from '../constants';
 import { Language } from '../types';
+import RevenueCommissions from './admin/RevenueCommissions';
+import SystemReports from './admin/SystemReports';
+import DashboardOverview from './admin/DashboardOverview';
 
 // ── Admin Dashboard Header (matches Patient/Hospital) ──────────────────────────
 const AdminHeader: React.FC<{
@@ -450,106 +453,7 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
           )}
 
-          {activeTab === 'DASHBOARD' && (
-            <div className="space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Total Hospitals</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.totalHospitals}</p>
-                    </div>
-                    <BuildingOffice2Icon className="w-8 h-8 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Active Hospitals</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.activeHospitals}</p>
-                    </div>
-                    <CheckCircleIcon className="w-8 h-8 text-green-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Total Patients</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.totalPatients}</p>
-                    </div>
-                    <UsersIcon className="w-8 h-8 text-blue-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Total Revenue</p>
-                      <p className="text-2xl font-bold text-slate-900">${summaryData.totalRevenue.toLocaleString()}</p>
-                    </div>
-                    <CurrencyDollarIcon className="w-8 h-8 text-emerald-600" />
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">Pending Approvals</p>
-                      <p className="text-2xl font-bold text-slate-900">{summaryData.pendingApprovals}</p>
-                    </div>
-                    <ClockIcon className="w-8 h-8 text-yellow-600" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Hospitals Table */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200">
-                <div className="p-6 border-b border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-900">Recent Hospital Additions</h3>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Hospital Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Location</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Specialties</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Patients</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {hospitals.slice(0, 4).map(hospital => (
-                        <tr key={hospital.id} className="hover:bg-slate-50">
-                          <td className="px-6 py-4 text-sm font-medium text-slate-900">{hospital.name}</td>
-                          <td className="px-6 py-4 text-sm text-slate-900">{hospital.city}, {hospital.state}</td>
-                          <td className="px-6 py-4 text-sm text-slate-900">
-                            <div className="flex flex-wrap gap-1">
-                              {hospital.specialties.slice(0, 2).map((specialty, idx) => (
-                                <span key={idx} className="px-2 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-full">
-                                  {specialty}
-                                </span>
-                              ))}
-                              {hospital.specialties.length > 2 && (
-                                <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-full">
-                                  +{hospital.specialties.length - 2} more
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(hospital.status)}`}>
-                              {hospital.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-900">{hospital.patients}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          )}
+          {activeTab === 'DASHBOARD' && <DashboardOverview hospitals={hospitals} />}
 
           {activeTab === 'ADD_HOSPITAL' && (
             <div className="max-w-4xl">
@@ -558,10 +462,10 @@ const SuperAdminDashboard: React.FC = () => {
                   <h3 className="text-lg font-semibold text-slate-900">Add New Hospital to IMAP Solution Network</h3>
                 </div>
                 
-                <form onSubmit={handleAddHospital} className="space-y-6">
+                <form onSubmit={handleAddHospital} className="space-y-4">
                   {/* Hospital Logo Upload */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Hospital Logo</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Hospital Logo</label>
                     <div className="flex items-center gap-4">
                       <div className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center overflow-hidden">
                         {newHospital.logoPreview ? (
@@ -592,24 +496,24 @@ const SuperAdminDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Hospital Name *</label>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Hospital Name *</label>
                       <input
                         type="text"
                         required
                         value={newHospital.name}
                         onChange={(e) => setNewHospital({...newHospital, name: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                         placeholder="e.g., Apollo Hospitals Mumbai"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Country</label>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Country</label>
                       <select
                         value={newHospital.country}
                         onChange={(e) => setNewHospital({...newHospital, country: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       >
                         <option value="India">India</option>
                         <option value="Thailand">Thailand</option>
@@ -619,16 +523,16 @@ const SuperAdminDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">State *</label>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">State *</label>
                       <select
                         required
                         value={newHospital.state}
                         onChange={(e) => {
                           setNewHospital({...newHospital, state: e.target.value, city: ''});
                         }}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       >
                         <option value="">Select State</option>
                         {indianStates.map(state => (
@@ -637,12 +541,12 @@ const SuperAdminDashboard: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">City *</label>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">City *</label>
                       <select
                         required
                         value={newHospital.city}
                         onChange={(e) => setNewHospital({...newHospital, city: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                         disabled={!newHospital.state}
                       >
                         <option value="">Select City</option>
@@ -654,25 +558,25 @@ const SuperAdminDashboard: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Commission Rate (%)</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Commission Rate (%)</label>
                     <input
                       type="number"
                       min="1"
                       max="20"
                       value={newHospital.commissionRate}
                       onChange={(e) => setNewHospital({...newHospital, commissionRate: parseInt(e.target.value)})}
-                      className="w-32 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-28 px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                     />
                   </div>
 
                   {/* Medical Specialties */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Medical Specialties *</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Medical Specialties *</label>
                     <div className="flex gap-2 mb-3">
                       <select
                         value={currentSpecialty}
                         onChange={(e) => setCurrentSpecialty(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="flex-1 px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       >
                         <option value="">Select a specialty</option>
                         {medicalSpecialties.map(specialty => (
@@ -711,59 +615,59 @@ const SuperAdminDashboard: React.FC = () => {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Contact Email</label>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Contact Email</label>
                       <input
                         type="email"
                         value={newHospital.contactEmail}
                         onChange={(e) => setNewHospital({...newHospital, contactEmail: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                         placeholder="admin@hospital.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Contact Phone</label>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Contact Phone</label>
                       <input
                         type="tel"
                         value={newHospital.contactPhone}
                         onChange={(e) => setNewHospital({...newHospital, contactPhone: e.target.value})}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                         placeholder="+91 98765 43210"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Full Address</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Full Address</label>
                     <textarea
                       value={newHospital.address}
                       onChange={(e) => setNewHospital({...newHospital, address: e.target.value})}
                       rows={3}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="Complete hospital address"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Hospital Description</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Hospital Description</label>
                     <textarea
                       value={newHospital.description}
                       onChange={(e) => setNewHospital({...newHospital, description: e.target.value})}
                       rows={4}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       placeholder="Brief description of hospital facilities and services"
                     />
                   </div>
 
                   {/* Accreditations */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Accreditations</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Accreditations</label>
                     <div className="flex gap-2 mb-3">
                       <select
                         value={currentAccreditation}
                         onChange={(e) => setCurrentAccreditation(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                        className="flex-1 px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       >
                         <option value="">Select an accreditation</option>
                         {accreditationOptions.map(accreditation => (
@@ -896,33 +800,37 @@ const SuperAdminDashboard: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'REVENUE' && <RevenueCommissions hospitals={hospitals} />}
+
+          {activeTab === 'REPORTS' && <SystemReports hospitals={hospitals} />}
+
           {activeTab === 'SETTINGS' && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-slate-900 mb-6">IMAP Solution Platform Settings</h3>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Platform Name</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Platform Name</label>
                     <input 
                       type="text" 
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                      className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
                       defaultValue="IMAP Solution - Medical Tourism Platform" 
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">Default Commission Rate (%)</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Default Commission Rate (%)</label>
                     <input 
                       type="number" 
-                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                      className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
                       defaultValue="8" 
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Support Email</label>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Support Email</label>
                   <input 
                     type="email" 
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
+                    className="w-full px-2.5 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" 
                     defaultValue="support@imapsolution.com" 
                   />
                 </div>
